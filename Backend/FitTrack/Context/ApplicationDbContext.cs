@@ -1,0 +1,35 @@
+﻿using FitTrack.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
+
+namespace FitTrack.Context
+{
+    public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
+    {
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+            : base(options)
+        {
+        }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<ApplicationUser>()
+                .HasOne(au => au.UserDetails)
+                .WithOne(u => u.User)
+                .HasForeignKey<UserDetails>(u => u.UserId);
+
+            modelBuilder.Entity<UserDetails>()
+                .Property(u => u.Gender)
+                .HasConversion<string>();
+
+            modelBuilder.Entity<UserDetails>()
+                .Property(u => u.ActivityLevel)
+                .HasConversion<string>();
+        }
+
+        public DbSet<UserDetails> UserDetails { get; set; }
+    }
+}

@@ -1,0 +1,14 @@
+services:
+  nutritiongeneratorservice:
+    image: ${DOCKER_REGISTRY-}nutritiongeneratorservice
+    build:
+      context: .
+      dockerfile: NutritionGeneratorService/Dockerfile
+    secrets:
+      - hf_token_secret
+
+
+secrets:
+    hf_token_secret:
+        file: ./hf_token.txt
+
