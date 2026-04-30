@@ -26,25 +26,25 @@ const Login = () => {
   // TODO: remove comments from this handler
   const handleLogin = async () => {
       setIsLoading(true);
-      // const result = await loginUser(emailAddress, password);
+      const result = await loginUser(emailAddress, password);
 
-      // if(!result.success) {
-      //   switch (result.error.status) {
-      //     case 401:
-      //       showError("Wrong credentials");
-      //       break;
-      //     default:
-      //       showError("An error ocurred while logging in");
-      //       break;
-      //   }
-      //   setIsLoading(false);
-      //   return;
-      // }
+      if(!result.success) {
+        switch (result.error.status) {
+          case 401:
+            showError("Wrong credentials");
+            break;
+          default:
+            showError("An error ocurred while logging in");
+            break;
+        }
+        setIsLoading(false);
+        return;
+      }
 
-      // const userId = await getLoggedUserId(result.token);
-      // setUserId(userId);
+      const userId = await getLoggedUserId(result.token);
+      setUserId(userId);
 
-      // setIsLoading(false);
+      setIsLoading(false);
       navigate("/onboarding");
       showInfo('YEEE');
   };
