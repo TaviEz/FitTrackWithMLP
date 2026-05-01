@@ -2,6 +2,7 @@
 .DS_Store
 Thumbs.db
 .vscode/
+.vs/
 .idea/
 
 # Env files
@@ -22,3 +23,30 @@ obj/
 # Rider / VS
 .idea/
 .vs/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments
+venv/
+.venv/
+env/
+bin/
+lib/
+
+# SQLite database files
+*.db
+*.sqlite3
+*.db-journal
+*.db-wal
+
+# Logs and profiling
+.pytest_cache/
+.coverage
+htmlcov/
+.ipynb_checkpoints/
+
+# Docker specific
+.dockerignore
