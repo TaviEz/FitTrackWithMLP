@@ -50,7 +50,9 @@ namespace FitTrack.Controllers
             if (!Enum.TryParse(userDto.ActivityLevel, true, out ActivityLevel userActivityLevel))
                 return BadRequest("Invalid activity level");
 
-            if(user.UserDetails == null)
+
+            // TODO: create a UserService folder and move this logic there, also add a method to check if user details already exist for a user
+            if (user.UserDetails == null)
             {
                 var newUserDetails = new UserDetails
                 {
