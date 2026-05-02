@@ -9,6 +9,8 @@
         public int Height { get; set; } // in cm
         public ActivityLevel ActivityLevel { get; set; }
         public DateTime Date { get; set; }
+        public int Bmr { get; set; }
+        public int Tdee { get; set; }
 
         public string UserId { get; set; }
         public ApplicationUser User { get; set; }

@@ -15,8 +15,6 @@ import ResultsForm from "../shared/ResultsSummary";
 const Onboarding = () => {
     const [displayOnboardingInfo, setDisplayOnboardingInfo] = useState(true);
     const [activityLevels, setActivityLevels] = useState<ActivityLevel[]>([]);
-    const [bmr, setBmr] = useState(0);
-    const [tdee, setTdee] = useState(0);
     const [userDetails, setUserDetails] = useState<UserDetails>(
         UserDetails.default()
     );
@@ -25,9 +23,11 @@ const Onboarding = () => {
     const handleCalculateCalories = async () => {        
         if (userDetails.activityLevel.multiplier !== 0) {
             const bmr = calculateBMR(userDetails);
-            const tdee = bmr * userDetails.activityLevel.multiplier;
-            setBmr(bmr);
-            setTdee(tdee);
+            const tdee = Math.round(bmr * userDetails.activityLevel.multiplier);
+            const updatedUserDetails = userDetails.clone();
+            updatedUserDetails.bmr = bmr;
+            updatedUserDetails.tdee = tdee;
+            setUserDetails(updatedUserDetails);
         }
         else {
             showInfo("Select an activity level in order to proceed");
@@ -120,7 +120,7 @@ const Onboarding = () => {
                                 }}
                             >
                                 <CardContent>
-                                    <ResultsForm bmr={bmr} tdee={tdee} handleNextSteps={handleNextSteps}/>
+                                    <ResultsForm bmr={userDetails.bmr} tdee={userDetails.tdee} handleNextSteps={handleNextSteps}/>
                                 </CardContent>
                             </Card>
                         </Grid>

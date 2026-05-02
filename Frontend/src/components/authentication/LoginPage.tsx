@@ -23,7 +23,6 @@ const Login = () => {
 
   const {setUserId} = useUser();
 
-  // TODO: remove comments from this handler
   const handleLogin = async () => {
       setIsLoading(true);
       const result = await loginUser(emailAddress, password);

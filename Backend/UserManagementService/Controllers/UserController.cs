@@ -14,14 +14,16 @@ namespace FitTrack.Controllers
         private readonly ApplicationDbContext _dbContext;
         private readonly UserManager<ApplicationUser> _userManager;
 
-        public UserController(ApplicationDbContext dbContext, UserManager<ApplicationUser> userManager)
+        public UserController(
+            ApplicationDbContext dbContext, 
+            UserManager<ApplicationUser> userManager)
         {
             _dbContext = dbContext;
             _userManager = userManager;
         }
 
         [HttpGet("me")]
-        public ActionResult GetLoggedUser()
+        public IActionResult GetLoggedUser()
         {
             if (!User.Identity?.IsAuthenticated ?? false)
                 return Unauthorized("User not authenticated");
@@ -32,7 +34,7 @@ namespace FitTrack.Controllers
 
 
         [HttpPost("details")]
-        public async Task<ActionResult> StoreUserDetails([FromBody] UserDetailsDto userDto)
+        public async Task<IActionResult> StoreUserDetails([FromBody] UserDetailsDto userDto)
         {
             var user = await _dbContext.Users
                 .Where(u => u.Id == userDto.Id)
@@ -58,6 +60,8 @@ namespace FitTrack.Controllers
                     Height = userDto.Height,
                     ActivityLevel = userActivityLevel,
                     Date = DateTime.Now,
+                    Bmr = userDto.Bmr,
+                    Tdee = userDto.Tdee,
                     UserId = userDto.Id
                 };
 
@@ -77,6 +81,8 @@ namespace FitTrack.Controllers
                 user.UserDetails.Height = userDto.Height;
                 user.UserDetails.ActivityLevel = userActivityLevel;
                 user.UserDetails.Date = DateTime.Now;
+                user.UserDetails.Bmr = userDto.Bmr;
+                user.UserDetails.Tdee = userDto.Tdee;
 
                 var result = await _dbContext.SaveChangesAsync();   
                 if (result > 0)

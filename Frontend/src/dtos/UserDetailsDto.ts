@@ -5,8 +5,10 @@ class UserDetailsDto {
     weight: number; 
     height: number;
     activityLevel: string;
+    bmr: number;
+    tdee: number;
 
-    public constructor(id: string, gender: string, age: number, weight: number, height: number, activityLevel: string)
+    public constructor(id: string, gender: string, age: number, weight: number, height: number, activityLevel: string, bmr: number, tdee: number)
     {
         this.id = id;
         this.gender = gender;
@@ -14,6 +16,8 @@ class UserDetailsDto {
         this.weight = weight;
         this.height = height;
         this.activityLevel = activityLevel;
+        this.bmr = bmr;
+        this.tdee = tdee;
     }
 }
 

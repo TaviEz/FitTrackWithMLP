@@ -44,7 +44,15 @@ export const getLoggedUserId = async (token: string): Promise<any> => {
 export const saveUserDetails = async (userDetails: UserDetails, userId: string): Promise<any> => {
     try {
         const userActivityLevel = getActivityLevelEnum(userDetails.activityLevel.label);
-        const userDto = new UserDetailsDto(userId, userDetails.gender, userDetails.age, userDetails.weight, userDetails.height, userActivityLevel)
+        const userDto = new UserDetailsDto(userId, 
+            userDetails.gender, 
+            userDetails.age, 
+            userDetails.weight, 
+            userDetails.height, 
+            userActivityLevel,
+            userDetails.bmr,
+            userDetails.tdee
+        )
 
         await axios.post(`${API_BASE_URL}/api/user/details`, userDto);
         
