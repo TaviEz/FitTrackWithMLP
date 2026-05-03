@@ -1,6 +1,6 @@
-﻿using FitTrack.Models;
+﻿using UserManagementService.Models;
 
-namespace FitTrack.DTOs
+namespace UserManagementService.DTOs
 {
     public class UserDetailsDto
     {

@@ -41,8 +41,6 @@ const Onboarding = () => {
         }
     }
 
-
-    // TODO: make sure to use integer numbers for displaying info such as BMR
     const calculateBMR = (userDetails: UserDetails) => {
         const genderConstant = userDetails.gender == 'female' ? -161 : 5;
         return 10 * userDetails.weight + 6.25 * userDetails.height - 5 * userDetails.age + genderConstant;

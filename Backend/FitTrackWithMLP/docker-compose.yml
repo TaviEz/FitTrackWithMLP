@@ -1,0 +1,11 @@
+services:
+  user-service:
+    build: 
+      context: .
+      dockerfile: /UserManagementService/Dockerfile
+    ports:
+      - "8081:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - Jwt__Key=${JWT_SECRET}
+      - ConnectionStrings__DefaultConnection=Server=host.docker.internal,1433;User Id=sa;Password=sa;Database=AuthServiceDb;TrustServerCertificate=True;

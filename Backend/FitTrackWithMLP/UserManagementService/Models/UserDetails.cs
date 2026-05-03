@@ -1,4 +1,4 @@
-﻿namespace FitTrack.Models
+﻿namespace UserManagementService.Models
 {
     public class UserDetails
     {

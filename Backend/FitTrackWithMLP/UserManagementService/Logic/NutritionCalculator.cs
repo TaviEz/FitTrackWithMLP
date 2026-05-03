@@ -1,4 +1,4 @@
-﻿using FitTrack.Models;
+﻿using UserManagementService.Models;
 using UserManagementService.DTOs;
 
 namespace UserManagementService.Logic

@@ -2,16 +2,23 @@
 
 #nullable disable
 
-namespace FitTrack.Migrations
+namespace UserManagementService.Migrations
 {
     /// <inheritdoc />
-    public partial class addHeightToUserDetails : Migration
+    public partial class UserDetailsNewColumns : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<int>(
-                name: "Height",
+                name: "Bmr",
+                table: "UserDetails",
+                type: "int",
+                nullable: false,
+                defaultValue: 0);
+
+            migrationBuilder.AddColumn<int>(
+                name: "Tdee",
                 table: "UserDetails",
                 type: "int",
                 nullable: false,
@@ -22,7 +29,11 @@ namespace FitTrack.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "Height",
+                name: "Bmr",
+                table: "UserDetails");
+
+            migrationBuilder.DropColumn(
+                name: "Tdee",
                 table: "UserDetails");
         }
     }

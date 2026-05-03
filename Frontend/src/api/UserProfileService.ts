@@ -3,7 +3,7 @@ import UserDetails from "../models/UserDetails";
 import UserDetailsDto from "../dtos/UserDetailsDto";
 import { getActivityLevelEnum } from "../utils/types";
 
-const API_BASE_URL = 'https://localhost:32761';
+const API_BASE_URL = 'http://localhost:8081';
 
 export const loginUser = async (email: string, password: string): Promise<any> => {
     try {

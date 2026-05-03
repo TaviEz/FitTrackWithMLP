@@ -1,7 +1,7 @@
-﻿using FitTrack.Context;
-using FitTrack.Models;
+﻿using UserManagementService.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using UserManagementService.Context;
 using UserManagementService.Logic;
 using static UserManagementService.Logic.NutritionCalculator;
 

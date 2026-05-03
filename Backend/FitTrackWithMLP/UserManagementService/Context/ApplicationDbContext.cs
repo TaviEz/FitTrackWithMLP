@@ -1,9 +1,8 @@
-﻿using FitTrack.Models;
-using Microsoft.AspNetCore.Identity;
+﻿using UserManagementService.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace FitTrack.Context
+namespace UserManagementService.Context
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {

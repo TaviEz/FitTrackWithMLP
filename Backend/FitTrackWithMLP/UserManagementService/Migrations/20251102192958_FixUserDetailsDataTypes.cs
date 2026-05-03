@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace FitTrack.Migrations
+namespace UserManagementService.Migrations
 {
     /// <inheritdoc />
     public partial class FixUserDetailsDataTypes : Migration

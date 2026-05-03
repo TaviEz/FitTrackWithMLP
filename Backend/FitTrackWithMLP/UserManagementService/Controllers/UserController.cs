@@ -1,11 +1,11 @@
-﻿using FitTrack.Context;
-using FitTrack.DTOs;
-using FitTrack.Models;
+﻿using UserManagementService.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using UserManagementService.Context;
+using UserManagementService.DTOs;
 
-namespace FitTrack.Controllers
+namespace UserManagementService.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

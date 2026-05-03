@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace FitTrack.Migrations
+namespace UserManagementService.Migrations
 {
     /// <inheritdoc />
     public partial class InitialCreate : Migration

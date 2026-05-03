@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 
-namespace FitTrack.Models
+namespace UserManagementService.Models
 {
     public class ApplicationUser : IdentityUser
     {
