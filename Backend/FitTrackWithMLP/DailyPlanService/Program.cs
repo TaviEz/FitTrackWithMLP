@@ -1,20 +1,14 @@
 using FitTrackWithMLP.Shared;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
-using UserManagementService.Context;
-using UserManagementService.Models;
 
-namespace UserManagementService
+namespace DailyPlanService
 {
     public class Program
     {
         public static void Main(string[] args)
         {
-            var myAllowSpecificOrigins = "_myAllowSpecificOrigins";
-
             var builder = WebApplication.CreateBuilder(args);
-            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
+            var myAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
             builder.Services.AddFitTrackAuthentication(builder.Configuration);
             builder.Services.AddControllers();
@@ -35,14 +29,6 @@ namespace UserManagementService
                 });
             });
 
-            builder.Services.AddDbContext<ApplicationDbContext>(
-                options => options.UseSqlServer(connectionString, sqlOptions =>
-                    sqlOptions.EnableRetryOnFailure()));
-
-            // Add Identity
-            builder.Services.AddIdentityApiEndpoints<ApplicationUser>()
-                .AddEntityFrameworkStores<ApplicationDbContext>();
-
             // Enable cors
             builder.Services.AddCors(options =>
             {
@@ -53,7 +39,7 @@ namespace UserManagementService
                                                         .AllowAnyHeader()
                                                         .AllowAnyMethod()
                                                         .AllowCredentials();
-                                          
+
                                   });
             });
 
@@ -67,8 +53,6 @@ namespace UserManagementService
             }
 
             app.UseCors(myAllowSpecificOrigins);
-
-            app.MapIdentityApi<ApplicationUser>();
 
             //app.UseHttpsRedirection();
 

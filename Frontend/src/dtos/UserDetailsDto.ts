@@ -19,6 +19,19 @@ class UserDetailsDto {
         this.bmr = bmr;
         this.tdee = tdee;
     }
+
+    static fromDomain(details: any, userId: string, activityLevelEnum: string): UserDetailsDto {
+        return new UserDetailsDto(
+            userId,
+            details.gender,
+            details.age,
+            details.weight,
+            details.height,
+            activityLevelEnum,
+            details.bmr,
+            details.tdee
+        );
+    }
 }
 
 export default UserDetailsDto

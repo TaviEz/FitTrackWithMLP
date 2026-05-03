@@ -9,3 +9,12 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - Jwt__Key=${JWT_SECRET}
       - ConnectionStrings__DefaultConnection=Server=host.docker.internal,1433;User Id=sa;Password=sa;Database=AuthServiceDb;TrustServerCertificate=True;
+  daily-plan-service:
+    build:
+      context: .
+      dockerfile: /DailyPlanService/Dockerfile
+    ports:
+      - "8082:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - Jwt__Key=${JWT_SECRET}

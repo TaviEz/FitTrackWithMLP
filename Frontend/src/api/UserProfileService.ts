@@ -1,15 +1,19 @@
-import axios from "axios";
 import UserDetails from "../models/UserDetails";
 import UserDetailsDto from "../dtos/UserDetailsDto";
 import { getActivityLevelEnum } from "../utils/types";
+import api from "./api";
 
 const API_BASE_URL = 'http://localhost:8081';
 
 export const loginUser = async (email: string, password: string): Promise<any> => {
     try {
         const loginDto = {email: email, password: password, twoFactorCode: '', twoFactorRecoveryCode: ''};
-        const result = await axios.post(`${API_BASE_URL}/login`, loginDto);
-        return { success: true, token: result.data.accessToken };
+        const result = await api.post(`${API_BASE_URL}/login`, loginDto);
+
+        const token = result.data.accessToken
+        localStorage.setItem('token', token);
+
+        return { success: true, token: token };
     } catch (error) {
         console.log(error);
         return { success: false, error};
@@ -19,7 +23,7 @@ export const loginUser = async (email: string, password: string): Promise<any> =
 export const registerUser = async (email: string, password: string): Promise<any> => {
     try {
         const registerDto = {email: email, password: password};
-        await axios.post(`${API_BASE_URL}/register`, registerDto);
+        await api.post(`${API_BASE_URL}/register`, registerDto);
         return { success: true };
     } catch (error: any) {
         console.log(error);
@@ -30,7 +34,7 @@ export const registerUser = async (email: string, password: string): Promise<any
 
 export const getLoggedUserId = async (token: string): Promise<any> => {
     try {
-        const result = await axios.get(`${API_BASE_URL}/api/user/me`, {
+        const result = await api.get(`${API_BASE_URL}/api/user/me`, {
             headers: {
                 Authorization: `Bearer ${token}`
             }
@@ -44,17 +48,9 @@ export const getLoggedUserId = async (token: string): Promise<any> => {
 export const saveUserDetails = async (userDetails: UserDetails, userId: string): Promise<any> => {
     try {
         const userActivityLevel = getActivityLevelEnum(userDetails.activityLevel.label);
-        const userDto = new UserDetailsDto(userId, 
-            userDetails.gender, 
-            userDetails.age, 
-            userDetails.weight, 
-            userDetails.height, 
-            userActivityLevel,
-            userDetails.bmr,
-            userDetails.tdee
-        )
+        const userDto = UserDetailsDto.fromDomain(userDetails, userId, userActivityLevel);
 
-        await axios.post(`${API_BASE_URL}/api/user/details`, userDto);
+        await api.post(`${API_BASE_URL}/api/user/details`, userDto);
         
     } catch (error: any) {
         

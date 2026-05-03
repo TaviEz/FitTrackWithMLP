@@ -11,6 +11,7 @@ import { activityLevelsData } from "../../utils/activityLevelsData";
 import { useUser } from "../../context/UserContext";
 import DecisionFlow from "./DecisionFlow";
 import ResultsForm from "../shared/ResultsSummary";
+import { generateDailyPlan } from "../../api/DailyPlanService";
 
 const Onboarding = () => {
     const [displayOnboardingInfo, setDisplayOnboardingInfo] = useState(true);
@@ -57,6 +58,12 @@ const Onboarding = () => {
 
     const decisionFlowComplete = (choice: string, mode: string) => {
         console.log(choice, mode);
+        if (choice == "meals" && mode == 'AITrack')
+        {
+            if (userId) {
+                generateDailyPlan(userDetails, userId);
+            }
+        }
     }
 
     return (

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using UserManagementService.Context;
 using UserManagementService.DTOs;
+using Microsoft.AspNetCore.Authorization;
 
 namespace UserManagementService.Controllers
 {
@@ -33,6 +34,7 @@ namespace UserManagementService.Controllers
         }
 
 
+        [Authorize]
         [HttpPost("details")]
         public async Task<IActionResult> StoreUserDetails([FromBody] UserDetailsDto userDto)
         {
