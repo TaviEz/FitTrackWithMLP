@@ -16,7 +16,6 @@ namespace UserManagementService
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 
-            builder.Services.AddFitTrackAuthentication(builder.Configuration);
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(c =>
@@ -42,6 +41,8 @@ namespace UserManagementService
             // Add Identity
             builder.Services.AddIdentityApiEndpoints<ApplicationUser>()
                 .AddEntityFrameworkStores<ApplicationDbContext>();
+
+            builder.Services.AddFitTrackAuthentication(builder.Configuration);
 
             // Enable cors
             builder.Services.AddCors(options =>

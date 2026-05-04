@@ -1,10 +1,15 @@
-﻿using UserManagementService.Models;
+﻿using FitTrackWithMLP.Shared.DTOs;
+using FitTrackWithMLP.Shared.Enums;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 using UserManagementService.Context;
-using UserManagementService.DTOs;
-using Microsoft.AspNetCore.Authorization;
+using UserManagementService.Models;
 
 namespace UserManagementService.Controllers
 {
@@ -14,21 +19,48 @@ namespace UserManagementService.Controllers
     {
         private readonly ApplicationDbContext _dbContext;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IConfiguration _configuration;
 
         public UserController(
-            ApplicationDbContext dbContext, 
-            UserManager<ApplicationUser> userManager)
+            ApplicationDbContext dbContext,
+            UserManager<ApplicationUser> userManager,
+            IConfiguration configuration)
         {
             _dbContext = dbContext;
             _userManager = userManager;
+            _configuration = configuration;
         }
 
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
+        {
+            var user = await _userManager.FindByEmailAsync(loginDto.Email);
+            if (user == null || !await _userManager.CheckPasswordAsync(user, loginDto.Password))
+                return Unauthorized();
+
+            var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]!);
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(
+                [
+                    new Claim(ClaimTypes.NameIdentifier, user.Id),
+                    new Claim(ClaimTypes.Email, user.Email!)
+                ]),
+                Expires = DateTime.UtcNow.AddDays(7),
+                SigningCredentials = new SigningCredentials(
+                    new SymmetricSecurityKey(key),
+                    SecurityAlgorithms.HmacSha256Signature)
+            };
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var token = tokenHandler.WriteToken(tokenHandler.CreateToken(tokenDescriptor));
+            return Ok(new { accessToken = token });
+        }
+
+        [Authorize]
         [HttpGet("me")]
         public IActionResult GetLoggedUser()
         {
-            if (!User.Identity?.IsAuthenticated ?? false)
-                return Unauthorized("User not authenticated");
-
             var userId = _userManager.GetUserId(User);
             return Ok(userId);
         }

@@ -1,7 +1,8 @@
-﻿using UserManagementService.Models;
+﻿using FitTrackWithMLP.Shared.DTOs;
+using FitTrackWithMLP.Shared.Enums;
 using UserManagementService.DTOs;
 
-namespace UserManagementService.Logic
+namespace FitTrackWithMLP.Shared.Logic
 {
     public static class NutritionCalculator
     {
@@ -16,7 +17,7 @@ namespace UserManagementService.Logic
             };
         }
 
-        public static NutritionTargetsDto GetDailyTargetsForGoal(UserDetails userDetails, string activityGroup, GoalType goal)
+        public static NutritionTargetsDto GetDailyTargetsForGoal(UserDetailsDto userDetails, string activityGroup, GoalType goal)
         {
             var weight = userDetails.Weight;
             var tdee = userDetails.Tdee;
@@ -67,16 +68,6 @@ namespace UserManagementService.Logic
 
                 _ => throw new ArgumentOutOfRangeException(nameof(goal), $"Goal {goal} not supported.")
             };
-        }
-
-        public enum GoalType
-        {
-            LoseFatAggressive,
-            LeanCutSlow,
-            MaintainFormTrained,
-            MaintainFormHealthy,
-            LeanBulk,
-            PowerBulk
         }
     }
 }

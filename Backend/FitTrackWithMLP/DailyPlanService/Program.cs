@@ -10,7 +10,6 @@ namespace DailyPlanService
             var builder = WebApplication.CreateBuilder(args);
             var myAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
-            builder.Services.AddFitTrackAuthentication(builder.Configuration);
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(c =>
@@ -42,6 +41,8 @@ namespace DailyPlanService
 
                                   });
             });
+
+            builder.Services.AddFitTrackAuthentication(builder.Configuration);
 
             var app = builder.Build();
 

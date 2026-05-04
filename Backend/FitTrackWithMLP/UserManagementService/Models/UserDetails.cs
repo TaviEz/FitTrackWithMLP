@@ -1,4 +1,6 @@
-﻿namespace UserManagementService.Models
+﻿using FitTrackWithMLP.Shared.Enums;
+
+namespace UserManagementService.Models
 {
     public class UserDetails
     {
@@ -20,14 +22,5 @@
     {
         Male,
         Female
-    }
-
-    public enum ActivityLevel
-    {
-        Sedentary,
-        LightlyActive,
-        ModeratelyActive,
-        VeryActive,
-        ExtraActive
     }
 }

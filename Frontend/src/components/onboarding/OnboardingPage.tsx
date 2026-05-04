@@ -49,7 +49,6 @@ const Onboarding = () => {
 
     const handleNextSteps = () => {
         console.log('next steps')
-        console.log(userId)
         if (userId) {
             saveUserDetails(userDetails, userId);
             setDisplayOnboardingInfo(false);

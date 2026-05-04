@@ -1,6 +1,4 @@
-﻿using UserManagementService.Models;
-
-namespace UserManagementService.DTOs
+﻿namespace FitTrackWithMLP.Shared.DTOs
 {
     public class UserDetailsDto
     {

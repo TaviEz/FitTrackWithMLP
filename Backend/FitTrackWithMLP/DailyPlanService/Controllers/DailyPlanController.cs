@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using FitTrackWithMLP.Shared.DTOs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace DailyPlanService.Controllers
 {
@@ -7,9 +9,13 @@ namespace DailyPlanService.Controllers
     [ApiController]
     public class DailyPlanController : ControllerBase
     {
+        [Authorize]
         [HttpPost("generate")]
-        public IActionResult GenerateDailyPlan()
+        public IActionResult GenerateDailyPlan(UserDetailsDto userDetailsDto)
         {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                 ?? User.FindFirst("sub")?.Value;
+
             //var userId = _userManager.GetUserId(User);
             //var userDetails = _dbContext.UserDetails.Where(ud => ud.UserId == userId).FirstOrDefault();
             //if (userDetails == null)
@@ -20,7 +26,7 @@ namespace DailyPlanService.Controllers
             //var goalType = GoalType.MaintainFormTrained;
             //var dailyTargets = NutritionCalculator.GetDailyTargetsForGoal(userDetails, activityGroup, goalType);
 
-            return Ok();
+            return Ok(userId);
         }
     }
 }

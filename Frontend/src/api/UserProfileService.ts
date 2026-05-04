@@ -7,8 +7,8 @@ const API_BASE_URL = 'http://localhost:8081';
 
 export const loginUser = async (email: string, password: string): Promise<any> => {
     try {
-        const loginDto = {email: email, password: password, twoFactorCode: '', twoFactorRecoveryCode: ''};
-        const result = await api.post(`${API_BASE_URL}/login`, loginDto);
+        const loginDto = {email: email, password: password};
+        const result = await api.post(`${API_BASE_URL}/api/user/login`, loginDto);
 
         const token = result.data.accessToken
         localStorage.setItem('token', token);
