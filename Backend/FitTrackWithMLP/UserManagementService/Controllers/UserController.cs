@@ -70,8 +70,12 @@ namespace UserManagementService.Controllers
         [HttpPost("details")]
         public async Task<IActionResult> StoreUserDetails([FromBody] UserDetailsDto userDto)
         {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null)
+                return Unauthorized();
+
             var user = await _dbContext.Users
-                .Where(u => u.Id == userDto.Id)
+                .Where(u => u.Id == userId)
                 .Include(ud => ud.UserDetails)
                 .FirstOrDefaultAsync();
 
@@ -90,6 +94,7 @@ namespace UserManagementService.Controllers
             {
                 var newUserDetails = new UserDetails
                 {
+                    UserId = userId,
                     Gender = userGender,
                     Age = userDto.Age,
                     Weight = userDto.Weight,
@@ -97,8 +102,7 @@ namespace UserManagementService.Controllers
                     ActivityLevel = userActivityLevel,
                     Date = DateTime.Now,
                     Bmr = userDto.Bmr,
-                    Tdee = userDto.Tdee,
-                    UserId = userDto.Id
+                    Tdee = userDto.Tdee
                 };
 
                 _dbContext.UserDetails.Add(newUserDetails);
@@ -127,7 +131,7 @@ namespace UserManagementService.Controllers
                     return StatusCode(500, "Failed to save user details.");
             }
 
-            return StatusCode(500, $"User details for user {userDto.Id} already created");
+            return StatusCode(500, $"User details for user {userId} already created");
         }
     }
 }

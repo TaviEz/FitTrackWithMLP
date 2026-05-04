@@ -5,10 +5,10 @@ import api from "./api";
 
 const API_BASE_URL = 'http://localhost:8082/api/DailyPlan';
 
-export const generateDailyPlan = async (userDetails: UserDetails, userId: string): Promise<any> => {
+export const generateDailyPlan = async (userDetails: UserDetails): Promise<any> => {
     try {
         const userActivityLevel = getActivityLevelEnum(userDetails.activityLevel.label);
-        const userDto = UserDetailsDto.fromDomain(userDetails, userId, userActivityLevel);
+        const userDto = UserDetailsDto.fromDomain(userDetails, userActivityLevel);
         const result = await api.post(`${API_BASE_URL}/generate`, userDto);
         return true;
     } catch (error) {

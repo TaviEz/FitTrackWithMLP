@@ -2,12 +2,11 @@
 {
     public class UserDetailsDto
     {
-        public string Id { get; set; }
-        public string Gender { get; set; }
+        public string Gender { get; set; } = string.Empty;
         public int Age { get; set; }
         public int Weight { get; set; }
         public int Height { get; set; }
-        public string ActivityLevel { get; set; }
+        public string ActivityLevel { get; set; } = string.Empty;
         public int Bmr { get; set; }
         public int Tdee { get; set; }
     }

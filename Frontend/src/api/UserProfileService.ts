@@ -45,10 +45,10 @@ export const getLoggedUserId = async (token: string): Promise<any> => {
     }
 }
 
-export const saveUserDetails = async (userDetails: UserDetails, userId: string): Promise<any> => {
+export const saveUserDetails = async (userDetails: UserDetails): Promise<any> => {
     try {
         const userActivityLevel = getActivityLevelEnum(userDetails.activityLevel.label);
-        const userDto = UserDetailsDto.fromDomain(userDetails, userId, userActivityLevel);
+        const userDto = UserDetailsDto.fromDomain(userDetails, userActivityLevel);
 
         await api.post(`${API_BASE_URL}/api/user/details`, userDto);
         

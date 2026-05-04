@@ -1,5 +1,4 @@
 class UserDetailsDto {
-    id: string;
     gender: string;
     age: number;
     weight: number; 
@@ -8,9 +7,8 @@ class UserDetailsDto {
     bmr: number;
     tdee: number;
 
-    public constructor(id: string, gender: string, age: number, weight: number, height: number, activityLevel: string, bmr: number, tdee: number)
+    public constructor(gender: string, age: number, weight: number, height: number, activityLevel: string, bmr: number, tdee: number)
     {
-        this.id = id;
         this.gender = gender;
         this.age = age;
         this.weight = weight;
@@ -20,9 +18,8 @@ class UserDetailsDto {
         this.tdee = tdee;
     }
 
-    static fromDomain(details: any, userId: string, activityLevelEnum: string): UserDetailsDto {
+    static fromDomain(details: any, activityLevelEnum: string): UserDetailsDto {
         return new UserDetailsDto(
-            userId,
             details.gender,
             details.age,
             details.weight,

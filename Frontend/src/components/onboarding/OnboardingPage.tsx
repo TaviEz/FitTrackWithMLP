@@ -50,7 +50,7 @@ const Onboarding = () => {
     const handleNextSteps = () => {
         console.log('next steps')
         if (userId) {
-            saveUserDetails(userDetails, userId);
+            saveUserDetails(userDetails);
             setDisplayOnboardingInfo(false);
         }
     }
@@ -60,7 +60,7 @@ const Onboarding = () => {
         if (choice == "meals" && mode == 'AITrack')
         {
             if (userId) {
-                generateDailyPlan(userDetails, userId);
+                generateDailyPlan(userDetails);
             }
         }
     }
