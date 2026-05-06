@@ -5,17 +5,17 @@ FROM python:3.12-slim
 WORKDIR /app
 
 # 3. Copy only the requirements first (to cache the installation layer)
-COPY requirements.txt .
+COPY /MealOptimizerService/requirements.txt .
 
 # 4. Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # 5. Copy the rest of your application code
-COPY . .
+COPY MealOptimizerService/ .
 
 # 6. Expose the port FastAPI runs on
-EXPOSE 8000
+EXPOSE 8080
 
 # 7. Start the Uvicorn server
 # We use the same path notation as your debugger
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8080"]

@@ -2,7 +2,7 @@ services:
   user-service:
     build: 
       context: .
-      dockerfile: /UserManagementService/Dockerfile
+      dockerfile: FitTrackWithMLP/UserManagementService/Dockerfile
     ports:
       - "8081:8080"
     environment:
@@ -12,9 +12,16 @@ services:
   daily-plan-service:
     build:
       context: .
-      dockerfile: /DailyPlanService/Dockerfile
+      dockerfile: FitTrackWithMLP/DailyPlanService/Dockerfile
     ports:
       - "8082:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - Jwt__Key=${JWT_SECRET}
+      - Optimizer__Url=http://optimizer-service:8080
+  optimizer-service:
+    build:
+      context: .
+      dockerfile: MealOptimizerService/Dockerfile
+    ports:
+      - "8083:8080"

@@ -89,7 +89,7 @@ namespace UserManagementService.Controllers
                 return BadRequest("Invalid activity level");
 
 
-            // TODO: create a UserService folder and move this logic there, also add a method to check if user details already exist for a user
+            // TODO: maybe create a user Service?
             if (user.UserDetails == null)
             {
                 var newUserDetails = new UserDetails

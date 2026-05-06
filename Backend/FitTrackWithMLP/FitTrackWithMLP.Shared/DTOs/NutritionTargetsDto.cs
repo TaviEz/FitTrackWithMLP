@@ -4,6 +4,6 @@
     {
         public int Calories { get; set; }
         public int Protein { get; set; }
-        public int FatMin { get; set; }
+        public int MinFat { get; set; }
     }
 }

@@ -43,13 +43,13 @@ for name, goals in test_scenarios_v2.items():
 
     for meal in result:
         # Header for the meal category
-        print(f"\n▶ {meal['category']}: {meal['title']}")
-        print(f"  (Meal ID: {meal['meal_id']} | Optimization Error: {meal['error']:.4f})")
+        print(f"\n▶ {meal.category}: {meal.title}")
+        print(f"  (Meal ID: {meal.meal_id} | Optimization Error: {meal.error:.4f})")
         print("  " + "-"*30)
         
         # List the ingredients
-        for ing in meal['ingredients']:
+        for ing in meal.ingredients:
             # Format: - 150g Ingredient Name
-            print(f"  - {ing['amount_g']:>4}g {ing['name']}")
+            print(f"  - {int(ing.amount_g):>4}g {ing.name}")
 
     print("\n" + "="*50)

@@ -12,17 +12,17 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["DailyPlanService/DailyPlanService.csproj", "DailyPlanService/"]
-COPY ["FitTrackWithMLP.Shared/FitTrackWithMLP.Shared.csproj", "FitTrackWithMLP.Shared/"]
-RUN dotnet restore "./DailyPlanService/DailyPlanService.csproj"
+COPY ["FitTrackWithMLP/DailyPlanService/DailyPlanService.csproj", "FitTrackWithMLP/DailyPlanService/"]
+COPY ["FitTrackWithMLP/FitTrackWithMLP.Shared/FitTrackWithMLP.Shared.csproj", "FitTrackWithMLP/FitTrackWithMLP.Shared/"]
+RUN dotnet restore "FitTrackWithMLP/DailyPlanService/DailyPlanService.csproj"
 COPY . .
-WORKDIR "/src/DailyPlanService"
-RUN dotnet build "./DailyPlanService.csproj" -c $BUILD_CONFIGURATION -o /app/build
+WORKDIR "/src/FitTrackWithMLP/DailyPlanService"
+RUN dotnet build "DailyPlanService.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 # This stage is used to publish the service project to be copied to the final stage
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./DailyPlanService.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "DailyPlanService.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final

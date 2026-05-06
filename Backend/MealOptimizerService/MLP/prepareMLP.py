@@ -3,6 +3,7 @@ import joblib
 import numpy as np
 from mealOptimizer import MealOptimizer
 from MLP.mealSelectorMLP import MealSelectorMLP
+from payloads.dailyPlanMealResponse import DailyPlanMealResponse
 from payloads.mealTargets import MealTargets
 from repositories.foodRepository import FoodRepository
 from repositories.mealRepository import MealRepository
@@ -70,23 +71,16 @@ def generate_daily_plan(goals: MealTargets, target_complexity: str = "Standard")
         if not final_meal_data:
             final_meal_data = mealRepository.get_meal_details_by_id(id_mapping[top_indices[0]])
 
-        optimization_result = optimizer.optimize_meal(final_meal_data.ingredients, meal_targets)    
-        meal_entry = {
-            "category": category,
-            "title": final_meal_data.title,
-            "meal_id": final_meal_data.id,
-            "ingredients": [],
-            "error": 0.0
-        }
+        optimization_result = optimizer.optimize_meal(final_meal_data.ingredients, meal_targets)
+        meal_entry = DailyPlanMealResponse(
+            category=category,
+            title=final_meal_data.title,
+            meal_id=final_meal_data.id
+        )
 
         if optimization_result:
-            meal_entry["error"] = optimization_result.error
-            for optimized_ing in optimization_result.ingredients:
-                meal_entry["ingredients"].append({
-                    "food_id": optimized_ing.food_id,
-                    "name": optimized_ing.name,
-                    "amount_g": int(optimized_ing.amount_g)
-                })
+            meal_entry.error = optimization_result.error
+            meal_entry.ingredients = optimization_result.ingredients
         
         daily_plan.append(meal_entry)
     return daily_plan
