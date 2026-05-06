@@ -1,6 +1,7 @@
 import sqlite3
 import os
 
+from payloads.ingredientRespose import IngredientResponse
 from payloads.mealResponse import MealResponse
 
 class MealRepository:
@@ -62,7 +63,7 @@ class MealRepository:
         cursor = conn.cursor()
 
         query = """
-            SELECT m.meal_id, m.meal_type_id, m.title, m.complexity, f.name
+            SELECT m.meal_id, m.meal_type_id, m.title, m.complexity, f.food_id, f.name
             FROM meals m
             JOIN meal_ingredients mi ON m.meal_id = mi.meal_id
             JOIN basic_foods f ON mi.food_id = f.food_id
@@ -79,8 +80,11 @@ class MealRepository:
         # Extract general meal info from the first row
         first_row = rows[0]
         
-        # Filter out None values in case the LEFT JOIN found a meal with no ingredients
-        ingredients = [row['name'] for row in rows if row['name'] is not None]
+        ingredients = [
+            IngredientResponse(food_id=row['food_id'], name=row['name'])
+            for row in rows
+            if row['name'] is not None
+        ]
 
         return MealResponse(
             meal_id=first_row['meal_id'],

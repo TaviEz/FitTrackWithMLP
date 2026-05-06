@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from pydantic import BaseModel
 from MLP.prepareMLP import generate_daily_plan
+from payloads.mealTargets import MealTargets
 from helpers.prepareDbConnection import ensure_database_initialized
 
 @asynccontextmanager
@@ -16,8 +17,10 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 class OptimizationRequest(BaseModel):
-    daily_goals: dict
-    complexity: str
+    calories: float
+    protein: float
+    min_fat: float
+    meals_complexity: str = "Standard"
 
 @app.get("/")
 async def root():
@@ -25,6 +28,10 @@ async def root():
 
 @app.post("/optimize")
 async def generate_meals(request: OptimizationRequest):
-    # MLP logic
-    result = generate_daily_plan(request.daily_goals)
-    return {"plan": result}
+    goals = MealTargets(
+        calories=request.calories,
+        protein=request.protein,
+        min_fat=request.min_fat
+    )
+    result = generate_daily_plan(goals, request.meals_complexity)
+    return result

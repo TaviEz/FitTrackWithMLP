@@ -3,6 +3,7 @@ import joblib
 import numpy as np
 from mealOptimizer import MealOptimizer
 from MLP.mealSelectorMLP import MealSelectorMLP
+from payloads.mealTargets import MealTargets
 from repositories.foodRepository import FoodRepository
 from repositories.mealRepository import MealRepository
 
@@ -37,7 +38,7 @@ def predict_meals(calories, protein, meal_type_id, k=5):
         
     return top_indices[0].tolist()
 
-def generate_daily_plan(goals: dict, target_complexity: str = "Standard"):
+def generate_daily_plan(goals: MealTargets, target_complexity: str = "Standard"):
     splits = {'BREAKFAST': 0.25, 'LUNCH': 0.30, 'SNACK': 0.15, 'DINNER': 0.30}
     meal_categories = ['BREAKFAST', 'LUNCH', 'SNACK', 'DINNER']
     daily_plan = []
@@ -45,15 +46,15 @@ def generate_daily_plan(goals: dict, target_complexity: str = "Standard"):
     # Build Daly Plan
     for meal_type_id, category in enumerate(meal_categories):
         ratio = splits.get(category, 0.25)
-        meal_targets = {
-            'calories': goals['cal'] * ratio,
-            'protein': goals['p'] * ratio,
-            'min_fat': goals['f_min'] * ratio
-        }
+        meal_targets = MealTargets(
+            calories=goals.calories * ratio,
+            protein=goals.protein * ratio,
+            min_fat=goals.min_fat * ratio
+        )
 
         # Get Top k suggestions from the model for this meal type
         k_value = 15 if target_complexity == "Simple" else 5
-        top_indices = predict_meals(meal_targets['calories'], meal_targets['protein'], meal_type_id, k=k_value)
+        top_indices = predict_meals(meal_targets.calories, meal_targets.protein, meal_type_id, k=k_value)
 
         suggested_ids = [id_mapping[p_idx] for p_idx in top_indices]
         
@@ -79,11 +80,12 @@ def generate_daily_plan(goals: dict, target_complexity: str = "Standard"):
         }
 
         if optimization_result:
-            meal_entry["error"] = optimization_result["error"]
-            for ing_name, weight in optimization_result["weights"].items():
+            meal_entry["error"] = optimization_result.error
+            for optimized_ing in optimization_result.ingredients:
                 meal_entry["ingredients"].append({
-                    "name": ing_name,
-                    "amount_g": int(weight)
+                    "food_id": optimized_ing.food_id,
+                    "name": optimized_ing.name,
+                    "amount_g": int(optimized_ing.amount_g)
                 })
         
         daily_plan.append(meal_entry)

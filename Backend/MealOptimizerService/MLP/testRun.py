@@ -1,4 +1,5 @@
 from MLP.prepareMLP import generate_daily_plan
+from payloads.mealTargets import MealTargets
 
 test_scenarios_v2 = {
     "ultra_lean_shred": {
@@ -29,7 +30,12 @@ test_scenarios_v2 = {
 }
 
 for name, goals in test_scenarios_v2.items():
-    result = generate_daily_plan(goals)
+    meal_targets = MealTargets(
+        calories=goals['cal'],
+        protein=goals['p'],
+        min_fat=goals['f_min']
+    )
+    result = generate_daily_plan(meal_targets)
 
     print("\n" + "="*50)
     print(f"  GENERATED MEAL PLAN | GOAL: {goals['cal']} kcal")
