@@ -5,6 +5,7 @@ import theme from "../../theme";
 import ActivityLevel from "../../models/ActivityLevel";
 import { type ChangeEvent } from "react";
 import type UserDetails from "../../models/UserDetails";
+import { goalsData } from "../../utils/goalsData";
 
 interface PersonalDetailsFormProps {
   userDetails: UserDetails
@@ -16,6 +17,34 @@ interface PersonalDetailsFormProps {
 
 
 const PersonalDetailsForm = ({userDetails, setUserDetails, activityLevels, handleOpenActivityLevel, handleCalculateCalories}: PersonalDetailsFormProps) => {
+    const selectMenuProps = {
+        disableScrollLock: true,
+        PaperProps: {
+            sx: {
+                maxHeight: 160,
+                overflowY: "auto",
+                // change default styling for the dropdown's scrollbar
+                scrollbarWidth: "thin",
+                scrollbarColor: `${theme.palette.grey[400]} transparent`,
+                '&::-webkit-scrollbar': {
+                    width: 8,
+                },
+                '&::-webkit-scrollbar-track': {
+                    backgroundColor: "transparent",
+                },
+                '&::-webkit-scrollbar-thumb': {
+                    backgroundColor: theme.palette.grey[400],
+                    borderRadius: 8,
+                    border: "2px solid transparent",
+                    backgroundClip: "content-box",
+                },
+                '&::-webkit-scrollbar-thumb:hover': {
+                    backgroundColor: theme.palette.grey[500],
+                },
+            },
+        },
+    };
+
     const handleChangeGender = (event: ChangeEvent<HTMLInputElement>) => {
         const newUserDetails = userDetails.clone();
         newUserDetails.gender = (event.target as HTMLInputElement).value;
@@ -32,13 +61,20 @@ const PersonalDetailsForm = ({userDetails, setUserDetails, activityLevels, handl
         }
     }
 
+    const handleGoalChange = (event: SelectChangeEvent) => {
+        const goalValue = event.target.value as string;
+        const newUserDetails = userDetails.clone();
+        newUserDetails.goal = goalValue;
+        setUserDetails(newUserDetails);
+    }
+
     return (
         <Box 
             display="flex" 
             flexDirection="column"
             justifyContent="center"
             alignItems="center"
-            gap={3}
+            gap={1.5}
         >
             <FormControl>
                 <Box display="flex" flexDirection="column" alignItems="flex-start">
@@ -108,12 +144,35 @@ const PersonalDetailsForm = ({userDetails, setUserDetails, activityLevels, handl
                     label="Activity level"
                     onChange={handleActivityChange}
                     onOpen={handleOpenActivityLevel}
+                    MenuProps={selectMenuProps}
                 >
                     {activityLevels.map((level) => (
                         <MenuItem key={level.label} value={level.label}>
                             <Tooltip title={level.description} placement="right" disableInteractive>
                                 <Box width="100%">
                                     <Typography noWrap>{level.label}</Typography>
+                                </Box>
+                            </Tooltip>
+                        </MenuItem>
+                    ))}
+                </Select>
+            </FormControl>
+
+            <FormControl variant="standard" sx={{ m: 1, minWidth: 200 }}>
+                <InputLabel id="selectGoal">Goal</InputLabel>
+                <Select
+                    labelId="selectGoal"
+                    id="goal-select"
+                    value={userDetails.goal}
+                    label="Goal"
+                    onChange={handleGoalChange}
+                    MenuProps={selectMenuProps}
+                >
+                    {goalsData.map((goal) => (
+                        <MenuItem key={goal.value} value={goal.value}>
+                            <Tooltip title={goal.description} placement="right" disableInteractive>
+                                <Box width="100%">
+                                    <Typography noWrap>{goal.label}</Typography>
                                 </Box>
                             </Tooltip>
                         </MenuItem>

@@ -88,8 +88,10 @@ namespace UserManagementService.Controllers
             if (!Enum.TryParse(userDto.ActivityLevel, true, out ActivityLevel userActivityLevel))
                 return BadRequest("Invalid activity level");
 
+            if (!Enum.TryParse(userDto.Goal, true, out GoalType userGoalType))
+                return BadRequest("Invalid goal type");
 
-            // TODO: maybe create a user Service?
+            // TODO: add a migration to store the goal of a user
             if (user.UserDetails == null)
             {
                 var newUserDetails = new UserDetails

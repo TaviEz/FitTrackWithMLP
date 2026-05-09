@@ -9,5 +9,6 @@
         public string ActivityLevel { get; set; } = string.Empty;
         public int Bmr { get; set; }
         public int Tdee { get; set; }
+        public string Goal { get; set; } = string.Empty;
     }
 }

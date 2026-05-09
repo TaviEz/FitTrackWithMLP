@@ -8,8 +8,9 @@ class UserDetails {
     activityLevel: ActivityLevel;
     tdee: number;
     bmr: number;
+    goal: string;
 
-    public constructor(gender: string, age: number, weight: number, height: number, activityLevel: ActivityLevel, bmr: number, tdee: number)
+    public constructor(gender: string, age: number, weight: number, height: number, activityLevel: ActivityLevel, bmr: number, tdee: number, goal: string = "MaintainFormTrained")
     {
         this.gender = gender;
         this.age = age;
@@ -18,10 +19,11 @@ class UserDetails {
         this.activityLevel = activityLevel;
         this.bmr = bmr
         this.tdee = tdee
+        this.goal = goal;
     }
 
     public static default() {
-        return new UserDetails("male", 25, 80, 180, ActivityLevel.empty(), 1800, 2150);
+        return new UserDetails("male", 25, 80, 180, ActivityLevel.empty(), 1800, 2150, "");
     }
 
     public clone(): UserDetails {
@@ -32,7 +34,8 @@ class UserDetails {
             this.height,
             this.activityLevel,
             this.bmr,
-            this.tdee
+            this.tdee,
+            this.goal
         );
     }
 }

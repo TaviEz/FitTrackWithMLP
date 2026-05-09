@@ -1,27 +1,55 @@
-import { Box, Card, CardContent, Grid, Typography } from "@mui/material"
+import { Box, Button, Card, CardContent, Chip, CircularProgress, Divider, Grid, Stack, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material"
 import theme from "../../theme";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import ActivityLevel from "../../models/ActivityLevel";
 import UserDetails from "../../models/UserDetails";
 import PersonalDetailsForm from "./PersonalDetailsForm";
 import { ToastContainer } from "react-toastify";
 import { showInfo } from "../shared/ShowToast";
-import { saveUserDetails } from "../../api/UserProfileService";
+import { getLoggedUserId, saveUserDetails } from "../../api/UserProfileService";
 import { activityLevelsData } from "../../utils/activityLevelsData";
 import { useUser } from "../../context/UserContext";
 import DecisionFlow from "./DecisionFlow";
 import ResultsForm from "../shared/ResultsSummary";
 import { generateDailyPlan } from "../../api/DailyPlanService";
+import UserPhysiqueDto from "../../dtos/UserPhysiqueDto";
+import { getActivityLevelEnum } from "../../utils/types";
+import type { MealDto } from "../../dtos/MealDto";
+import { SecondaryButton } from "../../styledComponents/Buttons";
 
 const Onboarding = () => {
-    const [displayOnboardingInfo, setDisplayOnboardingInfo] = useState(true);
+    const navigate = useNavigate();
+    const [step, setStep] = useState<1 | 2 | 3>(1);
     const [activityLevels, setActivityLevels] = useState<ActivityLevel[]>([]);
-    const [userDetails, setUserDetails] = useState<UserDetails>(
-        UserDetails.default()
-    );
-    const { userId } = useUser();
+    const [userDetails, setUserDetails] = useState<UserDetails>(UserDetails.default());
+    const [generatedMeals, setGeneratedMeals] = useState<MealDto[]>([]);
+    const [userPhysiqueDto, setUserPhysiqueDto] = useState<UserPhysiqueDto | null>(null);
+    const [generating, setGenerating] = useState(false);
+    const [mealsComplexity, setMealsComplexity] = useState<string>("Standard");
+    const { userId, setUserId } = useUser();
 
-    const handleCalculateCalories = async () => {        
+    useEffect(() => {
+        const hydrateUserId = async () => {
+            if (userId) {
+                return;
+            }
+
+            const token = localStorage.getItem("token");
+            if (!token) {
+                return;
+            }
+
+            const resolvedUserId = await getLoggedUserId(token);
+            if (resolvedUserId) {
+                setUserId(resolvedUserId);
+            }
+        };
+
+        hydrateUserId();
+    }, [userId, setUserId]);
+
+    const handleCalculateCalories = async () => {
         if (userDetails.activityLevel.multiplier !== 0) {
             const bmr = calculateBMR(userDetails);
             const tdee = Math.round(bmr * userDetails.activityLevel.multiplier);
@@ -29,76 +57,97 @@ const Onboarding = () => {
             updatedUserDetails.bmr = bmr;
             updatedUserDetails.tdee = tdee;
             setUserDetails(updatedUserDetails);
-        }
-        else {
+        } else {
             showInfo("Select an activity level in order to proceed");
         }
     }
 
     const handleOpenActivityLevel = () => {
-        if (activityLevels.length == 0) {
-            const data = activityLevelsData
-            setActivityLevels(data);
+        if (activityLevels.length === 0) {
+            setActivityLevels(activityLevelsData);
         }
     }
 
-    const calculateBMR = (userDetails: UserDetails) => {
-        const genderConstant = userDetails.gender == 'female' ? -161 : 5;
-        return 10 * userDetails.weight + 6.25 * userDetails.height - 5 * userDetails.age + genderConstant;
+    const calculateBMR = (ud: UserDetails) => {
+        const genderConstant = ud.gender === "female" ? -161 : 5;
+        return 10 * ud.weight + 6.25 * ud.height - 5 * ud.age + genderConstant;
     }
 
-    const handleNextSteps = () => {
-        console.log('next steps')
-        if (userId) {
-            saveUserDetails(userDetails);
-            setDisplayOnboardingInfo(false);
+    const handleNextSteps = async () => {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            showInfo("Your session expired. Please log in again.");
+            navigate("/");
+            return;
+        }
+
+        await saveUserDetails(userDetails);
+        setStep(2);
+    };
+
+    const runGeneration = async (dto: UserPhysiqueDto) => {
+        setGenerating(true);
+        const meals = await generateDailyPlan(dto);
+        setGenerating(false);
+        if (meals.length > 0) {
+            setGeneratedMeals(meals);
+            setStep(3);
+        } else {
+            showInfo("Could not generate meals right now. Please try again.");
         }
     }
 
-    const decisionFlowComplete = (choice: string, mode: string) => {
-        console.log(choice, mode);
-        if (choice == "meals" && mode == 'AITrack')
-        {
-            if (userId) {
-                generateDailyPlan(userDetails);
+    const decisionFlowComplete = async (mode: string) => {
+        if (mode === "SelfTrack") {
+            // TODO: navigate to dashboard page
+            navigate("/");
+            return;
+        }
+        if (mode === "AITrack") {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                showInfo("Your session expired. Please log in again.");
+                navigate("/");
+                return;
             }
+
+            const activityLevel = getActivityLevelEnum(userDetails.activityLevel.label);
+            const dto = new UserPhysiqueDto(
+                userDetails.tdee,
+                Math.round(userDetails.weight),
+                activityLevel,
+                userDetails.goal,
+                mealsComplexity
+            );
+            setUserPhysiqueDto(dto);
+            await runGeneration(dto);
         }
-    }
+    };
+
+    const handleRegenerate = async () => {
+        if (userPhysiqueDto) {
+            // update meals complexity after regenerate
+            userPhysiqueDto.mealsComplexity = mealsComplexity;
+            await runGeneration(userPhysiqueDto);
+        }
+    };
 
     return (
-        <Box 
-            display="flex" 
-            flexDirection="column"
-            justifyContent="center"
-            alignItems="center"
-            gap={3}
-        >
-            { displayOnboardingInfo ? (
+        <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" gap={3}>
+
+            {/* Step 1 — User Metrics */}
+            {step === 1 && (
                 <>
-                    <Typography
-                        sx={{
-                            ...theme.typography.h4
-                        }} 
-                    >
+                    <Typography sx={{ ...theme.typography.h4 }}>
                         Ready to build a healthier version of you?
                     </Typography>
-                    <Typography 
-                        sx={{
-                            ...theme.typography.h5
-                        }} 
-                    >
+                    <Typography sx={{ ...theme.typography.h5 }}>
                         Share a few details and we'll guide you every step of the way.
                     </Typography>
-                    
+
                     <Grid container spacing={4}>
                         <Grid size={{ xs: 12, md: 7 }}>
-                            <Card
-                                sx={{
-                                    p: 3,
-                                    borderRadius: 2,
-                                    border: `1px solid ${theme.palette.divider}`,
-                                }}
-                            >
+                            <Card sx={{ p: 3, borderRadius: 2, border: `1px solid ${theme.palette.divider}` }}>
                                 <PersonalDetailsForm
                                     userDetails={userDetails}
                                     setUserDetails={setUserDetails}
@@ -108,35 +157,121 @@ const Onboarding = () => {
                                 />
                             </Card>
                         </Grid>
-                        <Grid
-                            container
-                            size={{ xs: 12, md: 5 }}
-                            direction="column"
-                            alignItems="center"
-                        >
-                            <Card
-                                sx={{
-                                    minWidth: 300,
-                                    p: 3,
-                                    borderRadius: 2,
-                                    border: `1px solid ${theme.palette.primary.main}`,
-                                    backgroundColor: theme.palette.primary.light + "18"
-                                }}
-                            >
+                        <Grid container size={{ xs: 12, md: 5 }} direction="column" alignItems="center">
+                            <Card sx={{
+                                minWidth: 300,
+                                p: 3,
+                                borderRadius: 2,
+                                border: `1px solid ${theme.palette.primary.main}`,
+                                backgroundColor: theme.palette.primary.light + "18"
+                            }}>
                                 <CardContent>
-                                    <ResultsForm bmr={userDetails.bmr} tdee={userDetails.tdee} handleNextSteps={handleNextSteps}/>
+                                    <ResultsForm bmr={userDetails.bmr} tdee={userDetails.tdee} handleNextSteps={handleNextSteps} />
                                 </CardContent>
                             </Card>
                         </Grid>
                     </Grid>
                 </>
-            ) : (
-                <DecisionFlow onComplete={decisionFlowComplete}/>
             )}
 
-            <ToastContainer/>
-        </Box>
-    )
-}
+            {/* Step 2 — Choose Approach */}
+            {step === 2 && !generating && (
+                <DecisionFlow onComplete={decisionFlowComplete} />
+            )}
 
-export default Onboarding
+            {/* Loading spinner */}
+            {generating && (
+                <Box display="flex" flexDirection="column" alignItems="center" gap={2} mt={4}>
+                    <CircularProgress />
+                    <Typography variant="body1" color="text.secondary">
+                        Generating your meal plan...
+                    </Typography>
+                </Box>
+            )}
+
+            {/* Step 3 — Meal Plan Preview */}
+            {step === 3 && !generating && (
+                <Box display="flex" flexDirection="column" alignItems="center" gap={3} px={2} py={4} width="100%">
+                    <Box textAlign="center" maxWidth={900}>
+                        <Typography sx={{ ...theme.typography.h4 }} gutterBottom>
+                            Your AI Meal Plan Preview
+                        </Typography>
+                        <Typography sx={{ ...theme.typography.body1 }} color="text.secondary">
+                            Review your generated meals before moving forward to your dashboard.
+                        </Typography>
+                    </Box>
+
+                    <Box textAlign="center" width="100%">
+                        <Typography sx={{ ...theme.typography.body2, mb: 1.5 }}>
+                            Meal Complexity
+                        </Typography>
+                        <ToggleButtonGroup
+                            value={mealsComplexity}
+                            exclusive
+                            onChange={(_, newComplexity) => {
+                                if (newComplexity !== null) {
+                                    setMealsComplexity(newComplexity);
+                                }
+                            }}
+                            sx={{
+                                border: `1px solid ${theme.palette.divider}`,
+                                borderRadius: 1,
+                            }}
+                        >
+                            <ToggleButton value="Simple" sx={{ textTransform: "none", px: 2 }}>
+                                Minimal Prep
+                            </ToggleButton>
+                            <ToggleButton value="Standard" sx={{ textTransform: "none", px: 2 }}>
+                                Diverse Ingredients
+                            </ToggleButton>
+                        </ToggleButtonGroup>
+                    </Box>
+
+                    <Stack spacing={2} width="100%" maxWidth={980}>
+                        {generatedMeals.map((meal) => (
+                            <Card 
+                                key={meal.meal_id} 
+                                sx={{ borderRadius: 2, border: `1px solid ${theme.palette.divider}`, boxShadow: "none" }}
+                            >
+                                <CardContent>
+                                    <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" spacing={1} mb={2}>
+                                        <Typography sx={{ ...theme.typography.h5 }}>{meal.title}</Typography>
+                                        <Chip label={meal.category} color="primary" variant="outlined" sx={{ alignSelf: "flex-start" }} />
+                                    </Stack>
+
+                                    <Divider sx={{ my: 1.5 }} />
+
+                                    <Stack spacing={1}>
+                                        {meal.ingredients.map((ingredient) => (
+                                            <Box
+                                                key={`${meal.meal_id}-${ingredient.food_id}`}
+                                                display="flex"
+                                                justifyContent="space-between"
+                                                alignItems="center"
+                                                gap={2}
+                                            >
+                                                <Typography variant="body1">{ingredient.name}</Typography>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    {ingredient.amount_g} g
+                                                </Typography>
+                                            </Box>
+                                        ))}
+                                    </Stack>
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </Stack>
+
+                    <Stack direction={{ xs: "column", sm: "row" }} spacing={2} mt={1}>
+                        <SecondaryButton onClick={handleRegenerate}>Regenerate Plan</SecondaryButton>
+                        <Button variant="contained" onClick={() => navigate("/")}>Continue to Dashboard</Button>
+                    </Stack>
+                </Box>
+            )}
+
+            <ToastContainer />
+        </Box>
+    );
+};
+
+export default Onboarding;

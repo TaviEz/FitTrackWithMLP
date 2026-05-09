@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import theme from "../../theme";
 import PasswordField from "./PasswordField";
 import { getLoggedUserId, loginUser } from "../../api/UserProfileService";
-import { showError, showInfo } from "../shared/ShowToast";
+import { showError } from "../shared/ShowToast";
 import { ToastContainer } from 'react-toastify';
 import { useUser } from "../../context/UserContext";
 
@@ -45,7 +45,6 @@ const Login = () => {
 
       setIsLoading(false);
       navigate("/onboarding");
-      showInfo('YEEE');
   };
 
   return (

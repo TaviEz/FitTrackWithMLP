@@ -6,8 +6,9 @@ class UserDetailsDto {
     activityLevel: string;
     bmr: number;
     tdee: number;
+    goal: string;
 
-    public constructor(gender: string, age: number, weight: number, height: number, activityLevel: string, bmr: number, tdee: number)
+    public constructor(gender: string, age: number, weight: number, height: number, activityLevel: string, bmr: number, tdee: number, goal: string)
     {
         this.gender = gender;
         this.age = age;
@@ -16,6 +17,7 @@ class UserDetailsDto {
         this.activityLevel = activityLevel;
         this.bmr = bmr;
         this.tdee = tdee;
+        this.goal = goal;
     }
 
     static fromDomain(details: any, activityLevelEnum: string): UserDetailsDto {
@@ -26,7 +28,8 @@ class UserDetailsDto {
             details.height,
             activityLevelEnum,
             details.bmr,
-            details.tdee
+            details.tdee,
+            details.goal
         );
     }
 }

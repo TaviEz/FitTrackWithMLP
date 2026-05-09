@@ -1,18 +1,15 @@
-import UserDetailsDto from "../dtos/UserDetailsDto";
-import type UserDetails from "../models/UserDetails";
-import { getActivityLevelEnum } from "../utils/types";
+import type { MealDto } from "../dtos/MealDto";
+import type UserPhysiqueDto from "../dtos/UserPhysiqueDto";
 import api from "./api";
 
 const API_BASE_URL = 'http://localhost:8082/api/DailyPlan';
 
-export const generateDailyPlan = async (userDetails: UserDetails): Promise<any> => {
+export const generateDailyPlan = async (userPhysiqueDto: UserPhysiqueDto): Promise<MealDto[]> => {
     try {
-        const userActivityLevel = getActivityLevelEnum(userDetails.activityLevel.label);
-        const userDto = UserDetailsDto.fromDomain(userDetails, userActivityLevel);
-        const result = await api.post(`${API_BASE_URL}/generate`, userDto);
-        return true;
+        const result = await api.post<MealDto | MealDto[]>(`${API_BASE_URL}/generate`, userPhysiqueDto);
+        return Array.isArray(result.data) ? result.data : [result.data];
     } catch (error) {
         console.log(error);
-        return false;
+        return [];
     }
 }

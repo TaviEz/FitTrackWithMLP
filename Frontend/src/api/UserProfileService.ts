@@ -53,6 +53,6 @@ export const saveUserDetails = async (userDetails: UserDetails): Promise<any> =>
         await api.post(`${API_BASE_URL}/api/user/details`, userDto);
         
     } catch (error: any) {
-        
+        console.log(error);
     }
 }

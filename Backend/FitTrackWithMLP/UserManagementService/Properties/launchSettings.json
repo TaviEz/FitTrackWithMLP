@@ -39,7 +39,7 @@
       },
       "publishAllPorts": true,
       "useSSL": true,
-      "httpPort": 32760,
+      "httpPort": 8081,
       "sslPort": 32761
     }
   },
