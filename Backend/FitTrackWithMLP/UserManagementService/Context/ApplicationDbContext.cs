@@ -27,6 +27,10 @@ namespace UserManagementService.Context
             modelBuilder.Entity<UserDetails>()
                 .Property(u => u.ActivityLevel)
                 .HasConversion<string>();
+
+            modelBuilder.Entity<UserDetails>()
+                .Property(u => u.GoalType)
+                .HasConversion<string>();
         }
 
         public DbSet<UserDetails> UserDetails { get; set; }

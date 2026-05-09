@@ -13,6 +13,7 @@ namespace UserManagementService.Models
         public DateTime Date { get; set; }
         public int Bmr { get; set; }
         public int Tdee { get; set; }
+        public GoalType GoalType { get; set; }
 
         public string UserId { get; set; }
         public ApplicationUser User { get; set; }
