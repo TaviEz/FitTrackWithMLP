@@ -62,7 +62,19 @@ namespace DailyPlanService.Controllers
 
             var optimizedPlan = await response.Content.ReadFromJsonAsync<List<OptimizedMealPlanDto>>();
 
-            return Ok(optimizedPlan);
+            if (optimizedPlan == null)
+                return StatusCode(500, "Failed to parse optimizer response.");
+
+            var actualCalories = optimizedPlan.Sum(m => m.Calories);
+
+            var result = new DailyPlanResponseDto
+            {
+                TargetCalories = dailyTargets.Calories,
+                ActualCalories = actualCalories,
+                Meals = optimizedPlan
+            };
+
+            return Ok(result);
         }
     }
 }

@@ -6,7 +6,7 @@ import ActivityLevel from "../../models/ActivityLevel";
 import UserDetails from "../../models/UserDetails";
 import PersonalDetailsForm from "./PersonalDetailsForm";
 import { ToastContainer } from "react-toastify";
-import { showInfo } from "../shared/ShowToast";
+import { showError, showInfo } from "../shared/ShowToast";
 import { getLoggedUserId, saveUserDetails } from "../../api/UserProfileService";
 import { activityLevelsData } from "../../utils/activityLevelsData";
 import { useUser } from "../../context/UserContext";
@@ -27,6 +27,8 @@ const Onboarding = () => {
     const [userPhysiqueDto, setUserPhysiqueDto] = useState<UserPhysiqueDto | null>(null);
     const [generating, setGenerating] = useState(false);
     const [mealsComplexity, setMealsComplexity] = useState<string>("Standard");
+    const [targetCalories, setTargetCalories] = useState<number | null>(null);
+    const [actualCalories, setActualCalories] = useState<number | null>(null);
     const { userId, setUserId } = useUser();
 
     useEffect(() => {
@@ -81,18 +83,27 @@ const Onboarding = () => {
             return;
         }
 
-        await saveUserDetails(userDetails);
+        const result = await saveUserDetails(userDetails);
+        if (!result?.success) {
+            showError(result?.message || "Could not save your details. Please try again.");
+            return;
+        }
+
         setStep(2);
     };
 
     const runGeneration = async (dto: UserPhysiqueDto) => {
         setGenerating(true);
-        const meals = await generateDailyPlan(dto);
+        const dailyPlan = await generateDailyPlan(dto);
         setGenerating(false);
-        if (meals.length > 0) {
-            setGeneratedMeals(meals);
+        if (dailyPlan && dailyPlan.meals.length > 0) {
+            setGeneratedMeals(dailyPlan.meals);
+            setTargetCalories(dailyPlan.targetCalories);
+            setActualCalories(dailyPlan.actualCalories);
             setStep(3);
         } else {
+            setTargetCalories(null);
+            setActualCalories(null);
             showInfo("Could not generate meals right now. Please try again.");
         }
     }
@@ -112,6 +123,11 @@ const Onboarding = () => {
             }
 
             const activityLevel = getActivityLevelEnum(userDetails.activityLevel.label);
+            if (!activityLevel) {
+                showError("Please select a valid activity level before generating your plan.");
+                return;
+            }
+
             const dto = new UserPhysiqueDto(
                 userDetails.tdee,
                 Math.round(userDetails.weight),
@@ -131,6 +147,16 @@ const Onboarding = () => {
             await runGeneration(userPhysiqueDto);
         }
     };
+
+    const getMealCalories = (meal: MealDto) =>
+        meal.ingredients.reduce(
+            (sum, ingredient) => sum + ((ingredient.amount_g / 100) * (ingredient.calories ?? 0)),
+            0
+        );
+
+    const totalCalories = generatedMeals.reduce((sum, meal) => sum + getMealCalories(meal), 0);
+    const displayedActualCalories = actualCalories ?? totalCalories;
+    const formatCalories = (value: number) => Math.round(value);
 
     return (
         <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" gap={3}>
@@ -227,6 +253,36 @@ const Onboarding = () => {
                         </ToggleButtonGroup>
                     </Box>
 
+                    <Card sx={{ width: "100%", maxWidth: 980, borderRadius: 2, border: `1px solid ${theme.palette.primary.main}`, boxShadow: "none", backgroundColor: theme.palette.primary.light + "14" }}>
+                        <CardContent>
+                            <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" spacing={3} alignItems={{ xs: "flex-start", sm: "center" }}>
+                                <Box>
+                                    <Typography sx={{ ...theme.typography.body2, color: "text.secondary" }}>
+                                        Generated calories
+                                    </Typography>
+                                    <Typography sx={{ ...theme.typography.h4 }}>
+                                        {formatCalories(displayedActualCalories)} kcal
+                                    </Typography>
+                                </Box>
+                                {targetCalories !== null && (
+                                    <Box>
+                                        <Typography sx={{ ...theme.typography.body2, color: "text.secondary" }}>
+                                            Target calories
+                                        </Typography>
+                                        <Typography sx={{ ...theme.typography.h4 }}>
+                                            {formatCalories(targetCalories)} kcal
+                                        </Typography>
+                                    </Box>
+                                )}
+                                {targetCalories === null && (
+                                    <Typography sx={{ ...theme.typography.body2, color: "text.secondary" }}>
+                                        Target calories unavailable
+                                    </Typography>
+                                )}
+                            </Stack>
+                        </CardContent>
+                    </Card>
+
                     <Stack spacing={2} width="100%" maxWidth={980}>
                         {generatedMeals.map((meal) => (
                             <Card 
@@ -235,7 +291,12 @@ const Onboarding = () => {
                             >
                                 <CardContent>
                                     <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" spacing={1} mb={2}>
-                                        <Typography sx={{ ...theme.typography.h5 }}>{meal.title}</Typography>
+                                        <Box>
+                                            <Typography sx={{ ...theme.typography.h5 }}>{meal.title}</Typography>
+                                            <Typography sx={{ ...theme.typography.body2, color: "text.secondary" }}>
+                                                {formatCalories(getMealCalories(meal))} kcal
+                                            </Typography>
+                                        </Box>
                                         <Chip label={meal.category} color="primary" variant="outlined" sx={{ alignSelf: "flex-start" }} />
                                     </Stack>
 

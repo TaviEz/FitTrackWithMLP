@@ -91,7 +91,6 @@ namespace UserManagementService.Controllers
             if (!Enum.TryParse(userDto.Goal, true, out GoalType userGoalType))
                 return BadRequest("Invalid goal type");
 
-            // TODO: add a migration to store the goal of a user
             if (user.UserDetails == null)
             {
                 var newUserDetails = new UserDetails
@@ -104,7 +103,8 @@ namespace UserManagementService.Controllers
                     ActivityLevel = userActivityLevel,
                     Date = DateTime.Now,
                     Bmr = userDto.Bmr,
-                    Tdee = userDto.Tdee
+                    Tdee = userDto.Tdee,
+                    GoalType = userGoalType
                 };
 
                 _dbContext.UserDetails.Add(newUserDetails);
@@ -125,6 +125,7 @@ namespace UserManagementService.Controllers
                 user.UserDetails.Date = DateTime.Now;
                 user.UserDetails.Bmr = userDto.Bmr;
                 user.UserDetails.Tdee = userDto.Tdee;
+                user.UserDetails.GoalType = userGoalType;
 
                 var result = await _dbContext.SaveChangesAsync();   
                 if (result > 0)

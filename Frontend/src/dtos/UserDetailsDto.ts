@@ -24,11 +24,11 @@ class UserDetailsDto {
         return new UserDetailsDto(
             details.gender,
             details.age,
-            details.weight,
-            details.height,
+            Math.round(details.weight),
+            Math.round(details.height),
             activityLevelEnum,
-            details.bmr,
-            details.tdee,
+            Math.round(details.bmr),
+            Math.round(details.tdee),
             details.goal
         );
     }

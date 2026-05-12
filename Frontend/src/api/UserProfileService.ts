@@ -48,11 +48,19 @@ export const getLoggedUserId = async (token: string): Promise<any> => {
 export const saveUserDetails = async (userDetails: UserDetails): Promise<any> => {
     try {
         const userActivityLevel = getActivityLevelEnum(userDetails.activityLevel.label);
-        const userDto = UserDetailsDto.fromDomain(userDetails, userActivityLevel);
+        if (!userActivityLevel) {
+            return { success: false, message: "Please select a valid activity level." };
+        }
 
+        if (!userDetails.goal) {
+            return { success: false, message: "Please select a goal before continuing." };
+        }
+
+        const userDto = UserDetailsDto.fromDomain(userDetails, userActivityLevel);
         await api.post(`${API_BASE_URL}/api/user/details`, userDto);
-        
+        return { success: true };
     } catch (error: any) {
         console.log(error);
+        return { success: false };
     }
 }

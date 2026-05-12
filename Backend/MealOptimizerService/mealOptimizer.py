@@ -121,7 +121,11 @@ class MealOptimizer:
                     OptimizedIngredientResponse(
                         food_id=ing.food_id,
                         name=ing.name,
-                        amount_g=int(weight)
+                        amount_g=int(weight),
+                        calories=int(ing.calories),
+                        protein=ing.protein,
+                        fats=ing.fats,
+                        carbs=ing.carbs
                     )
                 )
 

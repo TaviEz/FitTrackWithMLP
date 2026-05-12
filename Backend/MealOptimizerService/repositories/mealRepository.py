@@ -63,7 +63,7 @@ class MealRepository:
         cursor = conn.cursor()
 
         query = """
-            SELECT m.meal_id, m.meal_type_id, m.title, m.complexity, f.food_id, f.name
+            SELECT m.meal_id, m.meal_type_id, m.title, m.complexity, f.food_id, f.name, f.calories, f.protein, f.fat, f.carbs
             FROM meals m
             JOIN meal_ingredients mi ON m.meal_id = mi.meal_id
             JOIN basic_foods f ON mi.food_id = f.food_id
@@ -81,7 +81,7 @@ class MealRepository:
         first_row = rows[0]
         
         ingredients = [
-            IngredientResponse(food_id=row['food_id'], name=row['name'])
+            IngredientResponse(food_id=row['food_id'], name=row['name'], calories=row['calories'], protein=row['protein'], fats=row['fat'], carbs=row['carbs'])
             for row in rows
             if row['name'] is not None
         ]

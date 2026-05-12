@@ -10,7 +10,7 @@ class UserDetails {
     bmr: number;
     goal: string;
 
-    public constructor(gender: string, age: number, weight: number, height: number, activityLevel: ActivityLevel, bmr: number, tdee: number, goal: string = "MaintainFormTrained")
+    public constructor(gender: string, age: number, weight: number, height: number, activityLevel: ActivityLevel, bmr: number, tdee: number, goal: string = "")
     {
         this.gender = gender;
         this.age = age;

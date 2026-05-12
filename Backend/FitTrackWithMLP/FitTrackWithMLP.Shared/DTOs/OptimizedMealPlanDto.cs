@@ -18,5 +18,8 @@ namespace FitTrackWithMLP.Shared.DTOs
 
         [JsonPropertyName("error")]
         public double Error { get; set; }
+
+        [JsonPropertyName("calories")]
+        public int Calories { get; set; }
     }
 }

@@ -81,6 +81,7 @@ def generate_daily_plan(goals: MealTargets, target_complexity: str = "Standard")
         if optimization_result:
             meal_entry.error = optimization_result.error
             meal_entry.ingredients = optimization_result.ingredients
+            meal_entry.calories = int(sum(i.amount_g / 100 * i.calories for i in optimization_result.ingredients))
         
         daily_plan.append(meal_entry)
     return daily_plan
