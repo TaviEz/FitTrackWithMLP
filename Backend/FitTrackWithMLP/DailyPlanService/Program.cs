@@ -1,4 +1,6 @@
+using DailyPlanService.Context;
 using FitTrackWithMLP.Shared;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 
 namespace DailyPlanService
@@ -9,6 +11,7 @@ namespace DailyPlanService
         {
             var builder = WebApplication.CreateBuilder(args);
             var myAllowSpecificOrigins = "_myAllowSpecificOrigins";
+            var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
@@ -27,6 +30,9 @@ namespace DailyPlanService
                     [new OpenApiSecuritySchemeReference("bearer", document)] = []
                 });
             });
+
+            builder.Services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseSqlServer(connectionString));
 
             // Enable cors
             builder.Services.AddCors(options =>
