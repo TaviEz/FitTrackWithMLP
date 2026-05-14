@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using System.Text.Json.Serialization;
 using UserManagementService.Context;
+using UserManagementService.MappingProfiles;
 using UserManagementService.Models;
 
 namespace UserManagementService
@@ -15,7 +16,7 @@ namespace UserManagementService
 
             var builder = WebApplication.CreateBuilder(args);
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-
+            var mapperConfiguration = builder.Configuration.GetSection("AutoMapper");
 
             builder.Services.AddControllers()
                 .AddJsonOptions(options =>
@@ -37,6 +38,12 @@ namespace UserManagementService
                 {
                     [new OpenApiSecuritySchemeReference("bearer", document)] = []
                 });
+            });
+
+            builder.Services.AddAutoMapper(cfg =>
+            {
+                cfg.AddProfile<UserDetailsProfile>();
+                cfg.LicenseKey = mapperConfiguration["LicenseKey"];
             });
 
             builder.Services.AddDbContext<ApplicationDbContext>(

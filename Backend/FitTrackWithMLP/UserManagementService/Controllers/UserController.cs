@@ -1,4 +1,5 @@
-﻿using FitTrackWithMLP.Shared.DTOs;
+﻿using AutoMapper;
+using FitTrackWithMLP.Shared.DTOs;
 using FitTrackWithMLP.Shared.DTOs.User;
 using FitTrackWithMLP.Shared.Enums;
 using Microsoft.AspNetCore.Authorization;
@@ -21,15 +22,18 @@ namespace UserManagementService.Controllers
         private readonly ApplicationDbContext _dbContext;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _configuration;
+        private readonly IMapper _mapper;
 
         public UserController(
             ApplicationDbContext dbContext,
             UserManager<ApplicationUser> userManager,
-            IConfiguration configuration)
+            IConfiguration configuration,
+            IMapper mapper)
         {
             _dbContext = dbContext;
             _userManager = userManager;
             _configuration = configuration;
+            _mapper = mapper;
         }
 
         [HttpPost("login")]
@@ -85,19 +89,9 @@ namespace UserManagementService.Controllers
 
             if (user.UserDetails == null)
             {
-                var newUserDetails = new UserDetails
-                {
-                    UserId = userId,
-                    Gender = userDto.Gender,
-                    Age = userDto.Age,
-                    Weight = userDto.Weight,
-                    Height = userDto.Height,
-                    ActivityLevel = userDto.ActivityLevel,
-                    Date = DateTime.Now,
-                    Bmr = userDto.Bmr,
-                    Tdee = userDto.Tdee,
-                    GoalType = userDto.Goal
-                };
+                var newUserDetails = _mapper.Map<UserDetails>(userDto);
+                newUserDetails.UserId = userId;
+                newUserDetails.Date = DateTime.UtcNow;
 
                 _dbContext.UserDetails.Add(newUserDetails);
                 var result = _dbContext.SaveChanges();
@@ -107,17 +101,10 @@ namespace UserManagementService.Controllers
                 else
                     return StatusCode(500, "Failed to save user details.");
             }
-            else // TODO: remove else after testing
+            else // TODO: remove else after testing or create a separate endpoint for updating user details
             {
-                user.UserDetails.Gender = userDto.Gender;
-                user.UserDetails.Age = userDto.Age;
-                user.UserDetails.Weight = userDto.Weight;
-                user.UserDetails.Height = userDto.Height;
-                user.UserDetails.ActivityLevel = userDto.ActivityLevel;
-                user.UserDetails.Date = DateTime.Now;
-                user.UserDetails.Bmr = userDto.Bmr;
-                user.UserDetails.Tdee = userDto.Tdee;
-                user.UserDetails.GoalType = userDto.Goal;
+                _mapper.Map(userDto, user.UserDetails);
+                user.UserDetails.Date = DateTime.UtcNow;
 
                 var result = await _dbContext.SaveChangesAsync();   
                 if (result > 0)
