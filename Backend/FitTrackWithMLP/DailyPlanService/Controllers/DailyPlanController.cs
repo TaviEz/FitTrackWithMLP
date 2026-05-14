@@ -1,8 +1,10 @@
-﻿using FitTrackWithMLP.Shared.DTOs;
+﻿using FitTrackWithMLP.Shared.DTOs.DailyPlan;
+using FitTrackWithMLP.Shared.DTOs.User;
 using FitTrackWithMLP.Shared.Enums;
 using FitTrackWithMLP.Shared.Logic;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace DailyPlanService.Controllers
 {
@@ -15,6 +17,14 @@ namespace DailyPlanService.Controllers
         public DailyPlanController(IConfiguration configuration)
         {
             _configuration = configuration;
+        }
+
+        [Authorize]
+        [HttpPost]
+        public async Task<IActionResult> CreateDailyPlan([FromBody] CreateDailyPlanDto dailyPlanDto)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            return Ok();
         }
 
         [Authorize]

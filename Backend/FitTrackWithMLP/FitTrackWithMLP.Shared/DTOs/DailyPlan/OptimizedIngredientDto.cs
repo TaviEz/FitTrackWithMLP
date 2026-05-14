@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace FitTrackWithMLP.Shared.DTOs
+namespace FitTrackWithMLP.Shared.DTOs.DailyPlan
 {
     public class OptimizedIngredientDto
     {

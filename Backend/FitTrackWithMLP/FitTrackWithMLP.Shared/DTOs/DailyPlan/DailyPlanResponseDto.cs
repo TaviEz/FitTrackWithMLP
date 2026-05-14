@@ -1,4 +1,4 @@
-﻿namespace FitTrackWithMLP.Shared.DTOs
+﻿namespace FitTrackWithMLP.Shared.DTOs.DailyPlan
 {
     public class DailyPlanResponseDto
     {
