@@ -83,29 +83,20 @@ namespace UserManagementService.Controllers
             if (user == null)
                 return NotFound("User not found");
 
-            if (!Enum.TryParse(userDto.Gender, true, out Gender userGender))
-                return BadRequest("Invalid gender value");
-
-            if (!Enum.TryParse(userDto.ActivityLevel, true, out ActivityLevel userActivityLevel))
-                return BadRequest("Invalid activity level");
-
-            if (!Enum.TryParse(userDto.Goal, true, out GoalType userGoalType))
-                return BadRequest("Invalid goal type");
-
             if (user.UserDetails == null)
             {
                 var newUserDetails = new UserDetails
                 {
                     UserId = userId,
-                    Gender = userGender,
+                    Gender = userDto.Gender,
                     Age = userDto.Age,
                     Weight = userDto.Weight,
                     Height = userDto.Height,
-                    ActivityLevel = userActivityLevel,
+                    ActivityLevel = userDto.ActivityLevel,
                     Date = DateTime.Now,
                     Bmr = userDto.Bmr,
                     Tdee = userDto.Tdee,
-                    GoalType = userGoalType
+                    GoalType = userDto.Goal
                 };
 
                 _dbContext.UserDetails.Add(newUserDetails);
@@ -118,15 +109,15 @@ namespace UserManagementService.Controllers
             }
             else // TODO: remove else after testing
             {
-                user.UserDetails.Gender = userGender;
+                user.UserDetails.Gender = userDto.Gender;
                 user.UserDetails.Age = userDto.Age;
                 user.UserDetails.Weight = userDto.Weight;
                 user.UserDetails.Height = userDto.Height;
-                user.UserDetails.ActivityLevel = userActivityLevel;
+                user.UserDetails.ActivityLevel = userDto.ActivityLevel;
                 user.UserDetails.Date = DateTime.Now;
                 user.UserDetails.Bmr = userDto.Bmr;
                 user.UserDetails.Tdee = userDto.Tdee;
-                user.UserDetails.GoalType = userGoalType;
+                user.UserDetails.GoalType = userDto.Goal;
 
                 var result = await _dbContext.SaveChangesAsync();   
                 if (result > 0)

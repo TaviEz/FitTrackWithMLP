@@ -18,10 +18,4 @@ namespace UserManagementService.Models
         public string UserId { get; set; }
         public ApplicationUser User { get; set; }
     }
-
-    public enum Gender
-    {
-        Male,
-        Female
-    }
 }

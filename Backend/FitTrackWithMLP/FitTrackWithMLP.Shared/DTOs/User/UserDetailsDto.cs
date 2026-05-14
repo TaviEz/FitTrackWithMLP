@@ -1,14 +1,16 @@
-﻿namespace FitTrackWithMLP.Shared.DTOs.User
+﻿using FitTrackWithMLP.Shared.Enums;
+
+namespace FitTrackWithMLP.Shared.DTOs.User
 {
     public class UserDetailsDto
     {
-        public string Gender { get; set; } = string.Empty;
+        public Gender Gender { get; set; }
         public int Age { get; set; }
         public int Weight { get; set; }
         public int Height { get; set; }
-        public string ActivityLevel { get; set; } = string.Empty;
+        public ActivityLevel ActivityLevel { get; set; }
         public int Bmr { get; set; }
         public int Tdee { get; set; }
-        public string Goal { get; set; } = string.Empty;
+        public GoalType Goal { get; set; }
     }
 }

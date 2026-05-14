@@ -3,6 +3,7 @@ using DailyPlanService.MappingProfiles;
 using FitTrackWithMLP.Shared;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
+using System.Text.Json.Serialization;
 
 namespace DailyPlanService
 {
@@ -15,7 +16,11 @@ namespace DailyPlanService
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
             var mapperConfiguration = builder.Configuration.GetSection("AutoMapper");
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                });
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(c =>
             {

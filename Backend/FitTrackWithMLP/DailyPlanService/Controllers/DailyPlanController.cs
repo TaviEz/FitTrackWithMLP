@@ -46,17 +46,8 @@ namespace DailyPlanService.Controllers
         [HttpPost("generate")]
         public async Task<IActionResult> GenerateDailyPlan([FromBody] UserPhysiqueDto userPhysiqueDto)
         {
-            if (!Enum.TryParse(userPhysiqueDto.ActivityLevel, true, out ActivityLevel userActivityLevel))
-                return BadRequest("Invalid activity level");
-
-            if (!Enum.TryParse(userPhysiqueDto.GoalType, true, out GoalType userGoalType))
-                return BadRequest("Invalid goal type");
-
-            if (userPhysiqueDto.MealsComplexity != "Standard" && userPhysiqueDto.MealsComplexity != "Simple")
-                return BadRequest("Invalid meals complexity. Allowed values are 'Standard' or 'Simple'.");
-
-            var activityGroup = NutritionCalculator.GetGroup(userActivityLevel);
-            var dailyTargets = NutritionCalculator.GetDailyTargetsForGoal(userPhysiqueDto, activityGroup, userGoalType);
+            var activityGroup = NutritionCalculator.GetGroup(userPhysiqueDto.ActivityLevel);
+            var dailyTargets = NutritionCalculator.GetDailyTargetsForGoal(userPhysiqueDto, activityGroup);
 
             var handler = new HttpClientHandler
             {
@@ -74,7 +65,7 @@ namespace DailyPlanService.Controllers
                 Calories = dailyTargets.Calories,
                 Protein = dailyTargets.Protein,
                 MinFat = dailyTargets.MinFat,
-                MealsComplexity = userPhysiqueDto.MealsComplexity
+                MealsComplexity = userPhysiqueDto.MealsComplexity.ToString()
             };
 
             var optimizeUrl = baseUrl + "/optimize";

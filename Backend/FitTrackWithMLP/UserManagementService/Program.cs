@@ -1,6 +1,7 @@
 using FitTrackWithMLP.Shared;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
+using System.Text.Json.Serialization;
 using UserManagementService.Context;
 using UserManagementService.Models;
 
@@ -16,7 +17,11 @@ namespace UserManagementService
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 
-            builder.Services.AddControllers();
+            builder.Services.AddControllers()
+                .AddJsonOptions(options =>
+                {
+                    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+                });
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(c =>
             {
