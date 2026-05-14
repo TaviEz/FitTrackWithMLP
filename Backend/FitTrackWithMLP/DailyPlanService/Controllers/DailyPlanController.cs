@@ -1,4 +1,6 @@
-﻿using FitTrackWithMLP.Shared.DTOs.DailyPlan;
+﻿using AutoMapper;
+using DailyPlanService.Models;
+using FitTrackWithMLP.Shared.DTOs.DailyPlan;
 using FitTrackWithMLP.Shared.DTOs.User;
 using FitTrackWithMLP.Shared.Enums;
 using FitTrackWithMLP.Shared.Logic;
@@ -13,10 +15,14 @@ namespace DailyPlanService.Controllers
     public class DailyPlanController : ControllerBase
     {
         private readonly IConfiguration _configuration;
+        private readonly IMapper _mapper;
 
-        public DailyPlanController(IConfiguration configuration)
+        public DailyPlanController(
+            IConfiguration configuration,
+            IMapper mapper)
         {
             _configuration = configuration;
+            _mapper = mapper;
         }
 
         [Authorize]
@@ -24,7 +30,16 @@ namespace DailyPlanService.Controllers
         public async Task<IActionResult> CreateDailyPlan([FromBody] CreateDailyPlanDto dailyPlanDto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            return Ok();
+
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("User ID not found in token.");
+
+            var dailyPlan = _mapper.Map<DailyPlan>(dailyPlanDto);
+            dailyPlan.UserId = Guid.Parse(userId);
+            dailyPlan.CreatedAt = DateTime.UtcNow;
+            dailyPlan.ModifiedAt = DateTime.UtcNow;
+
+            return Ok(dailyPlan);
         }
 
         [Authorize]

@@ -1,4 +1,5 @@
 using DailyPlanService.Context;
+using DailyPlanService.MappingProfiles;
 using FitTrackWithMLP.Shared;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
@@ -12,6 +13,7 @@ namespace DailyPlanService
             var builder = WebApplication.CreateBuilder(args);
             var myAllowSpecificOrigins = "_myAllowSpecificOrigins";
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+            var mapperConfiguration = builder.Configuration.GetSection("AutoMapper");
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
@@ -29,6 +31,12 @@ namespace DailyPlanService
                 {
                     [new OpenApiSecuritySchemeReference("bearer", document)] = []
                 });
+            });
+
+            builder.Services.AddAutoMapper(cfg =>
+            {
+                cfg.AddProfile<DailyPlanProfile>();    
+                cfg.LicenseKey = mapperConfiguration["LicenseKey"];
             });
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
