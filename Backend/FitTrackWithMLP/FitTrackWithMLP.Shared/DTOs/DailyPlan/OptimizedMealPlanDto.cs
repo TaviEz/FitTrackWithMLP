@@ -10,7 +10,7 @@ namespace FitTrackWithMLP.Shared.DTOs.DailyPlan
         [JsonPropertyName("title")]
         public string Title { get; set; } = string.Empty;
 
-        [JsonPropertyName("meal_id")]
+        [JsonPropertyName("mealId")]
         public int MealId { get; set; }
 
         [JsonPropertyName("ingredients")]

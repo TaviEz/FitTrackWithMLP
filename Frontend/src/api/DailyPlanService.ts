@@ -1,4 +1,5 @@
 import type { DailyPlanResponseDto } from "../dtos/DailyPlanResponseDto";
+import type { CreateDailyPlanDto } from "../dtos/CreateDailyPlanDto";
 import type UserPhysiqueDto from "../dtos/UserPhysiqueDto";
 import api from "./api";
 
@@ -11,5 +12,15 @@ export const generateDailyPlan = async (userPhysiqueDto: UserPhysiqueDto): Promi
     } catch (error) {
         console.log(error);
         return null;
+    }
+}
+
+export const createDailyPlan = async (payload: CreateDailyPlanDto): Promise<boolean> => {
+    try {
+        await api.post(`${API_BASE_URL}`, payload);
+        return true;
+    } catch (error) {
+        console.log(error);
+        return false;
     }
 }

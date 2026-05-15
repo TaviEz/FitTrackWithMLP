@@ -12,7 +12,8 @@ import { activityLevelsData } from "../../utils/activityLevelsData";
 import { useUser } from "../../context/UserContext";
 import DecisionFlow from "./DecisionFlow";
 import ResultsForm from "../shared/ResultsSummary";
-import { generateDailyPlan } from "../../api/DailyPlanService";
+import { createDailyPlan, generateDailyPlan } from "../../api/DailyPlanService";
+import type { CreateDailyPlanDto } from "../../dtos/CreateDailyPlanDto";
 import UserPhysiqueDto from "../../dtos/UserPhysiqueDto";
 import { getActivityLevelEnum } from "../../utils/types";
 import type { MealDto } from "../../dtos/MealDto";
@@ -29,6 +30,7 @@ const Onboarding = () => {
     const [mealsComplexity, setMealsComplexity] = useState<string>("Standard");
     const [targetCalories, setTargetCalories] = useState<number | null>(null);
     const [actualCalories, setActualCalories] = useState<number | null>(null);
+    const [savingPlan, setSavingPlan] = useState(false);
     const { userId, setUserId } = useUser();
 
     useEffect(() => {
@@ -104,14 +106,13 @@ const Onboarding = () => {
         } else {
             setTargetCalories(null);
             setActualCalories(null);
-            showInfo("Could not generate meals right now. Please try again.");
+            showError("Could not generate meals right now. Please try again.");
         }
     }
 
     const decisionFlowComplete = async (mode: string) => {
         if (mode === "SelfTrack") {
-            // TODO: navigate to dashboard page
-            navigate("/");
+            navigate("/dashboard");
             return;
         }
         if (mode === "AITrack") {
@@ -150,9 +151,39 @@ const Onboarding = () => {
 
     const getMealCalories = (meal: MealDto) =>
         meal.ingredients.reduce(
-            (sum, ingredient) => sum + ((ingredient.amount_g / 100) * (ingredient.calories ?? 0)),
+            (sum, ingredient) => sum + ((ingredient.amountG / 100) * (ingredient.calories ?? 0)),
             0
         );
+
+    const saveAndNavigateToDashboard = async () => {
+        if (generatedMeals.length === 0) {
+            showInfo("Generate a meal plan before continuing.");
+            return;
+        }
+
+        if (savingPlan) {
+            return;
+        }
+
+        setSavingPlan(true);
+        if (actualCalories == null) {
+            showError("Actual calories not available. Please generate a plan first.");
+            setSavingPlan(false);
+            return;
+        }
+        const payload: CreateDailyPlanDto = {
+            meals: generatedMeals
+        };
+        const result = await createDailyPlan(payload);
+        setSavingPlan(false);
+
+        if (!result) {
+            showError("Error! Failed to store the daily plan for the user.");
+            return;
+        }
+
+        navigate("/dashboard");
+    };
 
     const totalCalories = generatedMeals.reduce((sum, meal) => sum + getMealCalories(meal), 0);
     const displayedActualCalories = actualCalories ?? totalCalories;
@@ -286,7 +317,7 @@ const Onboarding = () => {
                     <Stack spacing={2} width="100%" maxWidth={980}>
                         {generatedMeals.map((meal) => (
                             <Card 
-                                key={meal.meal_id} 
+                                key={meal.mealId} 
                                 sx={{ borderRadius: 2, border: `1px solid ${theme.palette.divider}`, boxShadow: "none" }}
                             >
                                 <CardContent>
@@ -305,7 +336,7 @@ const Onboarding = () => {
                                     <Stack spacing={1}>
                                         {meal.ingredients.map((ingredient) => (
                                             <Box
-                                                key={`${meal.meal_id}-${ingredient.food_id}`}
+                                                key={`${meal.mealId}-${ingredient.foodId}`}
                                                 display="flex"
                                                 justifyContent="space-between"
                                                 alignItems="center"
@@ -313,7 +344,7 @@ const Onboarding = () => {
                                             >
                                                 <Typography variant="body1">{ingredient.name}</Typography>
                                                 <Typography variant="body2" color="text.secondary">
-                                                    {ingredient.amount_g} g
+                                                    {ingredient.amountG} g
                                                 </Typography>
                                             </Box>
                                         ))}
@@ -325,7 +356,9 @@ const Onboarding = () => {
 
                     <Stack direction={{ xs: "column", sm: "row" }} spacing={2} mt={1}>
                         <SecondaryButton onClick={handleRegenerate}>Regenerate Plan</SecondaryButton>
-                        <Button variant="contained" onClick={() => navigate("/")}>Continue to Dashboard</Button>
+                        <Button variant="contained" onClick={saveAndNavigateToDashboard} disabled={savingPlan}>
+                            {savingPlan ? "Saving..." : "Continue to Dashboard"}
+                        </Button>
                     </Stack>
                 </Box>
             )}

@@ -119,9 +119,9 @@ class MealOptimizer:
             for ing, weight in zip(valid_ingredients, res.x):
                 optimized_ingredients.append(
                     OptimizedIngredientResponse(
-                        food_id=ing.food_id,
+                        foodId=ing.food_id,
                         name=ing.name,
-                        amount_g=int(weight),
+                        amountG=int(weight),
                         calories=int(ing.calories),
                         protein=ing.protein,
                         fats=ing.fats,

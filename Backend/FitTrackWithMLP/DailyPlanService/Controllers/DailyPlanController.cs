@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using DailyPlanService.Context;
 using DailyPlanService.Models;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan;
 using FitTrackWithMLP.Shared.DTOs.User;
@@ -14,13 +15,16 @@ namespace DailyPlanService.Controllers
     [ApiController]
     public class DailyPlanController : ControllerBase
     {
+        private readonly ApplicationDbContext _dbContext;
         private readonly IConfiguration _configuration;
         private readonly IMapper _mapper;
 
         public DailyPlanController(
+            ApplicationDbContext dbContext,
             IConfiguration configuration,
             IMapper mapper)
         {
+            _dbContext = dbContext;
             _configuration = configuration;
             _mapper = mapper;
         }
@@ -39,7 +43,15 @@ namespace DailyPlanService.Controllers
             dailyPlan.CreatedAt = DateTime.UtcNow;
             dailyPlan.ModifiedAt = DateTime.UtcNow;
 
-            return Ok(dailyPlan);
+            // TODO: add a computed property in C# only that holds the total number of calories for the daily plan
+            // do this in automapper
+            _dbContext.DailyPlans.Add(dailyPlan);
+            var result = await _dbContext.SaveChangesAsync();
+
+            if (result > 0)
+                return Ok(dailyPlan); 
+            else
+                return StatusCode(500, "Failed to save user details.");
         }
 
         [Authorize]

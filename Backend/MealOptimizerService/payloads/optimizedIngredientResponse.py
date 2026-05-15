@@ -1,8 +1,8 @@
 class OptimizedIngredientResponse:
-    def __init__(self, food_id, name, amount_g, calories, protein, fats, carbs):
-        self.food_id = food_id
+    def __init__(self, foodId, name, amountG, calories, protein, fats, carbs):
+        self.foodId = foodId
         self.name = name
-        self.amount_g = amount_g
+        self.amountG = amountG
         self.calories = calories
         self.protein = protein
         self.fats = fats

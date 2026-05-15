@@ -4,13 +4,13 @@ namespace FitTrackWithMLP.Shared.DTOs.DailyPlan
 {
     public class OptimizedIngredientDto
     {
-        [JsonPropertyName("food_id")]
+        [JsonPropertyName("foodId")]
         public int FoodId { get; set; }
 
         [JsonPropertyName("name")]
         public string Name { get; set; } = string.Empty;
 
-        [JsonPropertyName("amount_g")]
+        [JsonPropertyName("amountG")]
         public int AmountG { get; set; }
 
         [JsonPropertyName("calories")]

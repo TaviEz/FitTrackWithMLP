@@ -1,7 +1,7 @@
 export interface MealIngredientDto {
-    food_id: number;
+    foodId: number;
     name: string;
-    amount_g: number;
+    amountG: number;
     calories: number;
     protein: number;
     fats: number;

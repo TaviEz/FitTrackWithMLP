@@ -75,13 +75,13 @@ def generate_daily_plan(goals: MealTargets, target_complexity: str = "Standard")
         meal_entry = DailyPlanMealResponse(
             category=category,
             title=final_meal_data.title,
-            meal_id=final_meal_data.id
+            mealId=final_meal_data.id
         )
 
         if optimization_result:
             meal_entry.error = optimization_result.error
             meal_entry.ingredients = optimization_result.ingredients
-            meal_entry.calories = int(sum(i.amount_g / 100 * i.calories for i in optimization_result.ingredients))
+            meal_entry.calories = int(sum(i.amountG / 100 * i.calories for i in optimization_result.ingredients))
         
         daily_plan.append(meal_entry)
     return daily_plan
