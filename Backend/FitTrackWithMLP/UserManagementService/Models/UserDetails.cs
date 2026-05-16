@@ -14,6 +14,7 @@ namespace UserManagementService.Models
         public int Bmr { get; set; }
         public int Tdee { get; set; }
         public GoalType GoalType { get; set; }
+        public int? TargetCalories { get; set; }
 
         public string UserId { get; set; }
         public ApplicationUser User { get; set; }
