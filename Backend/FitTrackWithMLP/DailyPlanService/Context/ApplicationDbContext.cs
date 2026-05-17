@@ -21,6 +21,10 @@ namespace DailyPlanService.Context
             modelBuilder.Entity<DailyPlan>()
                 .HasIndex(p => new { p.UserId, p.TargetDate })
                 .IsUnique();
+
+            modelBuilder.Entity<PlannedMeal>()
+                .Property(m => m.Category)
+                .HasConversion<string>();
         }
     }
 }
