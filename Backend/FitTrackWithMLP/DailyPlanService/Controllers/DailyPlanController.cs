@@ -3,10 +3,10 @@ using DailyPlanService.Context;
 using DailyPlanService.Models;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan;
 using FitTrackWithMLP.Shared.DTOs.User;
-using FitTrackWithMLP.Shared.Enums;
 using FitTrackWithMLP.Shared.Logic;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace DailyPlanService.Controllers
@@ -30,26 +30,47 @@ namespace DailyPlanService.Controllers
         }
 
         [Authorize]
+        [HttpGet]
+        public async Task<IActionResult> GetDailyPlan([FromQuery] DateOnly dateTarget)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized("User ID not found in token.");
+
+            var dailyPlan = await _dbContext.DailyPlans
+                .Include(p => p.Meals)
+                .ThenInclude(m => m.Ingredients)
+                .FirstOrDefaultAsync(p => p.UserId == Guid.Parse(userId) && p.TargetDate == dateTarget);
+
+            if (dailyPlan == null)
+                return NotFound("No daily plan found for the specified date.");
+
+            var dailyPlanDto = _mapper.Map<DailyPlanDto>(dailyPlan);
+
+            return Ok(dailyPlanDto);
+        }
+
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> CreateDailyPlan([FromBody] CreateDailyPlanDto dailyPlanDto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
             if (string.IsNullOrEmpty(userId))
                 return Unauthorized("User ID not found in token.");
 
             var dailyPlan = _mapper.Map<DailyPlan>(dailyPlanDto);
             dailyPlan.UserId = Guid.Parse(userId);
+            dailyPlan.TargetDate = today;
             dailyPlan.CreatedAt = DateTime.UtcNow;
             dailyPlan.ModifiedAt = DateTime.UtcNow;
 
-            // TODO: add a computed property in C# only that holds the total number of calories for the daily plan
-            // do this in automapper
             _dbContext.DailyPlans.Add(dailyPlan);
             var result = await _dbContext.SaveChangesAsync();
 
             if (result > 0)
-                return Ok(dailyPlan); 
+                return Ok(dailyPlan.DailyPlanId); 
             else
                 return StatusCode(500, "Failed to save user details.");
         }
@@ -95,7 +116,7 @@ namespace DailyPlanService.Controllers
 
             var actualCalories = optimizedPlan.Sum(m => m.Calories);
 
-            var result = new DailyPlanResponseDto
+            var result = new GeneratedDailyPlanDto
             {
                 TargetCalories = dailyTargets.Calories,
                 ActualCalories = actualCalories,

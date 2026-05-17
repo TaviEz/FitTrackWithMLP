@@ -87,7 +87,6 @@ namespace UserManagementService.Controllers
             if (user == null)
                 return NotFound("User not found");
 
-            // TODO: add a migration to hold the target calories for the user
             if (user.UserDetails == null)
             {
                 var newUserDetails = _mapper.Map<UserDetails>(userDto);

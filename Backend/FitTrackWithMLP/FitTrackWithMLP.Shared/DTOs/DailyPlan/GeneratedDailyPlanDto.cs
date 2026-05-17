@@ -1,6 +1,6 @@
 ﻿namespace FitTrackWithMLP.Shared.DTOs.DailyPlan
 {
-    public class DailyPlanResponseDto
+    public class GeneratedDailyPlanDto
     {
         public float TargetCalories { get; set; }
         public float ActualCalories { get; set; }
