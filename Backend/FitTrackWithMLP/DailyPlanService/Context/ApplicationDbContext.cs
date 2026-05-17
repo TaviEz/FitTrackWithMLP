@@ -13,5 +13,14 @@ namespace DailyPlanService.Context
         public DbSet<DailyPlan> DailyPlans { get; set; }
         public DbSet<PlannedMeal> PlannedMeals { get; set; }
         public DbSet<PlannedIngredient> PlannedMealIngredients { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<DailyPlan>()
+                .HasIndex(p => new { p.UserId, p.TargetDate })
+                .IsUnique();
+        }
     }
 }
