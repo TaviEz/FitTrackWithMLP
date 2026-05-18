@@ -12,5 +12,6 @@ namespace FitTrackWithMLP.Shared.DTOs.User
         public int Bmr { get; set; }
         public int Tdee { get; set; }
         public GoalType Goal { get; set; }
+        public int TargetCalories { get; set; }
     }
 }

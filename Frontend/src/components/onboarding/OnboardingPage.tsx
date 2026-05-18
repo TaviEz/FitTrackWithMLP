@@ -1,13 +1,13 @@
 import { Box, Button, Card, CardContent, Chip, CircularProgress, Divider, Grid, Stack, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material"
 import theme from "../../theme";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ActivityLevel from "../../models/ActivityLevel";
 import UserDetails from "../../models/UserDetails";
 import PersonalDetailsForm from "./PersonalDetailsForm";
 import { ToastContainer } from "react-toastify";
 import { showError, showInfo } from "../shared/ShowToast";
-import { getLoggedUserId, saveUserDetails } from "../../api/UserProfileService";
+import { saveUserDetails, getUserDetails } from "../../api/UserProfileService";
 import { activityLevelsData } from "../../utils/activityLevelsData";
 import { useUser } from "../../context/UserContext";
 import DecisionFlow from "./DecisionFlow";
@@ -31,27 +31,7 @@ const Onboarding = () => {
     const [targetCalories, setTargetCalories] = useState<number | null>(null);
     const [actualCalories, setActualCalories] = useState<number | null>(null);
     const [savingPlan, setSavingPlan] = useState(false);
-    const { userId, setUserId } = useUser();
-
-    useEffect(() => {
-        const hydrateUserId = async () => {
-            if (userId) {
-                return;
-            }
-
-            const token = localStorage.getItem("token");
-            if (!token) {
-                return;
-            }
-
-            const resolvedUserId = await getLoggedUserId(token);
-            if (resolvedUserId) {
-                setUserId(resolvedUserId);
-            }
-        };
-
-        hydrateUserId();
-    }, [userId, setUserId]);
+    const { setUserDetails: setUserDetailsContext } = useUser();
 
     const handleCalculateCalories = async () => {
         if (userDetails.activityLevel.multiplier !== 0) {
@@ -91,6 +71,14 @@ const Onboarding = () => {
             return;
         }
 
+        // retrieve the user details to get the computed targetCalories
+        const updatedDto = await getUserDetails();
+        if (updatedDto) {
+            const updated = userDetails.clone();
+            updated.targetCalories = updatedDto.targetCalories;
+            setUserDetails(updated);
+        }
+
         setStep(2);
     };
 
@@ -112,6 +100,7 @@ const Onboarding = () => {
 
     const decisionFlowComplete = async (mode: string) => {
         if (mode === "SelfTrack") {
+            setUserDetailsContext(userDetails);
             navigate("/dashboard");
             return;
         }
@@ -128,7 +117,6 @@ const Onboarding = () => {
                 showError("Please select a valid activity level before generating your plan.");
                 return;
             }
-
             const dto = new UserPhysiqueDto(
                 userDetails.tdee,
                 Math.round(userDetails.weight),
@@ -181,7 +169,8 @@ const Onboarding = () => {
             showError("Error! Failed to store the daily plan for the user.");
             return;
         }
-
+        
+        setUserDetailsContext(userDetails);
         navigate("/dashboard");
     };
 

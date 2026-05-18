@@ -12,7 +12,6 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import { useUser } from "../context/UserContext";
 import { getDailyPlan } from "../api/DailyPlanService";
-import { getTargetCalories } from "../api/UserProfileService";
 import { showError } from "./shared/ShowToast";
 import type { DailyPlanDto } from "../dtos/DailyPlan/DailyPlanDto";
 import type { PlannedMealDto } from "../dtos/DailyPlan/PlannedMealDto";
@@ -20,7 +19,7 @@ import type { PlannedMealDto } from "../dtos/DailyPlan/PlannedMealDto";
 const CATEGORIES = ["Breakfast", "Lunch", "Snack", "Dinner"];
 
 const Dashboard = () => {
-    const { userId } = useUser();
+    const { userId, userDetails } = useUser();
     const [dailyPlan, setDailyPlan] = useState<DailyPlanDto | null>(null);
     const [targetCalories, setTargetCalories] = useState<number>(0);
     const [loading, setLoading] = useState(true);
@@ -28,20 +27,17 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchData = async () => {
             const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
-            const [plan, calories] = await Promise.all([
-                getDailyPlan(today),
-                getTargetCalories(),
-            ]);
+            const plan = await getDailyPlan(today);
             if (plan) {
                 setDailyPlan(plan);
             } else {
                 showError("Failed to load daily plan");
             }
-            setTargetCalories(calories);
+            setTargetCalories(userDetails?.targetCalories ?? 0);
             setLoading(false);
         };
         fetchData();
-    }, []);
+    }, [userId, userDetails]);
 
     const handleAddMeal = () => {
         // TODO: open add meal dialog / navigate

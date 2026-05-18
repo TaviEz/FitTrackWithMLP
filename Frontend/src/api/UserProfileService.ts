@@ -46,9 +46,14 @@ export const getLoggedUserId = async (token: string): Promise<any> => {
     }
 }
 
-export const getTargetCalories = async (): Promise<number> => {
-    // TODO: replace with real API call when endpoint is ready
-    return 2000;
+export const getUserDetails = async (): Promise<UserDetailsDto | null> => {
+    try {
+        const result = await api.get<UserDetailsDto>(`${API_BASE_URL}/api/user/details`);
+        return result.data;
+    } catch (error: any) {
+        console.log(error);
+        return null;
+    }
 }
 
 export const saveUserDetails = async (userDetails: UserDetails): Promise<any> => {

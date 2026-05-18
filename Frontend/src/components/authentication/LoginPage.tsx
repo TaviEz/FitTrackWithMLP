@@ -4,10 +4,11 @@ import { PrimaryButton } from "../../styledComponents/Buttons";
 import { useNavigate } from "react-router-dom";
 import theme from "../../theme";
 import PasswordField from "./PasswordField";
-import { getLoggedUserId, loginUser } from "../../api/UserProfileService";
+import { getLoggedUserId, getUserDetails, loginUser } from "../../api/UserProfileService";
 import { showError } from "../shared/ShowToast";
 import { ToastContainer } from 'react-toastify';
 import { useUser } from "../../context/UserContext";
+import UserDetailsDto from "../../dtos/UserDetails/UserDetailsDto";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ const Login = () => {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  const {setUserId} = useUser();
+  const {setUserId, setUserDetails} = useUser();
 
   const handleLogin = async () => {
       setIsLoading(true);
@@ -43,7 +44,19 @@ const Login = () => {
       const userId = await getLoggedUserId(result.token);
       setUserId(userId);
 
+      const userDetailsDto = await getUserDetails();
       setIsLoading(false);
+
+      // in case we already have the user details of the user
+      // directly navigate to the dashboard page
+      if (userDetailsDto)
+      {
+        const userDetails = UserDetailsDto.toDomain(userDetailsDto);
+        setUserDetails(userDetails);
+        navigate("/dashboard");
+        return;
+      }
+
       navigate("/onboarding");
   };
 

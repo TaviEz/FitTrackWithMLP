@@ -2,6 +2,7 @@
 using FitTrackWithMLP.Shared.DTOs;
 using FitTrackWithMLP.Shared.DTOs.User;
 using FitTrackWithMLP.Shared.Enums;
+using FitTrackWithMLP.Shared.Logic;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -75,8 +76,17 @@ namespace UserManagementService.Controllers
         [HttpGet("details")]
         public async Task<IActionResult> GetUserDetails()
         {
-            
-            return Ok();
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null)
+                return Unauthorized();
+
+            var userDetails = await _dbContext.UserDetails
+                .Where(ud => ud.UserId == userId)
+                .FirstOrDefaultAsync();
+
+            var userDetailsDto = _mapper.Map<UserDetailsDto>(userDetails);  
+
+            return Ok(userDetailsDto);
         }
 
 
@@ -96,11 +106,18 @@ namespace UserManagementService.Controllers
             if (user == null)
                 return NotFound("User not found");
 
+            // get the daily targets for the user
+            var activityGroup = NutritionCalculator.GetGroup(userDto.ActivityLevel);
+            var dailyTargets = NutritionCalculator.GetDailyTargetsForGoal(
+                userDto.Weight, userDto.Tdee, activityGroup, userDto.Goal
+            );
+
             if (user.UserDetails == null)
             {
                 var newUserDetails = _mapper.Map<UserDetails>(userDto);
                 newUserDetails.UserId = userId;
                 newUserDetails.Date = DateTime.UtcNow;
+                newUserDetails.TargetCalories = dailyTargets.Calories;
 
                 _dbContext.UserDetails.Add(newUserDetails);
                 var result = _dbContext.SaveChanges();
@@ -110,10 +127,11 @@ namespace UserManagementService.Controllers
                 else
                     return StatusCode(500, "Failed to save user details.");
             }
-            else // TODO: remove else after testing or create a separate endpoint for updating user details
+            else
             {
                 _mapper.Map(userDto, user.UserDetails);
                 user.UserDetails.Date = DateTime.UtcNow;
+                user.UserDetails.TargetCalories = dailyTargets.Calories;
 
                 var result = await _dbContext.SaveChangesAsync();   
                 if (result > 0)
@@ -121,8 +139,6 @@ namespace UserManagementService.Controllers
                 else
                     return StatusCode(500, "Failed to save user details.");
             }
-
-            return StatusCode(500, $"User details for user {userId} already created");
         }
     }
 }

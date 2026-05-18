@@ -17,12 +17,9 @@ namespace FitTrackWithMLP.Shared.Logic
             };
         }
 
-        public static NutritionTargetsDto GetDailyTargetsForGoal(UserPhysiqueDto userDetails, string activityGroup)
+        public static NutritionTargetsDto GetDailyTargetsForGoal(int weight, int tdee, string activityGroup, GoalType goalType)
         {
-            var weight = userDetails.Weight;
-            var tdee = userDetails.Tdee;
-
-            return userDetails.GoalType switch
+            return goalType switch
             {
                 GoalType.LoseFatAggressive => new NutritionTargetsDto
                 {
@@ -66,7 +63,7 @@ namespace FitTrackWithMLP.Shared.Logic
                     MinFat = (int)(weight * 1.0)
                 },
 
-                _ => throw new ArgumentOutOfRangeException(nameof(userDetails.GoalType), $"Goal {userDetails.GoalType} not supported.")
+                _ => throw new ArgumentOutOfRangeException(nameof(goalType), $"Goal {goalType} not supported.")
             };
         }
     }

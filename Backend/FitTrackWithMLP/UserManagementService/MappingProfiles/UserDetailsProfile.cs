@@ -8,7 +8,10 @@ namespace UserManagementService.MappingProfiles
     {
         public UserDetailsProfile()
         {
-            CreateMap<UserDetailsDto, UserDetails>();
+            CreateMap<UserDetailsDto, UserDetails>()
+                .ForMember(dest => dest.TargetCalories, opt => opt.Ignore());
+
+            CreateMap<UserDetails, UserDetailsDto>();
         }
     }
 }

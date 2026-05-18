@@ -80,7 +80,9 @@ namespace DailyPlanService.Controllers
         public async Task<IActionResult> GenerateDailyPlan([FromBody] UserPhysiqueDto userPhysiqueDto)
         {
             var activityGroup = NutritionCalculator.GetGroup(userPhysiqueDto.ActivityLevel);
-            var dailyTargets = NutritionCalculator.GetDailyTargetsForGoal(userPhysiqueDto, activityGroup);
+            var dailyTargets = NutritionCalculator.GetDailyTargetsForGoal(
+                userPhysiqueDto.Weight, userPhysiqueDto.Tdee, activityGroup, userPhysiqueDto.GoalType
+            );
 
             var handler = new HttpClientHandler
             {
