@@ -70,6 +70,15 @@ namespace UserManagementService.Controllers
             return Ok(userId);
         }
 
+        // TODO: finish this api
+        [Authorize]
+        [HttpGet("details")]
+        public async Task<IActionResult> GetUserDetails()
+        {
+            
+            return Ok();
+        }
+
 
         [Authorize]
         [HttpPost("details")]

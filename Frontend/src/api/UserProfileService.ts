@@ -1,10 +1,11 @@
 import UserDetails from "../models/UserDetails";
-import UserDetailsDto from "../dtos/UserDetailsDto";
+import UserDetailsDto from "../dtos/UserDetails/UserDetailsDto";
 import { getActivityLevelEnum } from "../utils/types";
 import api from "./api";
 
 const API_BASE_URL = 'http://localhost:8081';
 
+// TODO: recheck if you should store the token in localStorage
 export const loginUser = async (email: string, password: string): Promise<any> => {
     try {
         const loginDto = {email: email, password: password};
@@ -43,6 +44,11 @@ export const getLoggedUserId = async (token: string): Promise<any> => {
     } catch (error: any) {
         console.log(error);
     }
+}
+
+export const getTargetCalories = async (): Promise<number> => {
+    // TODO: replace with real API call when endpoint is ready
+    return 2000;
 }
 
 export const saveUserDetails = async (userDetails: UserDetails): Promise<any> => {

@@ -13,10 +13,10 @@ import { useUser } from "../../context/UserContext";
 import DecisionFlow from "./DecisionFlow";
 import ResultsForm from "../shared/ResultsSummary";
 import { createDailyPlan, generateDailyPlan } from "../../api/DailyPlanService";
-import type { CreateDailyPlanDto } from "../../dtos/CreateDailyPlanDto";
-import UserPhysiqueDto from "../../dtos/UserPhysiqueDto";
+import type { CreateDailyPlanDto } from "../../dtos/DailyPlan/CreateDailyPlanDto";
+import UserPhysiqueDto from "../../dtos/UserDetails/UserPhysiqueDto";
 import { getActivityLevelEnum } from "../../utils/types";
-import type { MealDto } from "../../dtos/MealDto";
+import type { MealDto } from "../../dtos/DailyPlan/MealDto";
 import { SecondaryButton } from "../../styledComponents/Buttons";
 
 const Onboarding = () => {
