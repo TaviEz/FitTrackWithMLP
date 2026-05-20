@@ -43,7 +43,7 @@ namespace DailyPlanService.Controllers
                 .FirstOrDefaultAsync(p => p.UserId == Guid.Parse(userId) && p.TargetDate == dateTarget);
 
             if (dailyPlan == null)
-                return NotFound("No daily plan found for the specified date.");
+                return Ok(null);
 
             var dailyPlanDto = _mapper.Map<DailyPlanDto>(dailyPlan);
 

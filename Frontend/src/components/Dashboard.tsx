@@ -10,6 +10,7 @@ import {
     Divider,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import RestaurantMenuIcon from "@mui/icons-material/RestaurantMenu";
 import { useUser } from "../context/UserContext";
 import { getDailyPlan } from "../api/DailyPlanService";
 import { showError } from "./shared/ShowToast";
@@ -25,19 +26,23 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        if (!userId) return;
         const fetchData = async () => {
             const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
             const plan = await getDailyPlan(today);
-            if (plan) {
-                setDailyPlan(plan);
-            } else {
+            if (plan === undefined) {
                 showError("Failed to load daily plan");
+            } else {
+                setDailyPlan(plan);
             }
-            setTargetCalories(userDetails?.targetCalories ?? 0);
             setLoading(false);
         };
         fetchData();
-    }, [userId, userDetails]);
+    }, [userId]);
+
+    useEffect(() => {
+        setTargetCalories(userDetails?.targetCalories ?? 0);
+    }, [userDetails?.targetCalories]);
 
     const handleAddMeal = () => {
         // TODO: open add meal dialog / navigate
@@ -63,14 +68,16 @@ const Dashboard = () => {
                 <Typography variant="h5" fontWeight={700}>
                     Daily Plan
                 </Typography>
-                <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={handleAddMeal}
-                    sx={{ textTransform: "none" }}
-                >
-                    Add Meal
-                </Button>
+                {dailyPlan && (
+                    <Button
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                        onClick={handleAddMeal}
+                        sx={{ textTransform: "none" }}
+                    >
+                        Add Meal
+                    </Button>
+                )}
             </Box>
 
             {/* Calorie summary */}
@@ -132,15 +139,36 @@ const Dashboard = () => {
                     );
                 })
             ) : (
-                <Box textAlign="center" mt={6}>
-                    <Typography color="text.secondary" mb={2}>
-                        No meals added yet
+                <Box
+                    display="flex"
+                    flexDirection="column"
+                    alignItems="center"
+                    justifyContent="center"
+                    textAlign="center"
+                    mt={6}
+                    p={5}
+                    sx={{
+                        borderRadius: 4,
+                        border: "2px dashed",
+                        borderColor: "divider",
+                        bgcolor: "background.paper",
+                    }}
+                >
+                    <RestaurantMenuIcon
+                        sx={{ fontSize: 72, color: "primary.light", mb: 2, opacity: 0.7 }}
+                    />
+                    <Typography variant="h5" fontWeight={700} mb={1}>
+                        No plan for today
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" mb={3} maxWidth={340}>
+                        You haven't logged any meals yet. Start tracking your nutrition by adding your first meal.
                     </Typography>
                     <Button
                         variant="contained"
+                        size="large"
                         startIcon={<AddIcon />}
                         onClick={handleAddMeal}
-                        sx={{ textTransform: "none" }}
+                        sx={{ textTransform: "none", px: 4, borderRadius: 3 }}
                     >
                         Add your first meal
                     </Button>

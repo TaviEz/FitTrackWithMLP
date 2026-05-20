@@ -5,7 +5,6 @@ import api from "./api";
 
 const API_BASE_URL = 'http://localhost:8081';
 
-// TODO: recheck if you should store the token in localStorage
 export const loginUser = async (email: string, password: string): Promise<any> => {
     try {
         const loginDto = {email: email, password: password};
@@ -16,7 +15,6 @@ export const loginUser = async (email: string, password: string): Promise<any> =
 
         return { success: true, token: token };
     } catch (error) {
-        console.log(error);
         return { success: false, error};
     }
 }
@@ -27,7 +25,6 @@ export const registerUser = async (email: string, password: string): Promise<any
         await api.post(`${API_BASE_URL}/register`, registerDto);
         return { success: true };
     } catch (error: any) {
-        console.log(error);
         const errors = error.response?.data?.errors || {};
         return { success: false, errors };
     }
@@ -42,7 +39,7 @@ export const getLoggedUserId = async (token: string): Promise<any> => {
         });
         return result.data;
     } catch (error: any) {
-        console.log(error);
+        return undefined;
     }
 }
 
@@ -51,7 +48,6 @@ export const getUserDetails = async (): Promise<UserDetailsDto | null> => {
         const result = await api.get<UserDetailsDto>(`${API_BASE_URL}/api/user/details`);
         return result.data;
     } catch (error: any) {
-        console.log(error);
         return null;
     }
 }
@@ -71,7 +67,6 @@ export const saveUserDetails = async (userDetails: UserDetails): Promise<any> =>
         await api.post(`${API_BASE_URL}/api/user/details`, userDto);
         return { success: true };
     } catch (error: any) {
-        console.log(error);
         return { success: false };
     }
 }

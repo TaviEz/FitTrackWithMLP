@@ -1,4 +1,4 @@
-import { Box, Button, Card, CardContent, Chip, CircularProgress, Divider, Grid, Stack, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material"
+import { Box, Button, Card, CardContent, Chip, CircularProgress, Divider, Grid, Stack, ToggleButton, ToggleButtonGroup, Typography, Stepper, Step, StepLabel } from "@mui/material"
 import theme from "../../theme";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -18,6 +18,8 @@ import UserPhysiqueDto from "../../dtos/UserDetails/UserPhysiqueDto";
 import { getActivityLevelEnum } from "../../utils/types";
 import type { MealDto } from "../../dtos/DailyPlan/MealDto";
 import { SecondaryButton } from "../../styledComponents/Buttons";
+
+const steps = ["Personal Details", "Choose Approach", "Meal Plan"];
 
 const Onboarding = () => {
     const navigate = useNavigate();
@@ -179,7 +181,17 @@ const Onboarding = () => {
     const formatCalories = (value: number) => Math.round(value);
 
     return (
-        <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" gap={3}>
+        <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" gap={2}>
+            {/* Onboarding Stepper */}
+            <Box sx={{ width: '100%', maxWidth: 600, mt: 4, mb: 2 }}>
+                <Stepper activeStep={step - 1} alternativeLabel>
+                    {steps.map((label) => (
+                        <Step key={label}>
+                            <StepLabel>{label}</StepLabel>
+                        </Step>
+                    ))}
+                </Stepper>
+            </Box>
 
             {/* Step 1 — User Metrics */}
             {step === 1 && (
@@ -237,16 +249,7 @@ const Onboarding = () => {
 
             {/* Step 3 — Meal Plan Preview */}
             {step === 3 && !generating && (
-                <Box display="flex" flexDirection="column" alignItems="center" gap={3} px={2} py={4} width="100%">
-                    <Box textAlign="center" maxWidth={900}>
-                        <Typography sx={{ ...theme.typography.h4 }} gutterBottom>
-                            Your AI Meal Plan Preview
-                        </Typography>
-                        <Typography sx={{ ...theme.typography.body1 }} color="text.secondary">
-                            Review your generated meals before moving forward to your dashboard.
-                        </Typography>
-                    </Box>
-
+                <Box display="flex" flexDirection="column" alignItems="center" gap={3} px={2} width="100%">
                     <Box textAlign="center" width="100%">
                         <Typography sx={{ ...theme.typography.body2, mb: 1.5 }}>
                             Meal Complexity

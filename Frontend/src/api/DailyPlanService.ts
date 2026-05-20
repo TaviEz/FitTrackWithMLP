@@ -11,7 +11,6 @@ export const generateDailyPlan = async (userPhysiqueDto: UserPhysiqueDto): Promi
         const result = await api.post<GeneratedDailyPlanDto>(`${API_BASE_URL}/generate`, userPhysiqueDto);
         return result.data;
     } catch (error) {
-        console.log(error);
         return null;
     }
 }
@@ -21,17 +20,18 @@ export const createDailyPlan = async (payload: CreateDailyPlanDto): Promise<bool
         await api.post(`${API_BASE_URL}`, payload);
         return true;
     } catch (error) {
-        console.log(error);
         return false;
     }
 }
 
-export const getDailyPlan = async (dateTarget: string): Promise<DailyPlanDto | null> => {
+export const getDailyPlan = async (dateTarget: string): Promise<DailyPlanDto | null | undefined> => {
     try {
         const result = await api.get<DailyPlanDto>(`${API_BASE_URL}`, { params: { dateTarget } });
         return result.data;
-    } catch (error) {
-        console.log(error);
-        return null;
+    } catch (error: any) {
+        if (error?.response?.status === 404) {
+            return null; // no plan for this date — expected
+        }
+        return undefined; // real error
     }
 }
