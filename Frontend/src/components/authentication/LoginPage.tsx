@@ -41,7 +41,7 @@ const Login = () => {
         return;
       }
 
-      const userId = await getLoggedUserId(result.token);
+      const userId = await getLoggedUserId();
       setUserId(userId);
 
       const userDetailsDto = await getUserDetails();

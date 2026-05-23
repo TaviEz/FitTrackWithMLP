@@ -3,6 +3,7 @@ using FitTrackWithMLP.Shared.DTOs;
 using FitTrackWithMLP.Shared.DTOs.User;
 using FitTrackWithMLP.Shared.Enums;
 using FitTrackWithMLP.Shared.Logic;
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -24,20 +25,24 @@ namespace UserManagementService.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _configuration;
         private readonly IMapper _mapper;
+        private readonly IAntiforgery _antiforgery;
 
         public UserController(
             ApplicationDbContext dbContext,
             UserManager<ApplicationUser> userManager,
             IConfiguration configuration,
-            IMapper mapper)
+            IMapper mapper,
+            IAntiforgery antiforgery)
         {
             _dbContext = dbContext;
             _userManager = userManager;
             _configuration = configuration;
             _mapper = mapper;
+            _antiforgery = antiforgery;
         }
 
         [HttpPost("login")]
+        [IgnoreAntiforgeryToken]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
             var user = await _userManager.FindByEmailAsync(loginDto.Email);
@@ -60,7 +65,40 @@ namespace UserManagementService.Controllers
 
             var tokenHandler = new JwtSecurityTokenHandler();
             var token = tokenHandler.WriteToken(tokenHandler.CreateToken(tokenDescriptor));
+
+            // add the token in the cookie
+            Response.Cookies.Append("access_token", token, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true, // use HTTPS
+                SameSite = SameSiteMode.None, // needed for frontend on different origin
+                Expires = DateTimeOffset.UtcNow.AddDays(7)
+            });
+
+            // add the XSRF token in the cookie
+            var xsrfTokens = _antiforgery.GetAndStoreTokens(HttpContext);
+            Response.Cookies.Append("XSRF-TOKEN", xsrfTokens.RequestToken!, new CookieOptions
+            {
+                HttpOnly = false,
+                Secure = true,
+                SameSite = SameSiteMode.None
+            });
+
             return Ok(new { accessToken = token });
+        }
+
+        [Authorize]
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            Response.Cookies.Delete("access_token", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None
+            });
+
+            return Ok();
         }
 
         [Authorize]
@@ -71,7 +109,6 @@ namespace UserManagementService.Controllers
             return Ok(userId);
         }
 
-        // TODO: finish this api
         [Authorize]
         [HttpGet("details")]
         public async Task<IActionResult> GetUserDetails()

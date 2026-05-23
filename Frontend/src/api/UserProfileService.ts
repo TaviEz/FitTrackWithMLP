@@ -8,12 +8,8 @@ const API_BASE_URL = 'http://localhost:8081';
 export const loginUser = async (email: string, password: string): Promise<any> => {
     try {
         const loginDto = {email: email, password: password};
-        const result = await api.post(`${API_BASE_URL}/api/user/login`, loginDto);
-
-        const token = result.data.accessToken
-        localStorage.setItem('token', token);
-
-        return { success: true, token: token };
+        await api.post(`${API_BASE_URL}/api/user/login`, loginDto);
+        return { success: true };
     } catch (error) {
         return { success: false, error};
     }
@@ -30,13 +26,9 @@ export const registerUser = async (email: string, password: string): Promise<any
     }
 }
 
-export const getLoggedUserId = async (token: string): Promise<any> => {
+export const getLoggedUserId = async (): Promise<any> => {
     try {
-        const result = await api.get(`${API_BASE_URL}/api/user/me`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        });
+        const result = await api.get(`${API_BASE_URL}/api/user/me`);
         return result.data;
     } catch (error: any) {
         return undefined;

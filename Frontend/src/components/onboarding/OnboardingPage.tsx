@@ -60,13 +60,6 @@ const Onboarding = () => {
     }
 
     const handleNextSteps = async () => {
-        const token = localStorage.getItem("token");
-        if (!token) {
-            showInfo("Your session expired. Please log in again.");
-            navigate("/");
-            return;
-        }
-
         const result = await saveUserDetails(userDetails);
         if (!result?.success) {
             showError(result?.message || "Could not save your details. Please try again.");
@@ -107,13 +100,6 @@ const Onboarding = () => {
             return;
         }
         if (mode === "AITrack") {
-            const token = localStorage.getItem("token");
-            if (!token) {
-                showInfo("Your session expired. Please log in again.");
-                navigate("/");
-                return;
-            }
-
             const activityLevel = getActivityLevelEnum(userDetails.activityLevel.label);
             if (!activityLevel) {
                 showError("Please select a valid activity level before generating your plan.");

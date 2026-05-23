@@ -1,8 +1,10 @@
 using DailyPlanService.Context;
 using DailyPlanService.MappingProfiles;
 using FitTrackWithMLP.Shared;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
+using StackExchange.Redis;
 using System.Text.Json.Serialization;
 
 namespace DailyPlanService
@@ -15,6 +17,10 @@ namespace DailyPlanService
             var myAllowSpecificOrigins = "_myAllowSpecificOrigins";
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
             var mapperConfiguration = builder.Configuration.GetSection("AutoMapper");
+
+            // redis config
+            var redisConnectionString = builder.Configuration.GetConnectionString("RedisConnection");
+            var redis = ConnectionMultiplexer.Connect(redisConnectionString);
 
             builder.Services.AddControllers()
                 .AddJsonOptions(options =>
@@ -47,6 +53,15 @@ namespace DailyPlanService
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(connectionString));
 
+            builder.Services.AddDataProtection()
+                .SetApplicationName("FitTrackEcosystem")
+                .PersistKeysToStackExchangeRedis(redis, "FitTrack-Antiforgery-Keys");
+
+            builder.Services.AddAntiforgery(options =>
+            {
+                options.HeaderName = "X-XSRF-TOKEN";
+            });
+
             // Enable cors
             builder.Services.AddCors(options =>
             {
@@ -62,6 +77,7 @@ namespace DailyPlanService
             });
 
             builder.Services.AddFitTrackAuthentication(builder.Configuration);
+            builder.Services.AddAuthorization();
 
             var app = builder.Build();
 
@@ -76,8 +92,13 @@ namespace DailyPlanService
 
             //app.UseHttpsRedirection();
 
+            app.UseRouting();
+
             app.UseAuthentication();
             app.UseAuthorization();
+
+            app.UseFitTrackAntiforgeryCookie();
+            app.UseFitTrackAntiforgeryValidation();
 
             app.MapControllers();
 

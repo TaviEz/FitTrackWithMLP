@@ -1,6 +1,8 @@
 using FitTrackWithMLP.Shared;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
+using StackExchange.Redis;
 using System.Text.Json.Serialization;
 using UserManagementService.Context;
 using UserManagementService.MappingProfiles;
@@ -18,11 +20,16 @@ namespace UserManagementService
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
             var mapperConfiguration = builder.Configuration.GetSection("AutoMapper");
 
+            // redis config
+            var redisConnectionString = builder.Configuration.GetConnectionString("RedisConnection");
+            var redis = ConnectionMultiplexer.Connect(redisConnectionString);
+
             builder.Services.AddControllers()
                 .AddJsonOptions(options =>
                 {
                     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                 });
+
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(c =>
             {
@@ -55,6 +62,16 @@ namespace UserManagementService
                 .AddEntityFrameworkStores<ApplicationDbContext>();
 
             builder.Services.AddFitTrackAuthentication(builder.Configuration);
+            builder.Services.AddAuthorization();
+
+            builder.Services.AddDataProtection()
+                .SetApplicationName("FitTrackEcosystem")
+                .PersistKeysToStackExchangeRedis(redis, "FitTrack-Antiforgery-Keys");
+
+            builder.Services.AddAntiforgery(options =>
+            {
+                options.HeaderName = "X-XSRF-TOKEN";
+            });
 
             // Enable cors
             builder.Services.AddCors(options =>
@@ -81,12 +98,17 @@ namespace UserManagementService
 
             app.UseCors(myAllowSpecificOrigins);
 
-            app.MapIdentityApi<ApplicationUser>();
-
             //app.UseHttpsRedirection();
+
+            app.UseRouting();
 
             app.UseAuthentication();
             app.UseAuthorization();
+
+            app.MapIdentityApi<ApplicationUser>();
+
+            app.UseFitTrackAntiforgeryCookie();
+            app.UseFitTrackAntiforgeryValidation();
 
             app.MapControllers();
 

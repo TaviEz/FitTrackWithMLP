@@ -15,6 +15,27 @@ const HIDDEN_NAV_ROUTES = ['/', '/signIn', '/onboarding'];
 const AppLayout = () => {
   const { pathname } = useLocation();
   const showNav = !HIDDEN_NAV_ROUTES.includes(pathname);
+  const { setUserId, setUserDetails } = useUser();
+
+  useEffect(() => {
+    if (!showNav) {
+      return;
+    }
+
+    const rehydrate = async () => {
+      const userId = await getLoggedUserId();
+      if (!userId) {
+        return;
+      }
+
+      setUserId(userId);
+
+      const dto = await getUserDetails();
+      if (dto) setUserDetails(UserDetailsDto.toDomain(dto));
+    };
+
+    rehydrate();
+  }, [showNav, setUserId, setUserDetails]);
 
   return (
     <>
@@ -32,23 +53,6 @@ const AppLayout = () => {
 };
 
 const App = () => {
-  const { setUserId, setUserDetails } = useUser();
-
-  // TODO: recheck if you should store the token in localStorage
-  useEffect(() => {
-    const rehydrate = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) return;
-
-      const userId = await getLoggedUserId(token);
-      if (userId) setUserId(userId);
-
-      const dto = await getUserDetails();
-      if (dto) setUserDetails(UserDetailsDto.toDomain(dto));
-    };
-    rehydrate();
-  }, []);
-
   return (
     <BrowserRouter>
       <AppLayout />
