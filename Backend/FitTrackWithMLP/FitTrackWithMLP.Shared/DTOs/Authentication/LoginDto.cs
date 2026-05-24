@@ -1,4 +1,4 @@
-namespace FitTrackWithMLP.Shared.DTOs
+namespace FitTrackWithMLP.Shared.DTOs.Authentication
 {
     public class LoginDto
     {

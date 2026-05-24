@@ -1,7 +1,9 @@
 using FitTrackWithMLP.Shared;
+using FitTrackWithMLP.Shared.Middleware;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
+using Serilog;
 using StackExchange.Redis;
 using System.Text.Json.Serialization;
 using UserManagementService.Context;
@@ -20,9 +22,16 @@ namespace UserManagementService
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
             var mapperConfiguration = builder.Configuration.GetSection("AutoMapper");
 
+            // read serilog config from appsettings.json
+            Log.Logger = new LoggerConfiguration()
+                .ReadFrom.Configuration(builder.Configuration)
+                .CreateLogger();
+
             // redis config
             var redisConnectionString = builder.Configuration.GetConnectionString("RedisConnection");
             var redis = ConnectionMultiplexer.Connect(redisConnectionString);
+
+            builder.Host.UseSerilog();
 
             builder.Services.AddControllers()
                 .AddJsonOptions(options =>
@@ -52,6 +61,8 @@ namespace UserManagementService
                 cfg.AddProfile<UserDetailsProfile>();
                 cfg.LicenseKey = mapperConfiguration["LicenseKey"];
             });
+
+            builder.Services.AddTransient<GlobalExceptionMiddleware>();
 
             builder.Services.AddDbContext<ApplicationDbContext>(
                 options => options.UseSqlServer(connectionString, sqlOptions =>
@@ -95,6 +106,8 @@ namespace UserManagementService
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+
+            app.UseMiddleware<GlobalExceptionMiddleware>();
 
             app.UseCors(myAllowSpecificOrigins);
 
