@@ -1,5 +1,6 @@
 using FitTrackWithMLP.Shared;
 using FitTrackWithMLP.Shared.Middleware;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
@@ -9,6 +10,8 @@ using System.Text.Json.Serialization;
 using UserManagementService.Context;
 using UserManagementService.MappingProfiles;
 using UserManagementService.Models;
+using UserManagementService.Services.Authentication;
+using UserManagementService.Services.UserDetails;
 
 namespace UserManagementService
 {
@@ -63,6 +66,11 @@ namespace UserManagementService
             });
 
             builder.Services.AddTransient<GlobalExceptionMiddleware>();
+
+            builder.Services.AddScoped<IIdentityService, IdentityService>();
+            builder.Services.AddScoped<ITokenService, TokenService>();
+            builder.Services.AddScoped<IAuthCookieService, AuthCookieService>();
+            builder.Services.AddScoped<IUserDetailsService, UserDetailsService>();
 
             builder.Services.AddDbContext<ApplicationDbContext>(
                 options => options.UseSqlServer(connectionString, sqlOptions =>
