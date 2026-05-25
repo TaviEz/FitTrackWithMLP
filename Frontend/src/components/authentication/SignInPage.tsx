@@ -42,27 +42,11 @@ const SignInForm = () => {
 
     if (!result.success) {
       if (result.status === 409) {
-        setEmailError(result.message || 'Email already in use');
-        return;
-      }
-
-      const errors = result.errors;
-
-      if (errors.InvalidEmail) {
-        setEmailError(errors.InvalidEmail[0]);
-      } else if (errors.DuplicateUserName) {
-        setEmailError(errors.DuplicateUserName[0]);
-      }
-
-      const passwordMessages = [
-        errors.PasswordTooShort?.[0],
-        errors.PasswordRequiresDigit?.[0],
-        errors.PasswordRequiresUpper?.[0],
-        errors.PasswordRequiresNonAlphanumeric?.[0]
-      ].filter(Boolean);
-
-      if (passwordMessages.length > 0) {
-        setPasswordError(passwordMessages[0]);
+        setEmailError('Email already in use');
+      } else if (result.status === 400) {
+        setPasswordError('Could not create account. Please check your details.');
+      } else {
+        setEmailError('Could not create account. Please try again.');
       }
 
       return;

@@ -6,43 +6,44 @@ import type { DailyPlanDto } from "../dtos/DailyPlan/DailyPlanDto";
 
 const API_BASE_URL = 'http://localhost:8082/api/DailyPlan';
 
-export const generateDailyPlan = async (userPhysiqueDto: UserPhysiqueDto): Promise<GeneratedDailyPlanDto | null> => {
+export const generateDailyPlan = async (userPhysiqueDto: UserPhysiqueDto): Promise<any> => {
     try {
         const result = await api.post<GeneratedDailyPlanDto>(`${API_BASE_URL}/generate`, userPhysiqueDto);
 
         if (result.status >= 400) {
-            return null;
+            return { success: false, status: result.status };
         }
 
-        return result.data;
-    } catch (error) {
-        return null;
+        return { success: true, status: result.status, data: result.data };
+    } catch (error: any) {
+        return { success: false, status: error?.response?.status };
     }
 }
 
-export const createDailyPlan = async (payload: CreateDailyPlanDto): Promise<boolean> => {
+export const createDailyPlan = async (payload: CreateDailyPlanDto): Promise<any> => {
     try {
         const result = await api.post(`${API_BASE_URL}`, payload);
-        return result.status < 400;
-    } catch (error) {
-        return false;
+
+        if (result.status >= 400) {
+            return { success: false, status: result.status };
+        }
+
+        return { success: true, status: result.status };
+    } catch (error: any) {
+        return { success: false, status: error?.response?.status };
     }
 }
 
-export const getDailyPlan = async (dateTarget: string): Promise<DailyPlanDto | null | undefined> => {
+export const getDailyPlan = async (dateTarget: string): Promise<any> => {
     try {
         const result = await api.get<DailyPlanDto>(`${API_BASE_URL}`, { params: { dateTarget } });
 
-        if (result.status === 404) {
-            return null;
-        }
-
         if (result.status >= 400) {
-            return undefined;
+            return { success: false, status: result.status };
         }
 
-        return result.data;
+        return { success: true, status: result.status, data: result.data };
     } catch (error: any) {
-        return undefined; // real error
+        return { success: false, status: error?.response?.status };
     }
 }

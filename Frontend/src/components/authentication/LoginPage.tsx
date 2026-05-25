@@ -29,7 +29,7 @@ const Login = () => {
       const result = await loginUser(emailAddress, password);
 
       if(!result.success) {
-        switch (result.status ?? result.error?.status) {
+        switch (result.status) {
           case 401:
             showError("Wrong credentials");
             break;
@@ -41,17 +41,17 @@ const Login = () => {
         return;
       }
 
-      const userId = await getLoggedUserId();
-      setUserId(userId);
+      const userIdResult = await getLoggedUserId();
+      setUserId(userIdResult.data);
 
-      const userDetailsDto = await getUserDetails();
+      const userDetailsResult = await getUserDetails();
       setIsLoading(false);
 
       // in case we already have the user details of the user
       // directly navigate to the dashboard page
-      if (userDetailsDto)
+      if (userDetailsResult.success && userDetailsResult.data)
       {
-        const userDetails = UserDetailsDto.toDomain(userDetailsDto);
+        const userDetails = UserDetailsDto.toDomain(userDetailsResult.data);
         setUserDetails(userDetails);
         navigate("/dashboard");
         return;

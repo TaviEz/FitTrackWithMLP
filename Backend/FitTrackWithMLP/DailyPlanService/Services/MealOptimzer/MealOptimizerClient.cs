@@ -15,14 +15,25 @@ namespace DailyPlanService.Services.MealOptimzer
             OptimizedRequestDto request,
             CancellationToken cancellationToken = default)
         {
-            var response = await _httpClient.PostAsJsonAsync("/optimize", request, cancellationToken);
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync("/optimize", request, cancellationToken);
 
-            if (!response.IsSuccessStatusCode)
+                if (!response.IsSuccessStatusCode)
+                {
+                    return null;
+                }
+
+                return await response.Content.ReadFromJsonAsync<List<OptimizedMealPlanDto>>(cancellationToken: cancellationToken);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                throw; // caller canceled: propagate
+            }
+            catch (Exception)
             {
                 return null;
             }
-
-            return await response.Content.ReadFromJsonAsync<List<OptimizedMealPlanDto>>(cancellationToken: cancellationToken);
         }
     }
 }

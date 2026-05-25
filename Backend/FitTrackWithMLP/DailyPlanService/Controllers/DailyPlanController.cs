@@ -39,7 +39,7 @@ namespace DailyPlanService.Controllers
 
             if (dailyPlanDto is null)
             {
-                return NotFound();
+                return Ok(null);
             }
 
             return Ok(dailyPlanDto);

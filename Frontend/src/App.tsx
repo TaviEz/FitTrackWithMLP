@@ -24,14 +24,14 @@ const AppLayout = () => {
 
     const rehydrate = async () => {
       const userId = await getLoggedUserId();
-      if (!userId) {
+      if (!userId.success || !userId.data) {
         return;
       }
 
-      setUserId(userId);
+      setUserId(userId.data);
 
       const dto = await getUserDetails();
-      if (dto) setUserDetails(UserDetailsDto.toDomain(dto));
+      if (dto.success && dto.data) setUserDetails(UserDetailsDto.toDomain(dto.data));
     };
 
     rehydrate();

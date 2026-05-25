@@ -61,16 +61,20 @@ const Onboarding = () => {
 
     const handleNextSteps = async () => {
         const result = await saveUserDetails(userDetails);
-        if (!result?.success) {
-            showError(result?.message || "Could not save your details. Please try again.");
+        if (!result.success) {
+            if (result.status === 400) {
+                showError("Please check your personal details and try again.");
+            } else {
+                showError("Could not save your details. Please try again.");
+            }
             return;
         }
 
         // retrieve the user details to get the computed targetCalories
         const updatedDto = await getUserDetails();
-        if (updatedDto) {
+        if (updatedDto.success && updatedDto.data) {
             const updated = userDetails.clone();
-            updated.targetCalories = updatedDto.targetCalories;
+            updated.targetCalories = updatedDto.data.targetCalories;
             setUserDetails(updated);
         }
 
@@ -79,12 +83,12 @@ const Onboarding = () => {
 
     const runGeneration = async (dto: UserPhysiqueDto) => {
         setGenerating(true);
-        const dailyPlan = await generateDailyPlan(dto);
+        const result = await generateDailyPlan(dto);
         setGenerating(false);
-        if (dailyPlan && dailyPlan.meals.length > 0) {
-            setGeneratedMeals(dailyPlan.meals);
-            setTargetCalories(dailyPlan.targetCalories);
-            setActualCalories(dailyPlan.actualCalories);
+        if (result.success && result.data && result.data.meals.length > 0) {
+            setGeneratedMeals(result.data.meals);
+            setTargetCalories(result.data.targetCalories);
+            setActualCalories(result.data.actualCalories);
             setStep(3);
         } else {
             setTargetCalories(null);
@@ -153,8 +157,12 @@ const Onboarding = () => {
         const result = await createDailyPlan(payload);
         setSavingPlan(false);
 
-        if (!result) {
-            showError("Error! Failed to store the daily plan for the user.");
+        if (!result.success) {
+            if (result.status === 409) {
+                showError("A daily plan already exists for today.");
+            } else {
+                showError("Error! Failed to store the daily plan for the user.");
+            }
             return;
         }
         

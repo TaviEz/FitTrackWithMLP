@@ -29,11 +29,11 @@ const Dashboard = () => {
         if (!userId) return;
         const fetchData = async () => {
             const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
-            const plan = await getDailyPlan(today);
-            if (plan === undefined) {
+            const result = await getDailyPlan(today);
+            if (!result.success) {
                 showError("Failed to load daily plan");
             } else {
-                setDailyPlan(plan);
+                setDailyPlan(result.data);
             }
             setLoading(false);
         };
