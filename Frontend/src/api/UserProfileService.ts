@@ -8,7 +8,12 @@ const API_BASE_URL = 'http://localhost:8081/api/user';
 export const loginUser = async (email: string, password: string): Promise<any> => {
     try {
         const loginDto = {email: email, password: password};
-        await api.post(`${API_BASE_URL}/login`, loginDto);
+        const result = await api.post(`${API_BASE_URL}/login`, loginDto);
+
+        if (result.status >= 400) {
+            return { success: false, status: result.status };
+        }
+
         return { success: true };
     } catch (error) {
         return { success: false, error};
@@ -18,7 +23,17 @@ export const loginUser = async (email: string, password: string): Promise<any> =
 export const registerUser = async (email: string, password: string): Promise<any> => {
     try {
         const registerDto = {email: email, password: password};
-        await api.post(`${API_BASE_URL}/register`, registerDto);
+        const result = await api.post(`${API_BASE_URL}/register`, registerDto);
+
+        if (result.status >= 400) {
+            return {
+                success: false,
+                status: result.status,
+                message: typeof result.data === "string" ? result.data : undefined,
+                errors: result.data?.errors || {}
+            };
+        }
+
         return { success: true };
     } catch (error: any) {
         const errors = error.response?.data?.errors || {};
@@ -29,6 +44,9 @@ export const registerUser = async (email: string, password: string): Promise<any
 export const getLoggedUserId = async (): Promise<any> => {
     try {
         const result = await api.get(`${API_BASE_URL}/me`);
+        if (result.status >= 400) {
+            return undefined;
+        }
         return result.data;
     } catch (error: any) {
         return undefined;
@@ -38,6 +56,11 @@ export const getLoggedUserId = async (): Promise<any> => {
 export const getUserDetails = async (): Promise<UserDetailsDto | null> => {
     try {
         const result = await api.get<UserDetailsDto>(`${API_BASE_URL}/details`);
+
+        if (result.status >= 400) {
+            return null;
+        }
+
         return result.data;
     } catch (error: any) {
         return null;
@@ -56,7 +79,12 @@ export const saveUserDetails = async (userDetails: UserDetails): Promise<any> =>
         }
 
         const userDto = UserDetailsDto.fromDomain(userDetails, userActivityLevel);
-        await api.post(`${API_BASE_URL}/details`, userDto);
+        const result = await api.post(`${API_BASE_URL}/details`, userDto);
+
+        if (result.status >= 400) {
+            return { success: false };
+        }
+
         return { success: true };
     } catch (error: any) {
         return { success: false };

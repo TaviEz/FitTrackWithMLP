@@ -35,6 +35,7 @@ namespace UserManagementService.Controllers
 
         
         [HttpPost("login")]
+        [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
         {
             var user = await _authService.AuthenticateAsync(loginDto.Email, loginDto.Password);
@@ -62,7 +63,6 @@ namespace UserManagementService.Controllers
                 return Ok();
             }
 
-            // TODO: handle register error in frontend
             var duplicateEmail = result.Errors.Any(e => e.Code == "DuplicateEmail");
             if (duplicateEmail)
             {
@@ -116,7 +116,6 @@ namespace UserManagementService.Controllers
                 return Unauthorized();
             }
 
-            // TODO: supress errors after login if userDetails is empty
             var userDetailsDto = await _userDetailsService.GetUserDetailsAsync(userId);
 
             if (userDetailsDto == null)

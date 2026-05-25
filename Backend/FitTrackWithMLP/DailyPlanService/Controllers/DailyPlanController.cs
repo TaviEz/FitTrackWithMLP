@@ -20,9 +20,6 @@ namespace DailyPlanService.Controllers
         private readonly IMealOptimizerClient _mealOptimizerClient;
 
         public DailyPlanController(
-            ApplicationDbContext dbContext,
-            IConfiguration configuration,
-            IMapper mapper,
             IDailyPlanService dailyPlanService,
             IMealOptimizerClient mealOptimizerClient)
         {
@@ -53,7 +50,6 @@ namespace DailyPlanService.Controllers
         public async Task<IActionResult> CreateDailyPlan([FromBody] CreateDailyPlanDto dailyPlanDto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
             if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out _))
                 return Unauthorized("User ID not found in token.");
@@ -67,7 +63,7 @@ namespace DailyPlanService.Controllers
 
             return result switch
             {
-                CreateDailyPlanStatus.Created => Ok(),
+                CreateDailyPlanStatus.Created => Created(),
                 CreateDailyPlanStatus.AlreadyExists => Conflict("A daily plan already exists for today."),
                 _ => StatusCode(StatusCodes.Status500InternalServerError)
             };

@@ -41,6 +41,11 @@ const SignInForm = () => {
     const result = await registerUser(emailAddress, password);
 
     if (!result.success) {
+      if (result.status === 409) {
+        setEmailError(result.message || 'Email already in use');
+        return;
+      }
+
       const errors = result.errors;
 
       if (errors.InvalidEmail) {

@@ -29,7 +29,7 @@ const Login = () => {
       const result = await loginUser(emailAddress, password);
 
       if(!result.success) {
-        switch (result.error.status) {
+        switch (result.status ?? result.error?.status) {
           case 401:
             showError("Wrong credentials");
             break;
