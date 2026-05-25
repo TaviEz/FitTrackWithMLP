@@ -1,12 +1,13 @@
 ﻿using AutoMapper;
 using DailyPlanService.Context;
-using DailyPlanService.Models;
+using DailyPlanService.Services.DailyPlan;
+using DailyPlanService.Services.MealOptimzer;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan;
 using FitTrackWithMLP.Shared.DTOs.User;
+using FitTrackWithMLP.Shared.Enums;
 using FitTrackWithMLP.Shared.Logic;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace DailyPlanService.Controllers
@@ -15,18 +16,18 @@ namespace DailyPlanService.Controllers
     [ApiController]
     public class DailyPlanController : ControllerBase
     {
-        private readonly ApplicationDbContext _dbContext;
-        private readonly IConfiguration _configuration;
-        private readonly IMapper _mapper;
+        private readonly IDailyPlanService _dailyPlanService;
+        private readonly IMealOptimizerClient _mealOptimizerClient;
 
         public DailyPlanController(
             ApplicationDbContext dbContext,
             IConfiguration configuration,
-            IMapper mapper)
+            IMapper mapper,
+            IDailyPlanService dailyPlanService,
+            IMealOptimizerClient mealOptimizerClient)
         {
-            _dbContext = dbContext;
-            _configuration = configuration;
-            _mapper = mapper;
+            _dailyPlanService = dailyPlanService;
+            _mealOptimizerClient = mealOptimizerClient;
         }
 
         [Authorize]
@@ -34,18 +35,15 @@ namespace DailyPlanService.Controllers
         public async Task<IActionResult> GetDailyPlan([FromQuery] DateOnly dateTarget)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId))
+            if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out _))
                 return Unauthorized("User ID not found in token.");
 
-            var dailyPlan = await _dbContext.DailyPlans
-                .Include(p => p.Meals)
-                .ThenInclude(m => m.Ingredients)
-                .FirstOrDefaultAsync(p => p.UserId == Guid.Parse(userId) && p.TargetDate == dateTarget);
+            var dailyPlanDto = await _dailyPlanService.GetDailyPlanAsync(userId, dateTarget);
 
-            if (dailyPlan == null)
-                return Ok(null);
-
-            var dailyPlanDto = _mapper.Map<DailyPlanDto>(dailyPlan);
+            if (dailyPlanDto is null)
+            {
+                return NotFound();
+            }
 
             return Ok(dailyPlanDto);
         }
@@ -57,22 +55,22 @@ namespace DailyPlanService.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
-            if (string.IsNullOrEmpty(userId))
+            if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out _))
                 return Unauthorized("User ID not found in token.");
 
-            var dailyPlan = _mapper.Map<DailyPlan>(dailyPlanDto);
-            dailyPlan.UserId = Guid.Parse(userId);
-            dailyPlan.TargetDate = today;
-            dailyPlan.CreatedAt = DateTime.UtcNow;
-            dailyPlan.ModifiedAt = DateTime.UtcNow;
+            if (dailyPlanDto.Meals is null || dailyPlanDto.Meals.Count == 0)
+            {
+                return BadRequest("At least one meal is required.");
+            }
 
-            _dbContext.DailyPlans.Add(dailyPlan);
-            var result = await _dbContext.SaveChangesAsync();
+            var result = await _dailyPlanService.CreateDailyPlanAsync(userId, dailyPlanDto);
 
-            if (result > 0)
-                return Ok(dailyPlan.DailyPlanId); 
-            else
-                return StatusCode(500, "Failed to save user details.");
+            return result switch
+            {
+                CreateDailyPlanStatus.Created => Ok(),
+                CreateDailyPlanStatus.AlreadyExists => Conflict("A daily plan already exists for today."),
+                _ => StatusCode(StatusCodes.Status500InternalServerError)
+            };
         }
 
         [Authorize]
@@ -84,17 +82,6 @@ namespace DailyPlanService.Controllers
                 userPhysiqueDto.Weight, userPhysiqueDto.Tdee, activityGroup, userPhysiqueDto.GoalType
             );
 
-            var handler = new HttpClientHandler
-            {
-                Proxy = null,
-                UseProxy = false
-            };
-            using var client = new HttpClient(handler);
-            var baseUrl = _configuration["Optimizer:Url"];
-
-            if (string.IsNullOrEmpty(baseUrl))
-                return StatusCode(500, "Optimizer service URL is not configured.");
-
             var optimizerRequest = new OptimizedRequestDto
             {
                 Calories = dailyTargets.Calories,
@@ -103,15 +90,7 @@ namespace DailyPlanService.Controllers
                 MealsComplexity = userPhysiqueDto.MealsComplexity.ToString()
             };
 
-            var optimizeUrl = baseUrl + "/optimize";
-            HttpResponseMessage response = await client.PostAsJsonAsync(optimizeUrl, optimizerRequest);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                return StatusCode((int)response.StatusCode, "Optimizer service failed.");
-            }
-
-            var optimizedPlan = await response.Content.ReadFromJsonAsync<List<OptimizedMealPlanDto>>();
+            var optimizedPlan = await _mealOptimizerClient.OptimizeAsync(optimizerRequest);
 
             if (optimizedPlan == null)
                 return StatusCode(500, "Failed to parse optimizer response.");

@@ -1,11 +1,15 @@
 using DailyPlanService.Context;
 using DailyPlanService.MappingProfiles;
+using DailyPlanService.Services.DailyPlan;
 using FitTrackWithMLP.Shared;
+using FitTrackWithMLP.Shared.Middleware;
+using DailyPlanServiceImpl = DailyPlanService.Services.DailyPlan.DailyPlanService;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using StackExchange.Redis;
 using System.Text.Json.Serialization;
+using DailyPlanService.Services.MealOptimzer;
 
 namespace DailyPlanService
 {
@@ -27,6 +31,7 @@ namespace DailyPlanService
                 {
                     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                 });
+
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen(c =>
             {
@@ -48,6 +53,16 @@ namespace DailyPlanService
             {
                 cfg.AddProfile<DailyPlanProfile>();    
                 cfg.LicenseKey = mapperConfiguration["LicenseKey"];
+            });
+
+            builder.Services.AddTransient<GlobalExceptionMiddleware>();
+
+            builder.Services.AddScoped<IDailyPlanService, DailyPlanServiceImpl>();
+            builder.Services.AddHttpClient<IMealOptimizerClient, MealOptimizerClient>((sp, client) =>
+            {
+                var config = sp.GetRequiredService<IConfiguration>();
+                client.BaseAddress = new Uri(config["Optimizer:Url"]!);
+                client.Timeout = TimeSpan.FromSeconds(30);
             });
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>

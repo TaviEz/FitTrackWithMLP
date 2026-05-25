@@ -1,6 +1,5 @@
 using FitTrackWithMLP.Shared;
 using FitTrackWithMLP.Shared.Middleware;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;

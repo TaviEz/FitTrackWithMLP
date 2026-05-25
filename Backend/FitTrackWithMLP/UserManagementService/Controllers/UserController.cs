@@ -1,20 +1,9 @@
-﻿using AutoMapper;
-using FitTrackWithMLP.Shared.DTOs.Authentication;
+﻿using FitTrackWithMLP.Shared.DTOs.Authentication;
 using FitTrackWithMLP.Shared.DTOs.User;
 using FitTrackWithMLP.Shared.Enums;
-using FitTrackWithMLP.Shared.Logic;
-using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
-using UserManagementService.Context;
-using UserManagementService.Models;
 using UserManagementService.Services.Authentication;
 using UserManagementService.Services.UserDetails;
 
@@ -140,7 +129,6 @@ namespace UserManagementService.Controllers
 
             return Ok(userDetailsDto);
         }
-
 
         [Authorize]
         [HttpPost("details")]
