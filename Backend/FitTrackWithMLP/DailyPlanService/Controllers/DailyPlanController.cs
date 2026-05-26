@@ -1,6 +1,4 @@
-﻿using AutoMapper;
-using DailyPlanService.Context;
-using DailyPlanService.Services.DailyPlan;
+﻿using DailyPlanService.Services.DailyPlan;
 using DailyPlanService.Services.MealOptimzer;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan;
 using FitTrackWithMLP.Shared.DTOs.User;
@@ -18,13 +16,16 @@ namespace DailyPlanService.Controllers
     {
         private readonly IDailyPlanService _dailyPlanService;
         private readonly IMealOptimizerClient _mealOptimizerClient;
+        private readonly ILogger<DailyPlanController> _logger;
 
         public DailyPlanController(
             IDailyPlanService dailyPlanService,
-            IMealOptimizerClient mealOptimizerClient)
+            IMealOptimizerClient mealOptimizerClient,
+            ILogger<DailyPlanController> logger)
         {
             _dailyPlanService = dailyPlanService;
             _mealOptimizerClient = mealOptimizerClient;
+            _logger = logger;
         }
 
         [Authorize]
@@ -39,9 +40,11 @@ namespace DailyPlanService.Controllers
 
             if (dailyPlanDto is null)
             {
+                _logger.LogWarning("No daily plan found for user {UserId} on {Date}", userId, dateTarget);
                 return Ok(null);
             }
 
+            _logger.LogInformation("Daily plan retrieved for user {UserId} on {Date}", userId, dateTarget);
             return Ok(dailyPlanDto);
         }
 
@@ -56,6 +59,7 @@ namespace DailyPlanService.Controllers
 
             if (dailyPlanDto.Meals is null || dailyPlanDto.Meals.Count == 0)
             {
+                _logger.LogWarning("Attempt to create a daily plan with no meals for user {UserId}", userId);
                 return BadRequest("At least one meal is required.");
             }
 
@@ -89,7 +93,11 @@ namespace DailyPlanService.Controllers
             var optimizedPlan = await _mealOptimizerClient.OptimizeAsync(optimizerRequest);
 
             if (optimizedPlan == null)
+            {
+                _logger.LogError("Meal optimizer failed to generate a plan for user with activity level {ActivityLevel} and goal {GoalType}",
+                    userPhysiqueDto.ActivityLevel, userPhysiqueDto.GoalType);
                 return StatusCode(500, "Failed to parse optimizer response.");
+            }
 
             var actualCalories = optimizedPlan.Sum(m => m.Calories);
 
@@ -100,6 +108,8 @@ namespace DailyPlanService.Controllers
                 Meals = optimizedPlan
             };
 
+            _logger.LogInformation("Generated daily plan for user with activity level {ActivityLevel} and goal {GoalType}. Target calories: {TargetCalories}, Actual calories: {ActualCalories}",
+                userPhysiqueDto.ActivityLevel, userPhysiqueDto.GoalType, result.TargetCalories, result.ActualCalories);
             return Ok(result);
         }
     }

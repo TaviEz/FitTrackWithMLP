@@ -1,15 +1,16 @@
 using DailyPlanService.Context;
 using DailyPlanService.MappingProfiles;
 using DailyPlanService.Services.DailyPlan;
+using DailyPlanService.Services.MealOptimzer;
 using FitTrackWithMLP.Shared;
 using FitTrackWithMLP.Shared.Middleware;
-using DailyPlanServiceImpl = DailyPlanService.Services.DailyPlan.DailyPlanService;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
+using Serilog;
 using StackExchange.Redis;
 using System.Text.Json.Serialization;
-using DailyPlanService.Services.MealOptimzer;
+using DailyPlanServiceImpl = DailyPlanService.Services.DailyPlan.DailyPlanService;
 
 namespace DailyPlanService
 {
@@ -22,9 +23,16 @@ namespace DailyPlanService
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
             var mapperConfiguration = builder.Configuration.GetSection("AutoMapper");
 
+            // read serilog config from appsettings.json
+            Log.Logger = new LoggerConfiguration()
+                .ReadFrom.Configuration(builder.Configuration)
+                .CreateLogger();
+
             // redis config
             var redisConnectionString = builder.Configuration.GetConnectionString("RedisConnection");
             var redis = ConnectionMultiplexer.Connect(redisConnectionString);
+
+            builder.Host.UseSerilog();
 
             builder.Services.AddControllers()
                 .AddJsonOptions(options =>
@@ -102,6 +110,8 @@ namespace DailyPlanService
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+
+            app.UseSerilogRequestLogging();
 
             app.UseCors(myAllowSpecificOrigins);
 
