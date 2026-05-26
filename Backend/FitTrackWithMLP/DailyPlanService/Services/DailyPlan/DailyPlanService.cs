@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using DailyPlanService.Context;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan;
+using FitTrackWithMLP.Shared.DTOs.DailyPlan.Create;
+using FitTrackWithMLP.Shared.DTOs.DailyPlan.Edit;
 using FitTrackWithMLP.Shared.Enums;
 using Microsoft.EntityFrameworkCore;
 
@@ -51,6 +53,22 @@ namespace DailyPlanService.Services.DailyPlan
 
             var result = await _dbContext.SaveChangesAsync();
             return result > 0 ? CreateDailyPlanStatus.Created : CreateDailyPlanStatus.Failed;
+        }
+
+        // TODO: use automapper to map entity to dto here
+        public async Task<bool> EditDailyPlanAsync(string userId, EditDailyPlanDto dailyPlanDto)
+        {
+            var dailyPlan = await _dbContext.DailyPlans
+                .Include(p => p.Meals)
+                .ThenInclude(m => m.Ingredients)
+                .Where(p => p.UserId == Guid.Parse(userId)
+                    && p.DailyPlanId == dailyPlanDto.DailyPlanId)
+                .FirstOrDefaultAsync();
+            
+
+
+            return true;
+                                    
         }
     }
 }

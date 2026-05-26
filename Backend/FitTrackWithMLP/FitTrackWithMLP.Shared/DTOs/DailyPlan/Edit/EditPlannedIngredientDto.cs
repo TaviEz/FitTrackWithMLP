@@ -1,8 +1,9 @@
-﻿namespace FitTrackWithMLP.Shared.DTOs.DailyPlan
+﻿namespace FitTrackWithMLP.Shared.DTOs.DailyPlan.Edit
 {
-    public class CreatePlannedIngredientDto
+    public class EditPlannedIngredientDto
     {
-        public int FoodId { get; set; } // SQLite ID
+        public int PlannedIngredientId { get; set; }
+        public int FoodId { get; set; }
         public int AmountG { get; set; }
         public string Name { get; set; } = string.Empty;
         public double Protein { get; set; }

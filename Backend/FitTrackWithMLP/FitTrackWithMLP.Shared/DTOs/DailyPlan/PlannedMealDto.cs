@@ -2,6 +2,7 @@
 {
     public class PlannedMealDto
     {
+        public int PlannedMealId { get; set; }
         public string Category { get; set; } = string.Empty;
         public string Title { get; set; } = string.Empty;
         public List<PlannedMealIngredientDto> Ingredients { get; set; } = new();

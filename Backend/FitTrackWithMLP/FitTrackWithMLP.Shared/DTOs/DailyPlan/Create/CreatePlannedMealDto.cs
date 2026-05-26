@@ -1,6 +1,6 @@
 ﻿using FitTrackWithMLP.Shared.Enums;
 
-namespace FitTrackWithMLP.Shared.DTOs.DailyPlan
+namespace FitTrackWithMLP.Shared.DTOs.DailyPlan.Create
 {
     public class CreatePlannedMealDto
     {

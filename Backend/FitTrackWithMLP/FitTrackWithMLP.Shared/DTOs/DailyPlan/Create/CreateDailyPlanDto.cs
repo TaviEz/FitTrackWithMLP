@@ -1,4 +1,4 @@
-﻿namespace FitTrackWithMLP.Shared.DTOs.DailyPlan
+﻿namespace FitTrackWithMLP.Shared.DTOs.DailyPlan.Create
 {
     public class CreateDailyPlanDto
     {

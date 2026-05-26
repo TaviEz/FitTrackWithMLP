@@ -1,6 +1,8 @@
 ﻿using DailyPlanService.Services.DailyPlan;
 using DailyPlanService.Services.MealOptimzer;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan;
+using FitTrackWithMLP.Shared.DTOs.DailyPlan.Create;
+using FitTrackWithMLP.Shared.DTOs.DailyPlan.Edit;
 using FitTrackWithMLP.Shared.DTOs.User;
 using FitTrackWithMLP.Shared.Enums;
 using FitTrackWithMLP.Shared.Logic;
@@ -73,7 +75,21 @@ namespace DailyPlanService.Controllers
             };
         }
 
-        // TODO: add PUT endpoint for dailyPlan
+        // TODO: finish this
+        [Authorize]
+        [HttpPut]
+        public async Task<IActionResult> EditDailyPlan([FromBody] EditDailyPlanDto dailyPlanDto)    
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out _))
+                return Unauthorized("User ID not found in token.");
+
+            
+
+            return Ok();
+        }
+
         [Authorize]
         [HttpPost("generate")]
         public async Task<IActionResult> GenerateDailyPlan([FromBody] UserPhysiqueDto userPhysiqueDto)
