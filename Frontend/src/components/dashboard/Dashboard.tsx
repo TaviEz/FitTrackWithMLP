@@ -8,14 +8,18 @@ import {
     CircularProgress,
     LinearProgress,
     Divider,
+    Stack,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import RestaurantMenuIcon from "@mui/icons-material/RestaurantMenu";
-import { useUser } from "../context/UserContext";
-import { getDailyPlan } from "../api/DailyPlanService";
-import { showError } from "./shared/ShowToast";
-import type { DailyPlanDto } from "../dtos/DailyPlan/DailyPlanDto";
-import type { PlannedMealDto } from "../dtos/DailyPlan/PlannedMealDto";
+import { useUser } from "../../context/UserContext";
+import { getDailyPlan } from "../../api/DailyPlanService";
+import { showError } from "../shared/ShowToast";
+import { ToastContainer } from "react-toastify";
+import type { DailyPlanDto } from "../../dtos/DailyPlan/DailyPlanDto";
+import type { PlannedMealDto } from "../../dtos/DailyPlan/PlannedMealDto";
+import GeneratePlanDialog from "./GeneratePlanDialog";
 
 const CATEGORIES = ["Breakfast", "Lunch", "Snack", "Dinner"];
 
@@ -24,21 +28,24 @@ const Dashboard = () => {
     const [dailyPlan, setDailyPlan] = useState<DailyPlanDto | null>(null);
     const [targetCalories, setTargetCalories] = useState<number>(0);
     const [loading, setLoading] = useState(true);
+    const [generatePlanOpen, setGeneratePlanOpen] = useState(false);
+
+    const fetchDailyPlan = async () => {
+        setLoading(true);
+        const today = new Date().toISOString().split("T")[0];
+        const result = await getDailyPlan(today);
+        if (!result.success) {
+            showError("Failed to load daily plan");
+        } else {
+            setDailyPlan(result.data);
+        }
+        setLoading(false);
+    };
 
     useEffect(() => {
         if (!userId) return;
-        const fetchData = async () => {
-            const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
-            const result = await getDailyPlan(today);
-            if (!result.success) {
-                showError("Failed to load daily plan");
-            } else {
-                setDailyPlan(result.data);
-            }
-            setLoading(false);
-        };
-        fetchData();
-    }, [userId]);
+        fetchDailyPlan();
+    }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         setTargetCalories(userDetails?.targetCalories ?? 0);
@@ -46,6 +53,15 @@ const Dashboard = () => {
 
     const handleAddMeal = () => {
         // TODO: open add meal dialog / navigate
+    };
+
+    const handleGenerateWithAI = () => {
+        setGeneratePlanOpen(true);
+    };
+
+    const handlePlanAccepted = async () => {
+        setGeneratePlanOpen(false);
+        await fetchDailyPlan();
     };
 
     const mealsByCategory = (category: string): PlannedMealDto[] =>
@@ -62,7 +78,9 @@ const Dashboard = () => {
     }
 
     return (
-        <Box sx={{ p: 3, maxWidth: 800, mx: "auto" }}>
+        <>
+            {/* make sure you dont have a scrollbar on this page */}
+            <Box sx={{ p: 3, pt: 8, maxWidth: 800, mx: "auto" }}>
             {/* Header */}
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
                 <Typography variant="h5" fontWeight={700}>
@@ -71,11 +89,11 @@ const Dashboard = () => {
                 {dailyPlan && (
                     <Button
                         variant="contained"
-                        startIcon={<AddIcon />}
-                        onClick={handleAddMeal}
+                        startIcon={<AutoAwesomeIcon />}
+                        onClick={handleGenerateWithAI}
                         sx={{ textTransform: "none" }}
                     >
-                        Add Meal
+                        Regenerate Plan
                     </Button>
                 )}
             </Box>
@@ -139,6 +157,7 @@ const Dashboard = () => {
                     );
                 })
             ) : (
+                // Display friendly message in case there are no meals
                 <Box
                     display="flex"
                     flexDirection="column"
@@ -161,20 +180,39 @@ const Dashboard = () => {
                         No plan for today
                     </Typography>
                     <Typography variant="body2" color="text.secondary" mb={3} maxWidth={340}>
-                        You haven't logged any meals yet. Start tracking your nutrition by adding your first meal.
+                        You haven't logged any meals yet. Let AI build a plan for you, or add meals manually.
                     </Typography>
-                    <Button
-                        variant="contained"
-                        size="large"
-                        startIcon={<AddIcon />}
-                        onClick={handleAddMeal}
-                        sx={{ textTransform: "none", px: 4, borderRadius: 3 }}
-                    >
-                        Add your first meal
-                    </Button>
+                    <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+                        <Button
+                            variant="contained"
+                            size="large"
+                            startIcon={<AutoAwesomeIcon />}
+                            onClick={handleGenerateWithAI}
+                            sx={{ textTransform: "none", px: 4, borderRadius: 3 }}
+                        >
+                            Generate with AI
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            size="large"
+                            startIcon={<AddIcon />}
+                            onClick={handleAddMeal}
+                            sx={{ textTransform: "none", px: 4, borderRadius: 3 }}
+                        >
+                            Add manually
+                        </Button>
+                    </Stack>
                 </Box>
             )}
         </Box>
+        <GeneratePlanDialog
+            open={generatePlanOpen}
+            mode={dailyPlan ? "replace" : "create"}
+            onClose={() => setGeneratePlanOpen(false)}
+            onPlanAccepted={handlePlanAccepted}
+        />
+        <ToastContainer />
+        </>
     );
 };
 

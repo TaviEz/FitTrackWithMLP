@@ -73,6 +73,7 @@ namespace DailyPlanService.Controllers
             };
         }
 
+        // TODO: add PUT endpoint for dailyPlan
         [Authorize]
         [HttpPost("generate")]
         public async Task<IActionResult> GenerateDailyPlan([FromBody] UserPhysiqueDto userPhysiqueDto)

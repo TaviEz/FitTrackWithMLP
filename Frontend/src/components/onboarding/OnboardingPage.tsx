@@ -1,4 +1,4 @@
-import { Box, Button, Card, CardContent, Chip, CircularProgress, Divider, Grid, Stack, ToggleButton, ToggleButtonGroup, Typography, Stepper, Step, StepLabel } from "@mui/material"
+import { Box, Button, Card, CardContent, CircularProgress, Grid, Typography, Stepper, Step, StepLabel } from "@mui/material"
 import theme from "../../theme";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -18,6 +18,7 @@ import UserPhysiqueDto from "../../dtos/UserDetails/UserPhysiqueDto";
 import { getActivityLevelEnum } from "../../utils/types";
 import type { MealDto } from "../../dtos/DailyPlan/MealDto";
 import { SecondaryButton } from "../../styledComponents/Buttons";
+import GeneratedPlanPreview from "../shared/GeneratedPlanPreview";
 
 const steps = ["Personal Details", "Choose Approach", "Meal Plan"];
 
@@ -129,12 +130,6 @@ const Onboarding = () => {
         }
     };
 
-    const getMealCalories = (meal: MealDto) =>
-        meal.ingredients.reduce(
-            (sum, ingredient) => sum + ((ingredient.amountG / 100) * (ingredient.calories ?? 0)),
-            0
-        );
-
     const saveAndNavigateToDashboard = async () => {
         if (generatedMeals.length === 0) {
             showInfo("Generate a meal plan before continuing.");
@@ -169,10 +164,6 @@ const Onboarding = () => {
         setUserDetailsContext(userDetails);
         navigate("/dashboard");
     };
-
-    const totalCalories = generatedMeals.reduce((sum, meal) => sum + getMealCalories(meal), 0);
-    const displayedActualCalories = actualCalories ?? totalCalories;
-    const formatCalories = (value: number) => Math.round(value);
 
     return (
         <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" gap={2}>
@@ -243,110 +234,21 @@ const Onboarding = () => {
 
             {/* Step 3 — Meal Plan Preview */}
             {step === 3 && !generating && (
-                <Box display="flex" flexDirection="column" alignItems="center" gap={3} px={2} width="100%">
-                    <Box textAlign="center" width="100%">
-                        <Typography sx={{ ...theme.typography.body2, mb: 1.5 }}>
-                            Meal Complexity
-                        </Typography>
-                        <ToggleButtonGroup
-                            value={mealsComplexity}
-                            exclusive
-                            onChange={(_, newComplexity) => {
-                                if (newComplexity !== null) {
-                                    setMealsComplexity(newComplexity);
-                                }
-                            }}
-                            sx={{
-                                border: `1px solid ${theme.palette.divider}`,
-                                borderRadius: 1,
-                            }}
-                        >
-                            <ToggleButton value="Simple" sx={{ textTransform: "none", px: 2 }}>
-                                Minimal Prep
-                            </ToggleButton>
-                            <ToggleButton value="Standard" sx={{ textTransform: "none", px: 2 }}>
-                                Diverse Ingredients
-                            </ToggleButton>
-                        </ToggleButtonGroup>
-                    </Box>
-
-                    <Card sx={{ width: "100%", maxWidth: 980, borderRadius: 2, border: `1px solid ${theme.palette.primary.main}`, boxShadow: "none", backgroundColor: theme.palette.primary.light + "14" }}>
-                        <CardContent>
-                            <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" spacing={3} alignItems={{ xs: "flex-start", sm: "center" }}>
-                                <Box>
-                                    <Typography sx={{ ...theme.typography.body2, color: "text.secondary" }}>
-                                        Generated calories
-                                    </Typography>
-                                    <Typography sx={{ ...theme.typography.h4 }}>
-                                        {formatCalories(displayedActualCalories)} kcal
-                                    </Typography>
-                                </Box>
-                                {targetCalories !== null && (
-                                    <Box>
-                                        <Typography sx={{ ...theme.typography.body2, color: "text.secondary" }}>
-                                            Target calories
-                                        </Typography>
-                                        <Typography sx={{ ...theme.typography.h4 }}>
-                                            {formatCalories(targetCalories)} kcal
-                                        </Typography>
-                                    </Box>
-                                )}
-                                {targetCalories === null && (
-                                    <Typography sx={{ ...theme.typography.body2, color: "text.secondary" }}>
-                                        Target calories unavailable
-                                    </Typography>
-                                )}
-                            </Stack>
-                        </CardContent>
-                    </Card>
-
-                    <Stack spacing={2} width="100%" maxWidth={980}>
-                        {generatedMeals.map((meal) => (
-                            <Card 
-                                key={meal.mealId} 
-                                sx={{ borderRadius: 2, border: `1px solid ${theme.palette.divider}`, boxShadow: "none" }}
-                            >
-                                <CardContent>
-                                    <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" spacing={1} mb={2}>
-                                        <Box>
-                                            <Typography sx={{ ...theme.typography.h5 }}>{meal.title}</Typography>
-                                            <Typography sx={{ ...theme.typography.body2, color: "text.secondary" }}>
-                                                {formatCalories(getMealCalories(meal))} kcal
-                                            </Typography>
-                                        </Box>
-                                        <Chip label={meal.category} color="primary" variant="outlined" sx={{ alignSelf: "flex-start" }} />
-                                    </Stack>
-
-                                    <Divider sx={{ my: 1.5 }} />
-
-                                    <Stack spacing={1}>
-                                        {meal.ingredients.map((ingredient) => (
-                                            <Box
-                                                key={`${meal.mealId}-${ingredient.foodId}`}
-                                                display="flex"
-                                                justifyContent="space-between"
-                                                alignItems="center"
-                                                gap={2}
-                                            >
-                                                <Typography variant="body1">{ingredient.name}</Typography>
-                                                <Typography variant="body2" color="text.secondary">
-                                                    {ingredient.amountG} g
-                                                </Typography>
-                                            </Box>
-                                        ))}
-                                    </Stack>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </Stack>
-
-                    <Stack direction={{ xs: "column", sm: "row" }} spacing={2} mt={1}>
-                        <SecondaryButton onClick={handleRegenerate}>Regenerate Plan</SecondaryButton>
-                        <Button variant="contained" onClick={saveAndNavigateToDashboard} disabled={savingPlan}>
-                            {savingPlan ? "Saving..." : "Continue to Dashboard"}
-                        </Button>
-                    </Stack>
-                </Box>
+                <GeneratedPlanPreview
+                    meals={generatedMeals}
+                    targetCalories={targetCalories}
+                    actualCalories={actualCalories}
+                    mealsComplexity={mealsComplexity}
+                    onComplexityChange={setMealsComplexity}
+                    actions={
+                        <>
+                            <SecondaryButton onClick={handleRegenerate}>Regenerate Plan</SecondaryButton>
+                            <Button variant="contained" onClick={saveAndNavigateToDashboard} disabled={savingPlan}>
+                                {savingPlan ? "Saving..." : "Continue to Dashboard"}
+                            </Button>
+                        </>
+                    }
+                />
             )}
 
             <ToastContainer />
