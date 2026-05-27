@@ -41,6 +41,7 @@ namespace UserManagementService.Controllers
             var user = await _authService.AuthenticateAsync(loginDto.Email, loginDto.Password);
             if (user is null)
             {
+                _logger.LogWarning("Login failed for email: {Email}", loginDto.Email);
                 return Unauthorized();
             }
 
@@ -141,12 +142,19 @@ namespace UserManagementService.Controllers
             }
 
             var result = await _userDetailsService.UpsertUserDetailsAsync(userId, userDto);
-            return result.Status switch
+
+            switch (result.Status)
             {
-                UserDetailsOperationStatus.Success => Ok(),
-                UserDetailsOperationStatus.UserNotFound => NotFound(),
-                _ => StatusCode(StatusCodes.Status500InternalServerError)
-            };
+                case UserDetailsOperationStatus.Success:
+                    _logger.LogInformation("User details stored for userId: {UserId}", userId);
+                    return Ok();
+                case UserDetailsOperationStatus.UserNotFound:
+                    _logger.LogWarning("StoreUserDetails failed: user not found for userId: {UserId}", userId);
+                    return NotFound();
+                default:
+                    _logger.LogError("StoreUserDetails failed to save for userId: {UserId}", userId);
+                    return StatusCode(StatusCodes.Status500InternalServerError);
+            }
         }
     }
 }

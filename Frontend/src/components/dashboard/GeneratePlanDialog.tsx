@@ -134,6 +134,7 @@ const GeneratePlanDialog = ({ open, mode, existingPlanId, onClose, onPlanAccepte
                         </Typography>
                     </Box>
                 ) : (
+                    // TODO: rethink button names for handleAccept
                     <GeneratedPlanPreview
                         meals={meals}
                         targetCalories={targetCalories}

@@ -67,12 +67,18 @@ namespace DailyPlanService.Controllers
 
             var result = await _dailyPlanService.CreateDailyPlanAsync(userId, dailyPlanDto);
 
-            return result switch
+            switch (result)
             {
-                CreateDailyPlanStatus.Created => Created(),
-                CreateDailyPlanStatus.AlreadyExists => Conflict("A daily plan already exists for today."),
-                _ => StatusCode(StatusCodes.Status500InternalServerError)
-            };
+                case CreateDailyPlanStatus.Created:
+                    _logger.LogInformation("Daily plan created for user {UserId}", userId);
+                    return Created();
+                case CreateDailyPlanStatus.AlreadyExists:
+                    _logger.LogWarning("Daily plan already exists for user {UserId} today", userId);
+                    return Conflict("A daily plan already exists for today.");
+                default:
+                    _logger.LogError("Failed to create daily plan for user {UserId}", userId);
+                    return StatusCode(StatusCodes.Status500InternalServerError);
+            }
         }
 
         [Authorize]
@@ -88,10 +94,18 @@ namespace DailyPlanService.Controllers
 
             var result = await _dailyPlanService.ReplaceDailyPlanAsync(userId, dailyPlanId, dailyPlanDto);
 
-            if (result)
-                return Ok();
-
-            return StatusCode(500);
+            switch (result)
+            {
+                case ReplaceDailyPlanStatus.Replaced:
+                    _logger.LogInformation("Daily plan {DailyPlanId} replaced for user {UserId}", dailyPlanId, userId);
+                    return Ok();
+                case ReplaceDailyPlanStatus.NotFound:
+                    _logger.LogWarning("Daily plan {DailyPlanId} not found for user {UserId}", dailyPlanId, userId);
+                    return NotFound();
+                default:
+                    _logger.LogError("Failed to replace daily plan {DailyPlanId} for user {UserId}", dailyPlanId, userId);
+                    return StatusCode(StatusCodes.Status500InternalServerError);
+            }
         }
 
         [Authorize]

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using DailyPlanService.Context;
+using DailyPlanService.Models;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan.Create;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan.Edit;
@@ -55,8 +56,7 @@ namespace DailyPlanService.Services.DailyPlan
             return result > 0 ? CreateDailyPlanStatus.Created : CreateDailyPlanStatus.Failed;
         }
 
-        // TODO: use dailyPlan.Meals.Clear and map the new meals to dailyplandto.meals
-        public async Task<bool> ReplaceDailyPlanAsync(string userId, int dailyPlanId, EditDailyPlanDto dailyPlanDto)
+        public async Task<ReplaceDailyPlanStatus> ReplaceDailyPlanAsync(string userId, int dailyPlanId, EditDailyPlanDto dailyPlanDto)
         {
             var dailyPlan = await _dbContext.DailyPlans
                 .Include(p => p.Meals)
@@ -66,13 +66,21 @@ namespace DailyPlanService.Services.DailyPlan
                 .FirstOrDefaultAsync();
 
             if (dailyPlan == null)
-                return false;
+                return ReplaceDailyPlanStatus.NotFound;
 
-            _mapper.Map(dailyPlanDto, dailyPlan);
+            dailyPlan.Meals.Clear();
+
+            var newMeals = _mapper.Map<List<PlannedMeal>>(dailyPlanDto.Meals);
+
+            foreach (var meal in newMeals)
+            {
+                dailyPlan.Meals.Add(meal);
+            }
+
             dailyPlan.ModifiedAt = DateTime.UtcNow;
 
             var result = await _dbContext.SaveChangesAsync();
-            return result > 0;
+            return result > 0 ? ReplaceDailyPlanStatus.Replaced : ReplaceDailyPlanStatus.Failed;
         }
     }
 }

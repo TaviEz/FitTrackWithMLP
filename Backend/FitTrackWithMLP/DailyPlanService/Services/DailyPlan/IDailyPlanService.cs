@@ -9,6 +9,6 @@ namespace DailyPlanService.Services.DailyPlan
     {
         Task<DailyPlanDto?> GetDailyPlanAsync(string userId, DateOnly dateTarget);
         Task<CreateDailyPlanStatus> CreateDailyPlanAsync(string userId, CreateDailyPlanDto dailyPlanDto);
-        Task<bool> ReplaceDailyPlanAsync(string userId, int dailyPlanId, EditDailyPlanDto dailyPlanDto);
+        Task<ReplaceDailyPlanStatus> ReplaceDailyPlanAsync(string userId, int dailyPlanId, EditDailyPlanDto dailyPlanDto);
     }
 }
