@@ -75,19 +75,23 @@ namespace DailyPlanService.Controllers
             };
         }
 
-        // TODO: finish this
         [Authorize]
-        [HttpPut]
-        public async Task<IActionResult> EditDailyPlan([FromBody] EditDailyPlanDto dailyPlanDto)    
+        [HttpPut("{dailyPlanId:int}")]
+        public async Task<IActionResult> ReplaceDailyPlan(
+            [FromRoute] int dailyPlanId, 
+            [FromBody] EditDailyPlanDto dailyPlanDto)    
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out _))
                 return Unauthorized("User ID not found in token.");
 
-            
+            var result = await _dailyPlanService.ReplaceDailyPlanAsync(userId, dailyPlanId, dailyPlanDto);
 
-            return Ok();
+            if (result)
+                return Ok();
+
+            return StatusCode(500);
         }
 
         [Authorize]

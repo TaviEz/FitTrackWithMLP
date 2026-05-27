@@ -10,10 +10,10 @@ import {
     Typography,
 } from "@mui/material";
 import theme from "../../theme";
-import type { MealDto } from "../../dtos/DailyPlan/MealDto";
+import type { GeneratedMealDto } from "../../dtos/DailyPlan/GeneratedMealDto";
 
 interface GeneratedPlanPreviewProps {
-    meals: MealDto[];
+    meals: GeneratedMealDto[];
     targetCalories: number | null;
     actualCalories: number | null;
     mealsComplexity: string;
@@ -21,7 +21,7 @@ interface GeneratedPlanPreviewProps {
     actions: React.ReactNode;
 }
 
-const getMealCalories = (meal: MealDto) =>
+const getMealCalories = (meal: GeneratedMealDto) =>
     meal.ingredients.reduce(
         (sum, ingredient) => sum + ((ingredient.amountG / 100) * (ingredient.calories ?? 0)),
         0

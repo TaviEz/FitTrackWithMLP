@@ -1,7 +1,7 @@
 import type { PlannedMealIngredientDto } from "./PlannedMealIngredientDto";
 
 export interface PlannedMealDto {
-    id: number;
+    plannedMealId: number;
     category: string;
     title: string;
     ingredients: PlannedMealIngredientDto[];

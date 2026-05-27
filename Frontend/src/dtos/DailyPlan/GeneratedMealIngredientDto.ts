@@ -1,4 +1,4 @@
-export interface MealIngredientDto {
+export interface GeneratedMealIngredientDto {
     foodId: number;
     name: string;
     amountG: number;

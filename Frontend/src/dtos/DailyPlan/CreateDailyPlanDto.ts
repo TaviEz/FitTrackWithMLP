@@ -1,5 +1,5 @@
-import type { MealDto } from "./MealDto";
+import type { GeneratedMealDto } from "./GeneratedMealDto";
 
 export interface CreateDailyPlanDto {
-    meals: MealDto[];
+    meals: GeneratedMealDto[];
 }

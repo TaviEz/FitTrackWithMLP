@@ -208,6 +208,7 @@ const Dashboard = () => {
         <GeneratePlanDialog
             open={generatePlanOpen}
             mode={dailyPlan ? "replace" : "create"}
+            existingPlanId={dailyPlan?.dailyPlanId}
             onClose={() => setGeneratePlanOpen(false)}
             onPlanAccepted={handlePlanAccepted}
         />

@@ -10,11 +10,11 @@ import {
     Typography,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { generateDailyPlan, createDailyPlan } from "../../api/DailyPlanService";
+import { generateDailyPlan, createDailyPlan, replaceDailyPlan } from "../../api/DailyPlanService";
 import { useUser } from "../../context/UserContext";
 import UserPhysiqueDto from "../../dtos/UserDetails/UserPhysiqueDto";
 import { getActivityLevelEnum } from "../../utils/types";
-import type { MealDto } from "../../dtos/DailyPlan/MealDto";
+import type { GeneratedMealDto } from "../../dtos/DailyPlan/GeneratedMealDto";
 import type { CreateDailyPlanDto } from "../../dtos/DailyPlan/CreateDailyPlanDto";
 import GeneratedPlanPreview from "../shared/GeneratedPlanPreview";
 import { showError } from "../shared/ShowToast";
@@ -23,15 +23,16 @@ import { SecondaryButton } from "../../styledComponents/Buttons";
 interface GeneratePlanDialogProps {
     open: boolean;
     mode: "create" | "replace";
+    existingPlanId?: number;
     onClose: () => void;
     onPlanAccepted: () => void;
 }
 
-const GeneratePlanDialog = ({ open, mode, onClose, onPlanAccepted }: GeneratePlanDialogProps) => {
+const GeneratePlanDialog = ({ open, mode, existingPlanId, onClose, onPlanAccepted }: GeneratePlanDialogProps) => {
     const { userDetails } = useUser();
     const [generating, setGenerating] = useState(false);
     const [saving, setSaving] = useState(false);
-    const [meals, setMeals] = useState<MealDto[]>([]);
+    const [meals, setMeals] = useState<GeneratedMealDto[]>([]);
     const [targetCalories, setTargetCalories] = useState<number | null>(null);
     const [actualCalories, setActualCalories] = useState<number | null>(null);
     const [mealsComplexity, setMealsComplexity] = useState("Standard");
@@ -84,8 +85,20 @@ const GeneratePlanDialog = ({ open, mode, onClose, onPlanAccepted }: GeneratePla
         if (meals.length === 0) return;
         setSaving(true);
         if (mode === "replace") {
-            // TODO: call replace/PUT API once available
+            if (!existingPlanId) {
+                setSaving(false);
+                showError("Could not identify the plan to replace. Please try again.");
+                return;
+            }
+            const payload: CreateDailyPlanDto = { meals };
+            console.log(payload)
+            const result = await replaceDailyPlan(existingPlanId, payload);
             setSaving(false);
+            if (!result.success) {
+                showError("Failed to replace the plan. Please try again.");
+                return;
+            }
+            onPlanAccepted();
             return;
         }
         const payload: CreateDailyPlanDto = { meals };
@@ -105,7 +118,7 @@ const GeneratePlanDialog = ({ open, mode, onClose, onPlanAccepted }: GeneratePla
     return (
         <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
             <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <Typography variant="h6" fontWeight={700}>
+                <Typography variant="h6" fontWeight={700} component="span">
                     Today's Meal Plan
                 </Typography>
                 <IconButton onClick={onClose} size="small" aria-label="close">

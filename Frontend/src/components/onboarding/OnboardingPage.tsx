@@ -16,7 +16,7 @@ import { createDailyPlan, generateDailyPlan } from "../../api/DailyPlanService";
 import type { CreateDailyPlanDto } from "../../dtos/DailyPlan/CreateDailyPlanDto";
 import UserPhysiqueDto from "../../dtos/UserDetails/UserPhysiqueDto";
 import { getActivityLevelEnum } from "../../utils/types";
-import type { MealDto } from "../../dtos/DailyPlan/MealDto";
+import type { MealDto } from "../../dtos/DailyPlan/GeneratedMealDto";
 import { SecondaryButton } from "../../styledComponents/Buttons";
 import GeneratedPlanPreview from "../shared/GeneratedPlanPreview";
 

@@ -20,6 +20,23 @@ export const generateDailyPlan = async (userPhysiqueDto: UserPhysiqueDto): Promi
     }
 }
 
+export const replaceDailyPlan = async (
+    dailyPlanId: number,
+    payload: CreateDailyPlanDto
+): Promise<any> => {
+    try {
+        const result = await api.put(`${API_BASE_URL}/${dailyPlanId}`, payload);
+
+        if (result.status >= 400) {
+            return { success: false, status: result.status };
+        }
+
+        return { success: true, status: result.status };
+    } catch (error: any) {
+        return { success: false, status: error?.response?.status };
+    }
+}
+
 export const createDailyPlan = async (payload: CreateDailyPlanDto): Promise<any> => {
     try {
         const result = await api.post(`${API_BASE_URL}`, payload);

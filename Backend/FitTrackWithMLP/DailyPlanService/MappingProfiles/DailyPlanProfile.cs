@@ -2,6 +2,7 @@
 using DailyPlanService.Models;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan.Create;
+using FitTrackWithMLP.Shared.DTOs.DailyPlan.Edit;
 
 namespace DailyPlanService.MappingProfiles
 {
@@ -22,6 +23,10 @@ namespace DailyPlanService.MappingProfiles
                 .ForMember(dest => dest.TotalCalories, opt => opt.MapFrom(src =>
                     src.Ingredients.Sum(i => (int)Math.Round((i.AmountG / 100.0) * i.Calories))));
             CreateMap<PlannedIngredient, PlannedMealIngredientDto>();
+
+            CreateMap<EditDailyPlanDto, DailyPlan>();
+            CreateMap<EditPlannedMealDto, PlannedMeal>();
+            CreateMap<EditPlannedIngredientDto, PlannedIngredient>();
         }
     }
 }

@@ -1,7 +1,7 @@
 import type { PlannedMealDto } from "./PlannedMealDto";
 
 export interface DailyPlanDto {
-    id: number;
+    dailyPlanId: number;
     totalCalories: number;
     meals: PlannedMealDto[];
 }

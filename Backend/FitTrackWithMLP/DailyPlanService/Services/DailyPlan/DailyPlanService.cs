@@ -55,20 +55,24 @@ namespace DailyPlanService.Services.DailyPlan
             return result > 0 ? CreateDailyPlanStatus.Created : CreateDailyPlanStatus.Failed;
         }
 
-        // TODO: use automapper to map entity to dto here
-        public async Task<bool> EditDailyPlanAsync(string userId, EditDailyPlanDto dailyPlanDto)
+        // TODO: use dailyPlan.Meals.Clear and map the new meals to dailyplandto.meals
+        public async Task<bool> ReplaceDailyPlanAsync(string userId, int dailyPlanId, EditDailyPlanDto dailyPlanDto)
         {
             var dailyPlan = await _dbContext.DailyPlans
                 .Include(p => p.Meals)
                 .ThenInclude(m => m.Ingredients)
                 .Where(p => p.UserId == Guid.Parse(userId)
-                    && p.DailyPlanId == dailyPlanDto.DailyPlanId)
+                    && p.DailyPlanId == dailyPlanId)
                 .FirstOrDefaultAsync();
-            
 
+            if (dailyPlan == null)
+                return false;
 
-            return true;
-                                    
+            _mapper.Map(dailyPlanDto, dailyPlan);
+            dailyPlan.ModifiedAt = DateTime.UtcNow;
+
+            var result = await _dbContext.SaveChangesAsync();
+            return result > 0;
         }
     }
 }
