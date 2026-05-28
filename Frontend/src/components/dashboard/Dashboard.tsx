@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import {
     Box,
     Typography,
@@ -6,13 +7,18 @@ import {
     Card,
     CardContent,
     CircularProgress,
+    IconButton,
     LinearProgress,
     Divider,
     Stack,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import EditIcon from "@mui/icons-material/Edit";
 import RestaurantMenuIcon from "@mui/icons-material/RestaurantMenu";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { useUser } from "../../context/UserContext";
 import { getDailyPlan } from "../../api/DailyPlanService";
 import { showError } from "../shared/ShowToast";
@@ -22,9 +28,11 @@ import type { PlannedMealDto } from "../../dtos/DailyPlan/PlannedMealDto";
 import GeneratePlanDialog from "./GeneratePlanDialog";
 
 const CATEGORIES = ["Breakfast", "Lunch", "Snack", "Dinner"];
+const NAV_HEIGHT = 64;
 
 const Dashboard = () => {
     const { userId, userDetails } = useUser();
+    const location = useLocation();
     const [dailyPlan, setDailyPlan] = useState<DailyPlanDto | null>(null);
     const [targetCalories, setTargetCalories] = useState<number>(0);
     const [loading, setLoading] = useState(true);
@@ -45,7 +53,7 @@ const Dashboard = () => {
     useEffect(() => {
         if (!userId) return;
         fetchDailyPlan();
-    }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [userId, location.key]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         setTargetCalories(userDetails?.targetCalories ?? 0);
@@ -64,14 +72,30 @@ const Dashboard = () => {
         await fetchDailyPlan();
     };
 
+    const handleEditMeal = (meal: PlannedMealDto) => {
+        // TODO: open edit meal dialog
+        console.log("Edit meal:", meal);
+    };
+
+    const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+
     const mealsByCategory = (category: string): PlannedMealDto[] =>
         dailyPlan?.meals.filter(
             (m) => m.category.toLowerCase() === category.toLowerCase()
         ) ?? [];
 
+    const caloriePercent = targetCalories > 0
+        ? Math.min((dailyPlan?.totalCalories ?? 0) / targetCalories * 100, 100)
+        : 0;
+
     if (loading) {
         return (
-            <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+            <Box
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+                sx={{ mt: `${NAV_HEIGHT}px`, height: `calc(100vh - ${NAV_HEIGHT}px)` }}
+            >
                 <CircularProgress />
             </Box>
         );
@@ -79,140 +103,342 @@ const Dashboard = () => {
 
     return (
         <>
-            {/* make sure you dont have a scrollbar on this page */}
-            <Box sx={{ p: 3, pt: 8, maxWidth: 800, mx: "auto" }}>
-            {/* Header */}
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-                <Typography variant="h5" fontWeight={700}>
-                    Daily Plan
-                </Typography>
-                {dailyPlan && (
-                    <Button
-                        variant="contained"
-                        startIcon={<AutoAwesomeIcon />}
-                        onClick={handleGenerateWithAI}
-                        sx={{ textTransform: "none" }}
+            <Box
+                sx={{
+                    mt: `${NAV_HEIGHT}px`,
+                    height: `calc(100vh - ${NAV_HEIGHT}px)`,
+                    display: "flex",
+                    flexDirection: "column",
+                    overflow: "hidden",
+                }}
+            >
+                {/* ── Header bar ── */}
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 3,
+                        px: 3,
+                        py: 1.5,
+                        borderBottom: 1,
+                        borderColor: "divider",
+                        flexShrink: 0,
+                    }}
+                >
+                    <Typography variant="h6" fontWeight={700} sx={{ whiteSpace: "nowrap" }}>
+                        Daily Plan
+                    </Typography>
+
+                    {dailyPlan && (
+                        <Box sx={{ flex: 1, maxWidth: 320 }}>
+                            <Box display="flex" justifyContent="space-between" mb={0.5}>
+                                <Typography variant="caption" color="text.secondary">Calories</Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                    {dailyPlan.totalCalories} / {targetCalories} kcal
+                                </Typography>
+                            </Box>
+                            <LinearProgress
+                                variant="determinate"
+                                value={caloriePercent}
+                                sx={{ height: 6, borderRadius: 3 }}
+                            />
+                        </Box>
+                    )}
+
+                    <Box sx={{ flex: 1 }} />
+                    {dailyPlan ? (
+                        <Stack direction="row" spacing={1}>
+                            <Button
+                                variant="outlined"
+                                size="small"
+                                startIcon={<AddIcon />}
+                                onClick={handleAddMeal}
+                                sx={{ textTransform: "none" }}
+                            >
+                                Add meal
+                            </Button>
+                            <Button
+                                variant="contained"
+                                size="small"
+                                startIcon={<AutoAwesomeIcon />}
+                                onClick={handleGenerateWithAI}
+                                sx={{ textTransform: "none" }}
+                            >
+                                Regenerate
+                            </Button>
+                        </Stack>
+                    ) : (
+                        <Stack direction="row" spacing={1}>
+                            <Button
+                                variant="outlined"
+                                size="small"
+                                startIcon={<AddIcon />}
+                                onClick={handleAddMeal}
+                                sx={{ textTransform: "none" }}
+                            >
+                                Add manually
+                            </Button>
+                            <Button
+                                variant="contained"
+                                size="small"
+                                startIcon={<AutoAwesomeIcon />}
+                                onClick={handleGenerateWithAI}
+                                sx={{ textTransform: "none" }}
+                            >
+                                Generate with AI
+                            </Button>
+                        </Stack>
+                    )}
+                </Box>
+
+                {/* ── Content ── */}
+                {dailyPlan ? (
+                    <Box sx={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden" }}>
+                        {/* Calendar display and logic */}
+                        <Box
+                            sx={{
+                                px: 3,
+                                py: 1.5,
+                                flexShrink: 0,
+                                borderBottom: 1,
+                                borderColor: "divider",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "space-between",
+                                backgroundColor: "background.paper",
+                                position: "relative"
+                            }}
+                        >
+                            {/* Left Side: popover calendar */}
+                            <DatePicker
+                                label="Pick Date"
+                                value={selectedDate}
+                                onChange={(newDate) => {
+                                    if (newDate) setSelectedDate(newDate);
+                                }}
+                                slotProps={{
+                                    textField: {
+                                        size: 'small',
+                                        variant: 'standard'
+                                    }
+                                }}
+                            />
+
+                            {/* Center: Date Navigator */}
+                            <Stack 
+                                direction="row" 
+                                spacing={2} 
+                                alignItems="center"
+                                sx={{
+                                    position: "absolute",
+                                    left: "50%",
+                                    transform: "translateX(-50%)", // Mathematical alignment calculation anchor
+                                    zIndex: 1
+                                }}
+                            >
+                                <IconButton 
+                                    size="small" 
+                                    onClick={() => {
+                                        const nextDate = new Date(selectedDate);
+                                        nextDate.setDate(selectedDate.getDate() - 1);
+                                        setSelectedDate(nextDate);
+                                    }}
+                                >
+                                    <ChevronLeftIcon />
+                                </IconButton>
+                                
+                                <Typography 
+                                    variant="body1" 
+                                    fontWeight={700} 
+                                    sx={{ 
+                                        minWidth: 180,
+                                        textAlign: "center", 
+                                        fontSize: "1.05rem",
+                                        color: "text.primary" 
+                                    }}
+                                >
+                                    {selectedDate.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}
+                                </Typography>
+
+                                <IconButton 
+                                    size="small"
+                                    onClick={() => {
+                                        const nextDate = new Date(selectedDate);
+                                        nextDate.setDate(selectedDate.getDate() + 1);
+                                        setSelectedDate(nextDate);
+                                    }}
+                                >
+                                    <ChevronRightIcon />
+                                </IconButton>
+                            </Stack>
+
+                            {/* Right Side: Back to Today Reset */}
+                            <Button 
+                                variant="text" 
+                                size="small" 
+                                sx={{ textTransform: "none", fontWeight: 600 }}
+                                onClick={() => setSelectedDate(new Date())}
+                            >
+                                Today
+                            </Button>
+                        </Box>
+                        <Box 
+                            sx={{ 
+                                display: "flex", 
+                                flexDirection: "row",
+                                justifyContent: "center",
+                                width: "100%",
+                                maxWidth: "1400px",
+                                minHeight: 0, 
+                                gap: 3, 
+                                px: 4, 
+                                pt: 6,
+                                pb: 4,
+                                alignItems: "flex-start"
+                            }}
+                        >
+                            {CATEGORIES.map((category) => {
+                                const meal = mealsByCategory(category)[0] ?? null;
+                                return (
+                                    <Box
+                                        key={category}
+                                        sx={{
+                                            width: "20%", 
+                                            px: 1.5,
+                                            display: "flex",
+                                            flexDirection: "column",
+                                        }}
+                                    >
+                                        <Typography 
+                                            variant="subtitle2" 
+                                            fontWeight={700} 
+                                            color="text.secondary" 
+                                            mb={1.5} 
+                                            sx={{ textTransform: "uppercase", letterSpacing: 1 }}
+                                        >
+                                            {category}
+                                        </Typography>
+
+                                        {meal ? (
+                                            <Card 
+                                                variant="outlined" 
+                                                sx={{ 
+                                                    flex: 1, 
+                                                    display: "flex", 
+                                                    flexDirection: "column", 
+                                                    minHeight: 0,
+                                                    borderRadius: 3, // Modern rounded look
+                                                    boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.03)", // Clean, subtle depth shadow
+                                                    backgroundColor: "background.paper",
+                                                    border: "1px solid",
+                                                    borderColor: "divider"
+                                                }}
+                                            >
+                                                <CardContent sx={{ p: 3, flex: 1, display: "flex", flexDirection: "column", "&:last-child": { pb: 3 } }}>
+                                                    <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={0.5}>
+                                                        <Box flex={1}>
+                                                            <Typography variant="subtitle1" fontWeight={700} lineHeight={1.3} mb={0.5}>
+                                                                {meal.title}
+                                                            </Typography>
+                                                            <Typography variant="body2" fontWeight={600} color="primary.main">
+                                                                {meal.totalCalories} kcal
+                                                            </Typography>
+                                                        </Box>
+                                                        <IconButton
+                                                            size="small"
+                                                            onClick={() => handleEditMeal(meal)}
+                                                            aria-label="edit meal"
+                                                            sx={{ ml: 0.5, mt: -0.5, flexShrink: 0 }}
+                                                        >
+                                                            <EditIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </Box>
+                                                    <Divider sx={{ my: 2 }} />
+                                                    <Box sx={{ flex: 1, overflowY: "auto" }}>
+                                                        {meal.ingredients.map((ing, i) => (
+                                                            <Box
+                                                                key={ing.plannedMealIngredientId}
+                                                                sx={{
+                                                                    display: "flex",
+                                                                    justifyContent: "space-between", // Pushes text to left, grams to the right
+                                                                    alignItems: "center",
+                                                                    py: 1, // Cleaner vertical spacing
+                                                                    borderBottom: i < meal.ingredients.length - 1 ? "1px dashed" : "none", // Dashed separator looks lighter
+                                                                    borderColor: "divider",
+                                                                }}
+                                                            >
+                                                                <Typography variant="body2" color="text.primary" sx={{ fontWeight: 500 }}>
+                                                                    {ing.name}
+                                                                </Typography>
+                                                                <Typography variant="body2" color="text.secondary" sx={{ ml: 1, fontWeight: 600 }}>
+                                                                    {ing.amountG}g
+                                                                </Typography>
+                                                            </Box>
+                                                        ))}
+                                                    </Box>
+                                                </CardContent>
+                                            </Card>
+                                        ) : (
+                                            <Box
+                                                onClick={handleAddMeal}
+                                                sx={{
+                                                    flex: 1,
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                    alignItems: "center",
+                                                    justifyContent: "center",
+                                                    border: "1.5px dashed",
+                                                    borderColor: "divider",
+                                                    borderRadius: 2,
+                                                    cursor: "pointer",
+                                                    color: "text.disabled",
+                                                    transition: "border-color 0.2s, color 0.2s",
+                                                    "&:hover": {
+                                                        borderColor: "primary.main",
+                                                        color: "primary.main",
+                                                    },
+                                                }}
+                                            >
+                                                <AddIcon sx={{ mb: 0.5 }} />
+                                                <Typography variant="caption">
+                                                    Add {category.toLowerCase()}
+                                                </Typography>
+                                            </Box>
+                                        )}
+                                    </Box>
+                                );
+                            })}
+                    </Box>
+                    </Box>
+                ) : (
+                    <Box
+                        display="flex"
+                        flexDirection="column"
+                        alignItems="center"
+                        justifyContent="center"
+                        flex={1}
+                        textAlign="center"
+                        p={5}
                     >
-                        Regenerate Plan
-                    </Button>
+                        <RestaurantMenuIcon sx={{ fontSize: 72, color: "primary.light", mb: 2, opacity: 0.7 }} />
+                        <Typography variant="h5" fontWeight={700} mb={1}>
+                            No plan for today
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary" maxWidth={340}>
+                            You haven't logged any meals yet. Let AI build a plan for you, or add meals manually.
+                        </Typography>
+                    </Box>
                 )}
             </Box>
 
-            {/* Calorie summary */}
-            {dailyPlan && (
-                <Card sx={{ mb: 4 }}>
-                    <CardContent>
-                        <Box display="flex" justifyContent="space-between" mb={1}>
-                            <Typography variant="subtitle1" fontWeight={600}>
-                                Calories
-                            </Typography>
-                            <Typography variant="subtitle1" fontWeight={600}>
-                                {dailyPlan.totalCalories} / {targetCalories} kcal
-                            </Typography>
-                        </Box>
-                        <LinearProgress
-                            variant="determinate"
-                            value={Math.min((dailyPlan.totalCalories / targetCalories) * 100, 100)}
-                            sx={{ height: 8, borderRadius: 4 }}
-                        />
-                    </CardContent>
-                </Card>
-            )}
-
-            {/* Meals by category */}
-            {dailyPlan ? (
-                CATEGORIES.map((category) => {
-                    const meals = mealsByCategory(category);
-                    return (
-                        <Box key={category} mb={4}>
-                            <Typography variant="h6" fontWeight={700} mb={1}>
-                                {category}
-                            </Typography>
-                            <Divider sx={{ mb: 2 }} />
-                            {meals.length > 0 ? (
-                                meals.map((meal) => (
-                                    <Card key={meal.title} sx={{ mb: 2 }}>
-                                        <CardContent>
-                                            <Typography
-                                                variant="overline"
-                                                color="primary"
-                                                fontWeight={700}
-                                                display="block"
-                                                lineHeight={1.5}
-                                            >
-                                                {meal.category}
-                                            </Typography>
-                                            <Typography variant="body1" fontWeight={600}>
-                                                {meal.title}
-                                            </Typography>
-                                        </CardContent>
-                                    </Card>
-                                ))
-                            ) : (
-                                <Typography color="text.secondary" variant="body2">
-                                    No {category.toLowerCase()} added
-                                </Typography>
-                            )}
-                        </Box>
-                    );
-                })
-            ) : (
-                // Display friendly message in case there are no meals
-                <Box
-                    display="flex"
-                    flexDirection="column"
-                    alignItems="center"
-                    justifyContent="center"
-                    textAlign="center"
-                    mt={6}
-                    p={5}
-                    sx={{
-                        borderRadius: 4,
-                        border: "2px dashed",
-                        borderColor: "divider",
-                        bgcolor: "background.paper",
-                    }}
-                >
-                    <RestaurantMenuIcon
-                        sx={{ fontSize: 72, color: "primary.light", mb: 2, opacity: 0.7 }}
-                    />
-                    <Typography variant="h5" fontWeight={700} mb={1}>
-                        No plan for today
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" mb={3} maxWidth={340}>
-                        You haven't logged any meals yet. Let AI build a plan for you, or add meals manually.
-                    </Typography>
-                    <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
-                        <Button
-                            variant="contained"
-                            size="large"
-                            startIcon={<AutoAwesomeIcon />}
-                            onClick={handleGenerateWithAI}
-                            sx={{ textTransform: "none", px: 4, borderRadius: 3 }}
-                        >
-                            Generate with AI
-                        </Button>
-                        <Button
-                            variant="outlined"
-                            size="large"
-                            startIcon={<AddIcon />}
-                            onClick={handleAddMeal}
-                            sx={{ textTransform: "none", px: 4, borderRadius: 3 }}
-                        >
-                            Add manually
-                        </Button>
-                    </Stack>
-                </Box>
-            )}
-        </Box>
-        <GeneratePlanDialog
-            open={generatePlanOpen}
-            mode={dailyPlan ? "replace" : "create"}
-            existingPlanId={dailyPlan?.dailyPlanId}
-            onClose={() => setGeneratePlanOpen(false)}
-            onPlanAccepted={handlePlanAccepted}
-        />
-        <ToastContainer />
+            <GeneratePlanDialog
+                open={generatePlanOpen}
+                mode={dailyPlan ? "replace" : "create"}
+                existingPlanId={dailyPlan?.dailyPlanId}
+                onClose={() => setGeneratePlanOpen(false)}
+                onPlanAccepted={handlePlanAccepted}
+            />
+            <ToastContainer />
         </>
     );
 };

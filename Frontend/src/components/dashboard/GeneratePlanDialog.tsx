@@ -91,7 +91,6 @@ const GeneratePlanDialog = ({ open, mode, existingPlanId, onClose, onPlanAccepte
                 return;
             }
             const payload: CreateDailyPlanDto = { meals };
-            console.log(payload)
             const result = await replaceDailyPlan(existingPlanId, payload);
             setSaving(false);
             if (!result.success) {
@@ -134,7 +133,6 @@ const GeneratePlanDialog = ({ open, mode, existingPlanId, onClose, onPlanAccepte
                         </Typography>
                     </Box>
                 ) : (
-                    // TODO: rethink button names for handleAccept
                     <GeneratedPlanPreview
                         meals={meals}
                         targetCalories={targetCalories}
@@ -151,7 +149,7 @@ const GeneratePlanDialog = ({ open, mode, existingPlanId, onClose, onPlanAccepte
                                     onClick={handleAccept}
                                     disabled={saving}
                                 >
-                                    {saving ? "Saving..." : mode === "replace" ? "Replace plan" : "Use this plan"}
+                                    {saving ? "Saving..." : "Use this plan"}
                                 </Button>
                             </>
                         }
