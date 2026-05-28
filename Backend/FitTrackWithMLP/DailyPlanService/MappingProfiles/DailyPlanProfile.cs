@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
 using DailyPlanService.Models;
-using FitTrackWithMLP.Shared.DTOs.DailyPlan;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan.Create;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan.Edit;
+using FitTrackWithMLP.Shared.DTOs.DailyPlan.Get;
 
 namespace DailyPlanService.MappingProfiles
 {

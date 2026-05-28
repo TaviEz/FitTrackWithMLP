@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace FitTrackWithMLP.Shared.DTOs.DailyPlan
+namespace FitTrackWithMLP.Shared.DTOs.DailyPlan.Generate
 {
     public class OptimizedMealPlanDto
     {

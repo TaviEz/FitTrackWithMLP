@@ -1,5 +1,4 @@
-﻿using FitTrackWithMLP.Shared.DTOs.DailyPlan;
-using FitTrackWithMLP.Shared.DTOs.User;
+﻿using FitTrackWithMLP.Shared.DTOs.Nutrition;
 using FitTrackWithMLP.Shared.Enums;
 
 namespace FitTrackWithMLP.Shared.Logic

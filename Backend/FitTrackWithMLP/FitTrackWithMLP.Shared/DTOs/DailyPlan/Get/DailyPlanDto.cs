@@ -1,6 +1,5 @@
-﻿namespace FitTrackWithMLP.Shared.DTOs.DailyPlan
+﻿namespace FitTrackWithMLP.Shared.DTOs.DailyPlan.Get
 {
-    // TODO: organize the dtos at this level in folders similar to create and edit dtos
     public class DailyPlanDto
     {
         public int DailyPlanId { get; set; }

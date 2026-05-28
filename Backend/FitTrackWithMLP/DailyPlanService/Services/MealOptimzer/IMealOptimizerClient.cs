@@ -1,4 +1,4 @@
-﻿using FitTrackWithMLP.Shared.DTOs.DailyPlan;
+﻿using FitTrackWithMLP.Shared.DTOs.DailyPlan.Generate;
 
 namespace DailyPlanService.Services.MealOptimzer
 {

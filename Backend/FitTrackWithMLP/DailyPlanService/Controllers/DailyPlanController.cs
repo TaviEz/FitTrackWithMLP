@@ -1,8 +1,8 @@
 ﻿using DailyPlanService.Services.DailyPlan;
 using DailyPlanService.Services.MealOptimzer;
-using FitTrackWithMLP.Shared.DTOs.DailyPlan;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan.Create;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan.Edit;
+using FitTrackWithMLP.Shared.DTOs.DailyPlan.Generate;
 using FitTrackWithMLP.Shared.DTOs.User;
 using FitTrackWithMLP.Shared.Enums;
 using FitTrackWithMLP.Shared.Logic;

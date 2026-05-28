@@ -1,4 +1,4 @@
-﻿namespace FitTrackWithMLP.Shared.DTOs.DailyPlan
+﻿namespace FitTrackWithMLP.Shared.DTOs.DailyPlan.Get
 {
     public class PlannedMealDto
     {
