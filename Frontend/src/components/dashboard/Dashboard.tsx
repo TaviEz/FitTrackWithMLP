@@ -37,11 +37,12 @@ const Dashboard = () => {
     const [targetCalories, setTargetCalories] = useState<number>(0);
     const [loading, setLoading] = useState(true);
     const [generatePlanOpen, setGeneratePlanOpen] = useState(false);
+    const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
-    const fetchDailyPlan = async () => {
+    const fetchDailyPlan = async (date: Date) => {
         setLoading(true);
-        const today = new Date().toISOString().split("T")[0];
-        const result = await getDailyPlan(today);
+        const dateStr = date.toISOString().split("T")[0];
+        const result = await getDailyPlan(dateStr);
         if (!result.success) {
             showError("Failed to load daily plan");
         } else {
@@ -52,8 +53,8 @@ const Dashboard = () => {
 
     useEffect(() => {
         if (!userId) return;
-        fetchDailyPlan();
-    }, [userId, location.key]); // eslint-disable-line react-hooks/exhaustive-deps
+        fetchDailyPlan(selectedDate);
+    }, [userId, location.key, selectedDate]); // eslint-disable-line react-hooks/exhaustive-deps
 
     useEffect(() => {
         setTargetCalories(userDetails?.targetCalories ?? 0);
@@ -69,15 +70,13 @@ const Dashboard = () => {
 
     const handlePlanAccepted = async () => {
         setGeneratePlanOpen(false);
-        await fetchDailyPlan();
+        await fetchDailyPlan(selectedDate);
     };
 
     const handleEditMeal = (meal: PlannedMealDto) => {
         // TODO: open edit meal dialog
         console.log("Edit meal:", meal);
     };
-
-    const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
     const mealsByCategory = (category: string): PlannedMealDto[] =>
         dailyPlan?.meals.filter(
@@ -107,6 +106,7 @@ const Dashboard = () => {
                 sx={{
                     mt: `${NAV_HEIGHT}px`,
                     height: `calc(100vh - ${NAV_HEIGHT}px)`,
+                    width: "100%",
                     display: "flex",
                     flexDirection: "column",
                     overflow: "hidden",
@@ -146,142 +146,114 @@ const Dashboard = () => {
                     )}
 
                     <Box sx={{ flex: 1 }} />
-                    {dailyPlan ? (
-                        <Stack direction="row" spacing={1}>
-                            <Button
-                                variant="outlined"
-                                size="small"
-                                startIcon={<AddIcon />}
-                                onClick={handleAddMeal}
-                                sx={{ textTransform: "none" }}
-                            >
-                                Add meal
-                            </Button>
-                            <Button
-                                variant="contained"
-                                size="small"
-                                startIcon={<AutoAwesomeIcon />}
-                                onClick={handleGenerateWithAI}
-                                sx={{ textTransform: "none" }}
-                            >
-                                Regenerate
-                            </Button>
-                        </Stack>
-                    ) : (
-                        <Stack direction="row" spacing={1}>
-                            <Button
-                                variant="outlined"
-                                size="small"
-                                startIcon={<AddIcon />}
-                                onClick={handleAddMeal}
-                                sx={{ textTransform: "none" }}
-                            >
-                                Add manually
-                            </Button>
-                            <Button
-                                variant="contained"
-                                size="small"
-                                startIcon={<AutoAwesomeIcon />}
-                                onClick={handleGenerateWithAI}
-                                sx={{ textTransform: "none" }}
-                            >
-                                Generate with AI
-                            </Button>
-                        </Stack>
-                    )}
+                    <Stack direction="row" spacing={1}>
+                        <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<AddIcon />}
+                            onClick={handleAddMeal}
+                            sx={{ textTransform: "none" }}
+                        >
+                            {dailyPlan ? "Add meal" : "Add manually"}
+                        </Button>
+                        <Button
+                            variant="contained"
+                            size="small"
+                            startIcon={<AutoAwesomeIcon />}
+                            onClick={handleGenerateWithAI}
+                            sx={{ textTransform: "none" }}
+                        >
+                            {dailyPlan ? "Regenerate" : "Generate with AI"}
+                        </Button>
+                    </Stack>
                 </Box>
+                {/* Calendar display and logic */}
+                <Box
+                    sx={{
+                        px: 3,
+                        py: 1.5,
+                        flexShrink: 0,
+                        borderBottom: 1,
+                        borderColor: "divider",
+                        display: "flex",
+                        alignItems: "center",
+                        backgroundColor: "background.paper",
+                    }}
+                >
+                    {/* Left: flex:1 so it claims equal space as the right side */}
+                    <Box sx={{ flex: 1 }}>
+                        <DatePicker
+                            label="Pick Date"
+                            value={selectedDate}
+                            onChange={(newDate) => {
+                                if (newDate) setSelectedDate(newDate);
+                            }}
+                            slotProps={{
+                                textField: {
+                                    size: 'small',
+                                    variant: 'standard'
+                                }
+                            }}
+                        />
+                    </Box>
 
+                    {/* Center: selected date*/}
+                    <Stack 
+                        direction="row" 
+                        spacing={2} 
+                        alignItems="center"
+                    >
+                        <IconButton 
+                            size="small" 
+                            onClick={() => {
+                                const nextDate = new Date(selectedDate);
+                                nextDate.setDate(selectedDate.getDate() - 1);
+                                setSelectedDate(nextDate);
+                            }}
+                        >
+                            <ChevronLeftIcon />
+                        </IconButton>
+                        
+                        <Typography 
+                            variant="body1" 
+                            fontWeight={700} 
+                            sx={{ 
+                                minWidth: 180,
+                                textAlign: "center", 
+                                fontSize: "1.05rem",
+                                color: "text.primary" 
+                            }}
+                        >
+                            {selectedDate.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}
+                        </Typography>
+
+                        <IconButton 
+                            size="small"
+                            onClick={() => {
+                                const nextDate = new Date(selectedDate);
+                                nextDate.setDate(selectedDate.getDate() + 1);
+                                setSelectedDate(nextDate);
+                            }}
+                        >
+                            <ChevronRightIcon />
+                        </IconButton>
+                    </Stack>
+
+                    {/* Right: flex:1 mirrors the left, button pushed to the edge */}
+                    <Box sx={{ flex: 1, display: "flex", justifyContent: "flex-end" }}>
+                        <Button 
+                            variant="text" 
+                            size="small" 
+                            sx={{ textTransform: "none", fontWeight: 600 }}
+                            onClick={() => setSelectedDate(new Date())}
+                        >
+                            Today
+                        </Button>
+                    </Box>
+                </Box>
                 {/* ── Content ── */}
                 {dailyPlan ? (
                     <Box sx={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden" }}>
-                        {/* Calendar display and logic */}
-                        <Box
-                            sx={{
-                                px: 3,
-                                py: 1.5,
-                                flexShrink: 0,
-                                borderBottom: 1,
-                                borderColor: "divider",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "space-between",
-                                backgroundColor: "background.paper",
-                                position: "relative"
-                            }}
-                        >
-                            {/* Left Side: popover calendar */}
-                            <DatePicker
-                                label="Pick Date"
-                                value={selectedDate}
-                                onChange={(newDate) => {
-                                    if (newDate) setSelectedDate(newDate);
-                                }}
-                                slotProps={{
-                                    textField: {
-                                        size: 'small',
-                                        variant: 'standard'
-                                    }
-                                }}
-                            />
-
-                            {/* Center: Date Navigator */}
-                            <Stack 
-                                direction="row" 
-                                spacing={2} 
-                                alignItems="center"
-                                sx={{
-                                    position: "absolute",
-                                    left: "50%",
-                                    transform: "translateX(-50%)", // Mathematical alignment calculation anchor
-                                    zIndex: 1
-                                }}
-                            >
-                                <IconButton 
-                                    size="small" 
-                                    onClick={() => {
-                                        const nextDate = new Date(selectedDate);
-                                        nextDate.setDate(selectedDate.getDate() - 1);
-                                        setSelectedDate(nextDate);
-                                    }}
-                                >
-                                    <ChevronLeftIcon />
-                                </IconButton>
-                                
-                                <Typography 
-                                    variant="body1" 
-                                    fontWeight={700} 
-                                    sx={{ 
-                                        minWidth: 180,
-                                        textAlign: "center", 
-                                        fontSize: "1.05rem",
-                                        color: "text.primary" 
-                                    }}
-                                >
-                                    {selectedDate.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}
-                                </Typography>
-
-                                <IconButton 
-                                    size="small"
-                                    onClick={() => {
-                                        const nextDate = new Date(selectedDate);
-                                        nextDate.setDate(selectedDate.getDate() + 1);
-                                        setSelectedDate(nextDate);
-                                    }}
-                                >
-                                    <ChevronRightIcon />
-                                </IconButton>
-                            </Stack>
-
-                            {/* Right Side: Back to Today Reset */}
-                            <Button 
-                                variant="text" 
-                                size="small" 
-                                sx={{ textTransform: "none", fontWeight: 600 }}
-                                onClick={() => setSelectedDate(new Date())}
-                            >
-                                Today
-                            </Button>
-                        </Box>
                         <Box 
                             sx={{ 
                                 display: "flex", 
@@ -356,6 +328,7 @@ const Dashboard = () => {
                                                     <Divider sx={{ my: 2 }} />
                                                     <Box sx={{ flex: 1, overflowY: "auto" }}>
                                                         {meal.ingredients.map((ing, i) => (
+                                                            // TODO check on edit why im getting console error for the key
                                                             <Box
                                                                 key={ing.plannedMealIngredientId}
                                                                 sx={{
@@ -416,9 +389,15 @@ const Dashboard = () => {
                         flexDirection="column"
                         alignItems="center"
                         justifyContent="center"
-                        flex={1}
                         textAlign="center"
+                        mt={20}
                         p={5}
+                        sx={{
+                            borderRadius: 4,
+                            border: "2px dashed",
+                            borderColor: "divider",
+                            bgcolor: "background.paper",
+                        }}
                     >
                         <RestaurantMenuIcon sx={{ fontSize: 72, color: "primary.light", mb: 2, opacity: 0.7 }} />
                         <Typography variant="h5" fontWeight={700} mb={1}>
