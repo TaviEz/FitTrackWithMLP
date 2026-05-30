@@ -16,7 +16,7 @@ import { createDailyPlan, generateDailyPlan } from "../../api/DailyPlanService";
 import type { CreateDailyPlanDto } from "../../dtos/DailyPlan/CreateDailyPlanDto";
 import UserPhysiqueDto from "../../dtos/UserDetails/UserPhysiqueDto";
 import { getActivityLevelEnum } from "../../utils/types";
-import type { MealDto } from "../../dtos/DailyPlan/GeneratedMealDto";
+import type { GeneratedMealDto } from "../../dtos/DailyPlan/GeneratedMealDto";
 import { SecondaryButton } from "../../styledComponents/Buttons";
 import GeneratedPlanPreview from "../shared/GeneratedPlanPreview";
 
@@ -27,7 +27,7 @@ const Onboarding = () => {
     const [step, setStep] = useState<1 | 2 | 3>(1);
     const [activityLevels, setActivityLevels] = useState<ActivityLevel[]>([]);
     const [userDetails, setUserDetails] = useState<UserDetails>(UserDetails.default());
-    const [generatedMeals, setGeneratedMeals] = useState<MealDto[]>([]);
+    const [generatedMeals, setGeneratedMeals] = useState<GeneratedMealDto[]>([]);
     const [userPhysiqueDto, setUserPhysiqueDto] = useState<UserPhysiqueDto | null>(null);
     const [generating, setGenerating] = useState(false);
     const [mealsComplexity, setMealsComplexity] = useState<string>("Standard");
@@ -149,7 +149,8 @@ const Onboarding = () => {
         const payload: CreateDailyPlanDto = {
             meals: generatedMeals
         };
-        const result = await createDailyPlan(payload);
+        const dateStr = new Date().toISOString().split("T")[0];
+        const result = await createDailyPlan(payload, dateStr);
         setSavingPlan(false);
 
         if (!result.success) {

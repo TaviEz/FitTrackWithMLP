@@ -32,40 +32,42 @@ namespace DailyPlanService.Controllers
 
         [Authorize]
         [HttpGet]
-        public async Task<IActionResult> GetDailyPlan([FromQuery] DateOnly dateTarget)
+        public async Task<IActionResult> GetDailyPlan([FromQuery] DateOnly targetDate)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out _))
                 return Unauthorized("User ID not found in token.");
 
-            var dailyPlanDto = await _dailyPlanService.GetDailyPlanAsync(userId, dateTarget);
+            var dailyPlanDto = await _dailyPlanService.GetDailyPlanAsync(userId, targetDate);
 
             if (dailyPlanDto is null)
             {
-                _logger.LogWarning("No daily plan found for user {UserId} on {Date}", userId, dateTarget);
+                _logger.LogWarning("No daily plan found for user {UserId} on {Date}", userId, targetDate);
                 return Ok(null);
             }
 
-            _logger.LogInformation("Daily plan retrieved for user {UserId} on {Date}", userId, dateTarget);
+            _logger.LogInformation("Daily plan retrieved for user {UserId} on {Date}", userId, targetDate);
             return Ok(dailyPlanDto);
         }
 
         [Authorize]
         [HttpPost]
-        public async Task<IActionResult> CreateDailyPlan([FromBody] CreateDailyPlanDto dailyPlanDto)
+        public async Task<IActionResult> CreateDailyPlan(
+            [FromQuery] DateOnly targetDate, 
+            [FromBody] CreateDailyPlanDto dailyPlanDto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out _))
                 return Unauthorized("User ID not found in token.");
 
-            if (dailyPlanDto.Meals is null || dailyPlanDto.Meals.Count == 0)
+            if (dailyPlanDto.Meals is null)
             {
                 _logger.LogWarning("Attempt to create a daily plan with no meals for user {UserId}", userId);
                 return BadRequest("At least one meal is required.");
             }
 
-            var result = await _dailyPlanService.CreateDailyPlanAsync(userId, dailyPlanDto);
+            var result = await _dailyPlanService.CreateDailyPlanAsync(userId, targetDate, dailyPlanDto);
 
             switch (result)
             {

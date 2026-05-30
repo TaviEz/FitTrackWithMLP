@@ -24,11 +24,12 @@ interface GeneratePlanDialogProps {
     open: boolean;
     mode: "create" | "replace";
     existingPlanId?: number;
+    dateTarget: string;
     onClose: () => void;
     onPlanAccepted: () => void;
 }
 
-const GeneratePlanDialog = ({ open, mode, existingPlanId, onClose, onPlanAccepted }: GeneratePlanDialogProps) => {
+const GeneratePlanDialog = ({ open, mode, existingPlanId, dateTarget, onClose, onPlanAccepted }: GeneratePlanDialogProps) => {
     const { userDetails } = useUser();
     const [generating, setGenerating] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -101,7 +102,7 @@ const GeneratePlanDialog = ({ open, mode, existingPlanId, onClose, onPlanAccepte
             return;
         }
         const payload: CreateDailyPlanDto = { meals };
-        const result = await createDailyPlan(payload);
+        const result = await createDailyPlan(payload, dateTarget);
         setSaving(false);
         if (!result.success) {
             showError(

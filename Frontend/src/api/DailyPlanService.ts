@@ -6,6 +6,8 @@ import type { DailyPlanDto } from "../dtos/DailyPlan/DailyPlanDto";
 
 const API_BASE_URL = 'http://localhost:8082/api/DailyPlan';
 
+// TODO: find a way to take into consideration the other generated meals for the week this way you dont repeat
+// yourself
 export const generateDailyPlan = async (userPhysiqueDto: UserPhysiqueDto): Promise<any> => {
     try {
         const result = await api.post<GeneratedDailyPlanDto>(`${API_BASE_URL}/generate`, userPhysiqueDto);
@@ -37,9 +39,11 @@ export const replaceDailyPlan = async (
     }
 }
 
-export const createDailyPlan = async (payload: CreateDailyPlanDto): Promise<any> => {
+export const createDailyPlan = async (payload: CreateDailyPlanDto, targetDate: string): Promise<any> => {
     try {
-        const result = await api.post(`${API_BASE_URL}`, payload);
+        const result = await api.post(`${API_BASE_URL}`, payload, {
+            params: { targetDate },
+        });
 
         if (result.status >= 400) {
             return { success: false, status: result.status };
@@ -51,9 +55,9 @@ export const createDailyPlan = async (payload: CreateDailyPlanDto): Promise<any>
     }
 }
 
-export const getDailyPlan = async (dateTarget: string): Promise<any> => {
+export const getDailyPlan = async (targetDate: string): Promise<any> => {
     try {
-        const result = await api.get<DailyPlanDto>(`${API_BASE_URL}`, { params: { dateTarget } });
+        const result = await api.get<DailyPlanDto>(`${API_BASE_URL}`, { params: { targetDate } });
 
         if (result.status >= 400) {
             return { success: false, status: result.status };

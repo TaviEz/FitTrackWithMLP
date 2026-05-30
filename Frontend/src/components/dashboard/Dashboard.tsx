@@ -12,15 +12,15 @@ import {
     Divider,
     Stack,
 } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import EditIcon from "@mui/icons-material/Edit";
 import RestaurantMenuIcon from "@mui/icons-material/RestaurantMenu";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import AddIcon from "@mui/icons-material/Add";
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { useUser } from "../../context/UserContext";
-import { getDailyPlan } from "../../api/DailyPlanService";
+import { getDailyPlan, createDailyPlan } from "../../api/DailyPlanService";
 import { showError } from "../shared/ShowToast";
 import { ToastContainer } from "react-toastify";
 import type { DailyPlanDto } from "../../dtos/DailyPlan/DailyPlanDto";
@@ -60,8 +60,14 @@ const Dashboard = () => {
         setTargetCalories(userDetails?.targetCalories ?? 0);
     }, [userDetails?.targetCalories]);
 
-    const handleAddMeal = () => {
-        // TODO: open add meal dialog / navigate
+    const handleAddManually = async () => {
+        const dateStr = selectedDate.toISOString().split("T")[0];
+        const result = await createDailyPlan({ meals: [] }, dateStr);
+        if (!result.success) {
+            showError("Failed to create plan");
+        } else {
+            await fetchDailyPlan(selectedDate);
+        }
     };
 
     const handleGenerateWithAI = () => {
@@ -147,15 +153,17 @@ const Dashboard = () => {
 
                     <Box sx={{ flex: 1 }} />
                     <Stack direction="row" spacing={1}>
-                        <Button
-                            variant="outlined"
-                            size="small"
-                            startIcon={<AddIcon />}
-                            onClick={handleAddMeal}
-                            sx={{ textTransform: "none" }}
-                        >
-                            {dailyPlan ? "Add meal" : "Add manually"}
-                        </Button>
+                        {/* display add manually only if the user does not have a daily plan */}
+                        {!dailyPlan && (
+                            <Button
+                                variant="outlined"
+                                size="small"
+                                onClick={handleAddManually}
+                                sx={{ textTransform: "none" }}
+                            >
+                                Add manually
+                            </Button>
+                        )}
                         <Button
                             variant="contained"
                             size="small"
@@ -266,7 +274,8 @@ const Dashboard = () => {
                                 px: 4, 
                                 pt: 6,
                                 pb: 4,
-                                alignItems: "flex-start"
+                                alignItems: "flex-start",
+                                boxSizing: "border-box"
                             }}
                         >
                             {CATEGORIES.map((category) => {
@@ -275,8 +284,8 @@ const Dashboard = () => {
                                     <Box
                                         key={category}
                                         sx={{
-                                            width: "20%", 
-                                            px: 1.5,
+                                            flex: 1,
+                                            minWidth: "240px",  
                                             display: "flex",
                                             flexDirection: "column",
                                         }}
@@ -291,93 +300,95 @@ const Dashboard = () => {
                                             {category}
                                         </Typography>
 
-                                        {meal ? (
-                                            <Card 
-                                                variant="outlined" 
-                                                sx={{ 
-                                                    flex: 1, 
-                                                    display: "flex", 
-                                                    flexDirection: "column", 
-                                                    minHeight: 0,
-                                                    borderRadius: 3, // Modern rounded look
-                                                    boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.03)", // Clean, subtle depth shadow
-                                                    backgroundColor: "background.paper",
-                                                    border: "1px solid",
-                                                    borderColor: "divider"
-                                                }}
-                                            >
-                                                <CardContent sx={{ p: 3, flex: 1, display: "flex", flexDirection: "column", "&:last-child": { pb: 3 } }}>
-                                                    <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={0.5}>
-                                                        <Box flex={1}>
-                                                            <Typography variant="subtitle1" fontWeight={700} lineHeight={1.3} mb={0.5}>
-                                                                {meal.title}
-                                                            </Typography>
-                                                            <Typography variant="body2" fontWeight={600} color="primary.main">
-                                                                {meal.totalCalories} kcal
-                                                            </Typography>
-                                                        </Box>
-                                                        <IconButton
-                                                            size="small"
-                                                            onClick={() => handleEditMeal(meal)}
-                                                            aria-label="edit meal"
-                                                            sx={{ ml: 0.5, mt: -0.5, flexShrink: 0 }}
-                                                        >
-                                                            <EditIcon fontSize="small" />
-                                                        </IconButton>
-                                                    </Box>
-                                                    <Divider sx={{ my: 2 }} />
-                                                    <Box sx={{ flex: 1, overflowY: "auto" }}>
-                                                        {meal.ingredients.map((ing, i) => (
-                                                            // TODO check on edit why im getting console error for the key
-                                                            <Box
-                                                                key={ing.plannedMealIngredientId}
-                                                                sx={{
-                                                                    display: "flex",
-                                                                    justifyContent: "space-between", // Pushes text to left, grams to the right
-                                                                    alignItems: "center",
-                                                                    py: 1, // Cleaner vertical spacing
-                                                                    borderBottom: i < meal.ingredients.length - 1 ? "1px dashed" : "none", // Dashed separator looks lighter
-                                                                    borderColor: "divider",
-                                                                }}
-                                                            >
-                                                                <Typography variant="body2" color="text.primary" sx={{ fontWeight: 500 }}>
-                                                                    {ing.name}
+                                        <Card 
+                                            variant="outlined" 
+                                            sx={{ 
+                                                flex: 1, 
+                                                display: "flex", 
+                                                flexDirection: "column", 
+                                                minHeight: 0,
+                                                borderRadius: 3,
+                                                boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.03)",
+                                                backgroundColor: "background.paper",
+                                                border: "1px solid",
+                                                borderColor: "divider"
+                                            }}
+                                        >
+                                            <CardContent sx={{ p: 3, flex: 1, display: "flex", flexDirection: "column", "&:last-child": { pb: 3 } }}>
+                                                {meal && (
+                                                    <>
+                                                        <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={0.5}>
+                                                            <Box flex={1}>
+                                                                <Typography variant="subtitle1" fontWeight={700} lineHeight={1.3} mb={0.5}>
+                                                                    {meal.title}
                                                                 </Typography>
-                                                                <Typography variant="body2" color="text.secondary" sx={{ ml: 1, fontWeight: 600 }}>
-                                                                    {ing.amountG}g
+                                                                <Typography variant="body2" fontWeight={600} color="primary.main">
+                                                                    {meal.totalCalories} kcal
                                                                 </Typography>
                                                             </Box>
-                                                        ))}
+                                                            <IconButton
+                                                                size="small"
+                                                                onClick={() => handleEditMeal(meal)}
+                                                                aria-label="edit meal"
+                                                                sx={{ ml: 0.5, mt: -0.5, flexShrink: 0 }}
+                                                            >
+                                                                <EditIcon fontSize="small" />
+                                                            </IconButton>
+                                                        </Box>
+                                                        <Divider sx={{ my: 2 }} />
+                                                    </>
+                                                )}
+
+                                                {meal && meal.ingredients && meal.ingredients.length > 0 ? (
+                                                    <Box sx={{ flex: 1, overflowY: "auto" }}>
+                                                    {meal.ingredients.map((ing, i) => (
+                                                        // TODO check on edit why im getting console error for the key
+                                                        <Box
+                                                            key={ing.plannedMealIngredientId}
+                                                            sx={{
+                                                                display: "flex",
+                                                                justifyContent: "space-between",
+                                                                alignItems: "center",
+                                                                py: 1,
+                                                                borderBottom: i < meal.ingredients.length - 1 ? "1px dashed" : "none",
+                                                                borderColor: "divider",
+                                                            }}
+                                                        >
+                                                            <Typography variant="body2" color="text.primary" sx={{ fontWeight: 500 }}>
+                                                                {ing.name}
+                                                            </Typography>
+                                                            <Typography variant="body2" color="text.secondary" sx={{ ml: 1, fontWeight: 600 }}>
+                                                                {ing.amountG}g
+                                                            </Typography>
+                                                        </Box>
+                                                    ))}
+                                                </Box>
+                                                ) : ( // meal is null or has no ingredients — guide user to add
+                                                    <Box
+                                                        onClick={() => meal && handleEditMeal(meal)}
+                                                        sx={{
+                                                            flex: 1,
+                                                            display: "flex",
+                                                            flexDirection: "column",
+                                                            alignItems: "center",
+                                                            justifyContent: "center",
+                                                            cursor: "pointer",
+                                                            color: "text.disabled",
+                                                            py: 4,
+                                                            transition: "color 0.2s",
+                                                            "&:hover": {
+                                                                color: "primary.main",
+                                                            },
+                                                        }}
+                                                    >
+                                                        <AddIcon sx={{ mb: 0.5 }} />
+                                                        <Typography variant="caption" fontWeight={600}>
+                                                            Log your {category.toLowerCase()}
+                                                        </Typography>
                                                     </Box>
-                                                </CardContent>
-                                            </Card>
-                                        ) : (
-                                            <Box
-                                                onClick={handleAddMeal}
-                                                sx={{
-                                                    flex: 1,
-                                                    display: "flex",
-                                                    flexDirection: "column",
-                                                    alignItems: "center",
-                                                    justifyContent: "center",
-                                                    border: "1.5px dashed",
-                                                    borderColor: "divider",
-                                                    borderRadius: 2,
-                                                    cursor: "pointer",
-                                                    color: "text.disabled",
-                                                    transition: "border-color 0.2s, color 0.2s",
-                                                    "&:hover": {
-                                                        borderColor: "primary.main",
-                                                        color: "primary.main",
-                                                    },
-                                                }}
-                                            >
-                                                <AddIcon sx={{ mb: 0.5 }} />
-                                                <Typography variant="caption">
-                                                    Add {category.toLowerCase()}
-                                                </Typography>
-                                            </Box>
-                                        )}
+                                                )}
+                                            </CardContent>
+                                        </Card>
                                     </Box>
                                 );
                             })}
@@ -404,7 +415,7 @@ const Dashboard = () => {
                             No plan for today
                         </Typography>
                         <Typography variant="body2" color="text.secondary" maxWidth={340}>
-                            You haven't logged any meals yet. Let AI build a plan for you, or add meals manually.
+                            You haven't logged any meals yet. Let AI build a plan for you.
                         </Typography>
                     </Box>
                 )}
@@ -414,6 +425,7 @@ const Dashboard = () => {
                 open={generatePlanOpen}
                 mode={dailyPlan ? "replace" : "create"}
                 existingPlanId={dailyPlan?.dailyPlanId}
+                dateTarget={selectedDate.toISOString().split("T")[0]}
                 onClose={() => setGeneratePlanOpen(false)}
                 onPlanAccepted={handlePlanAccepted}
             />

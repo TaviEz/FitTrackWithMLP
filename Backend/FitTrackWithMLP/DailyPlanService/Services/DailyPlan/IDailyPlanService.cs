@@ -7,8 +7,8 @@ namespace DailyPlanService.Services.DailyPlan
 {
     public interface IDailyPlanService
     {
-        Task<DailyPlanDto?> GetDailyPlanAsync(string userId, DateOnly dateTarget);
-        Task<CreateDailyPlanStatus> CreateDailyPlanAsync(string userId, CreateDailyPlanDto dailyPlanDto);
+        Task<DailyPlanDto?> GetDailyPlanAsync(string userId, DateOnly targetDate);
+        Task<CreateDailyPlanStatus> CreateDailyPlanAsync(string userId, DateOnly targetDate, CreateDailyPlanDto dailyPlanDto);
         Task<ReplaceDailyPlanStatus> ReplaceDailyPlanAsync(string userId, int dailyPlanId, EditDailyPlanDto dailyPlanDto);
     }
 }

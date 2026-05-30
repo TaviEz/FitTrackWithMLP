@@ -21,22 +21,21 @@ namespace DailyPlanService.Services.DailyPlan
             _dbContext = dbContext;
             _mapper = mapper;
         }
-        public async Task<DailyPlanDto?> GetDailyPlanAsync(string userId, DateOnly dateTarget)
+        public async Task<DailyPlanDto?> GetDailyPlanAsync(string userId, DateOnly targetDate)
         {
             var dailyPlan = await _dbContext.DailyPlans
                 .Include(p => p.Meals)
                 .ThenInclude(m => m.Ingredients)
-                .FirstOrDefaultAsync(p => p.UserId == Guid.Parse(userId) && p.TargetDate == dateTarget);
+                .FirstOrDefaultAsync(p => p.UserId == Guid.Parse(userId) && p.TargetDate == targetDate);
 
             return dailyPlan is null ? null : _mapper.Map<DailyPlanDto>(dailyPlan);
         }
 
-        public async Task<CreateDailyPlanStatus> CreateDailyPlanAsync(string userId, CreateDailyPlanDto dailyPlanDto)
+        public async Task<CreateDailyPlanStatus> CreateDailyPlanAsync(string userId, DateOnly targetDate, CreateDailyPlanDto dailyPlanDto)
         {
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
             var userGuid = Guid.Parse(userId);
 
-            var exists = await _dbContext.DailyPlans.AnyAsync(p => p.UserId == userGuid && p.TargetDate == today);
+            var exists = await _dbContext.DailyPlans.AnyAsync(p => p.UserId == userGuid && p.TargetDate == targetDate);
 
             if (exists)
             {
@@ -45,7 +44,7 @@ namespace DailyPlanService.Services.DailyPlan
 
             var dailyPlan = _mapper.Map<Models.DailyPlan>(dailyPlanDto);
             dailyPlan.UserId = userGuid;
-            dailyPlan.TargetDate = today;
+            dailyPlan.TargetDate = targetDate;
             dailyPlan.CreatedAt = DateTime.UtcNow;
             dailyPlan.ModifiedAt = DateTime.UtcNow;
 
