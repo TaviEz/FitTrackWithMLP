@@ -26,6 +26,7 @@ import { ToastContainer } from "react-toastify";
 import type { DailyPlanDto } from "../../dtos/DailyPlan/DailyPlanDto";
 import type { PlannedMealDto } from "../../dtos/DailyPlan/PlannedMealDto";
 import GeneratePlanDialog from "./GeneratePlanDialog";
+import EditMealDialog from "./EditMealDialog";
 
 const CATEGORIES = ["Breakfast", "Lunch", "Snack", "Dinner"];
 const NAV_HEIGHT = 64;
@@ -38,6 +39,7 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
     const [generatePlanOpen, setGeneratePlanOpen] = useState(false);
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+    const [editMeal, setEditMeal] = useState<PlannedMealDto | null>(null);
 
     const fetchDailyPlan = async (date: Date) => {
         setLoading(true);
@@ -80,8 +82,8 @@ const Dashboard = () => {
     };
 
     const handleEditMeal = (meal: PlannedMealDto) => {
-        // TODO: open edit meal dialog
-        console.log("Edit meal:", meal);
+        console.log(meal)
+        setEditMeal(meal);
     };
 
     const mealsByCategory = (category: string): PlannedMealDto[] =>
@@ -342,9 +344,8 @@ const Dashboard = () => {
                                                 {meal && meal.ingredients && meal.ingredients.length > 0 ? (
                                                     <Box sx={{ flex: 1, overflowY: "auto" }}>
                                                     {meal.ingredients.map((ing, i) => (
-                                                        // TODO check on edit why im getting console error for the key
                                                         <Box
-                                                            key={ing.plannedMealIngredientId}
+                                                            key={i}
                                                             sx={{
                                                                 display: "flex",
                                                                 justifyContent: "space-between",
@@ -365,7 +366,19 @@ const Dashboard = () => {
                                                 </Box>
                                                 ) : ( // meal is null or has no ingredients — guide user to add
                                                     <Box
-                                                        onClick={() => meal && handleEditMeal(meal)}
+                                                        onClick={() => {
+                                                            if (meal) {
+                                                                handleEditMeal(meal);
+                                                            } else {
+                                                                handleEditMeal({
+                                                                    plannedMealId: 0,
+                                                                    category: category,
+                                                                    title: `${category} Meal`,
+                                                                    ingredients: [],
+                                                                    totalCalories: 0
+                                                                });
+                                                            }
+                                                        }}
                                                         sx={{
                                                             flex: 1,
                                                             display: "flex",
@@ -428,6 +441,11 @@ const Dashboard = () => {
                 dateTarget={selectedDate.toISOString().split("T")[0]}
                 onClose={() => setGeneratePlanOpen(false)}
                 onPlanAccepted={handlePlanAccepted}
+            />
+            <EditMealDialog
+                open={editMeal !== null}
+                meal={editMeal}
+                onClose={() => setEditMeal(null)}
             />
             <ToastContainer />
         </>
