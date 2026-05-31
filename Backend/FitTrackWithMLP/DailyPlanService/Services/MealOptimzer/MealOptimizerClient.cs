@@ -1,4 +1,5 @@
 ﻿using FitTrackWithMLP.Shared.DTOs.DailyPlan.Generate;
+using FitTrackWithMLP.Shared.DTOs.DailyPlan.Get;
 
 namespace DailyPlanService.Services.MealOptimzer
 {
@@ -34,6 +35,18 @@ namespace DailyPlanService.Services.MealOptimzer
             {
                 return null;
             }
+        }
+
+        public async Task<List<IngredientOptionDto>> GetIngredientOptionsAsync(string query)
+        {
+            var response = await _httpClient.GetAsync($"/ingredients?query={query}");
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                return new List<IngredientOptionDto>();
+            }
+
+            return await response.Content.ReadFromJsonAsync<List<IngredientOptionDto>>() ?? new List<IngredientOptionDto>();
         }
     }
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import {
+    Autocomplete,
     Box,
     Button,
     Dialog,
@@ -17,7 +18,8 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import type { PlannedMealDto } from "../../dtos/DailyPlan/PlannedMealDto";
 import type { PlannedMealIngredientDto } from "../../dtos/DailyPlan/PlannedMealIngredientDto";
 import type { UpdatePlannedMealDto } from "../../dtos/DailyPlan/UpdatePlannedMealDto";
-import { updatePlannedMeal, deletePlannedIngredient } from "../../api/DailyPlanService";
+import { updatePlannedMeal, deletePlannedIngredient, fetchIngredientOptions } from "../../api/DailyPlanService";
+import type { IngredientOptionDto } from "../../dtos/DailyPlan/IngredientOptionDto";
 
 interface EditMealDialogProps {
     open: boolean;
@@ -32,6 +34,23 @@ const EditMealDialog = ({ open, meal, onClose, onSave }: EditMealDialogProps) =>
     const [editingIngredientId, setEditingIngredientId] = useState<number | null>(null);
     const [hasDeleted, setHasDeleted] = useState(false);
     const [hasSaved, setHasSaved] = useState(false);
+    const [ingredientQuery, setIngredientQuery] = useState("");
+    const [ingredientOptions, setIngredientOptions] = useState<IngredientOptionDto[]>([]);
+
+    // TODO: create add ingredient endpoint
+    useEffect(() => {
+        if (!ingredientQuery.trim()) {
+            setIngredientOptions([]);
+            return;
+        }
+
+        // debounce the api call for 300ms
+        const timer = setTimeout(async () => {
+            const results = await fetchIngredientOptions(ingredientQuery);
+            setIngredientOptions(results);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [ingredientQuery]);
 
     useEffect(() => {
         if (meal) {
@@ -73,15 +92,35 @@ const EditMealDialog = ({ open, meal, onClose, onSave }: EditMealDialogProps) =>
     const handleAddIngredient = () => {
         const newIngredient: PlannedMealIngredientDto = {
             plannedIngredientId: 0,
-            name: "New Ingredient",
+            name: "",
             amountG: 100,
-            calories: 120,
+            calories: 50,
             protein: 0,
             fats: 0,
             carbs: 0
         };
-
+        
+        // add on the ui an ingredient with some default values
         setIngredients((prev) => [...prev, newIngredient]);
+        // set the id to 0
+        // in the conditional rendering it knows to display the autocomplete
+        setEditingIngredientId(0);
+    };
+
+    const handleIngredientSelect = (index: number, selected: IngredientOptionDto | null) => {
+        if (!selected) return;
+        setIngredients((prev) =>
+            prev.map((ing, i) =>
+                i === index
+                    ? { ...ing, 
+                        name: selected.name, 
+                        calories: selected.calories, 
+                        protein: selected.protein, 
+                        fats: selected.fat, 
+                        carbs: selected.carbs 
+                    } : ing
+            )
+        );
     };
 
     const handleClose = () => {
@@ -188,9 +227,27 @@ const EditMealDialog = ({ open, meal, onClose, onSave }: EditMealDialogProps) =>
                                     }}
                                 >
                                     <Box sx={{ flex: "0 0 35%", display: "flex", alignItems: "center" }}>
-                                        <Typography variant="body2" fontWeight={500} noWrap>
-                                            {ing.name}
-                                        </Typography>
+                                        {ing.plannedIngredientId === 0 ? (
+                                            <Autocomplete<IngredientOptionDto>
+                                                options={ingredientOptions}
+                                                getOptionLabel={(opt) => opt.name}
+                                                size="small"
+                                                fullWidth
+                                                onInputChange={(_, value) => setIngredientQuery(value)}
+                                                onChange={(_, selected) => handleIngredientSelect(i, selected)}
+                                                renderInput={(params) => (
+                                                    <TextField {...params} placeholder="Search ingredient" variant="outlined" />
+                                                )}
+                                                sx={{
+                                                    "& .MuiInputBase-root": { py: "1px", fontSize: "0.8125rem" },
+                                                    "& .MuiInputBase-input": { py: "2px !important" },
+                                                }}
+                                            />
+                                        ) : (
+                                            <Typography variant="body2" fontWeight={500} noWrap>
+                                                {ing.name}
+                                            </Typography>
+                                        )}
                                     </Box>
                                     <Box sx={{ flex: "0 0 25%", display: "flex", justifyContent: "center" }}>
                                         <TextField

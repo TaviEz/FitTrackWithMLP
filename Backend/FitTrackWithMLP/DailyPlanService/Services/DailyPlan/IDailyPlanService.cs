@@ -1,5 +1,4 @@
-﻿using FitTrackWithMLP.Shared.DTOs.DailyPlan;
-using FitTrackWithMLP.Shared.DTOs.DailyPlan.Create;
+﻿using FitTrackWithMLP.Shared.DTOs.DailyPlan.Create;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan.Get;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan.Update;
 using FitTrackWithMLP.Shared.Enums;

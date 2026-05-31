@@ -1,8 +1,8 @@
 ﻿using DailyPlanService.Services.DailyPlan;
 using DailyPlanService.Services.MealOptimzer;
-using FitTrackWithMLP.Shared.DTOs.DailyPlan;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan.Create;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan.Generate;
+using FitTrackWithMLP.Shared.DTOs.DailyPlan.Get;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan.Update;
 using FitTrackWithMLP.Shared.DTOs.User;
 using FitTrackWithMLP.Shared.Enums;
@@ -206,6 +206,26 @@ namespace DailyPlanService.Controllers
             }
 
             return Ok();
+        }
+
+        [Authorize]
+        [HttpGet("ingredient/search")]
+        public async Task<IActionResult> GetIngredientOptions(
+            [FromQuery] string query)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out _))
+                return Unauthorized("User ID not found in token.");
+
+            var ingredientOptions = await _mealOptimizerClient.GetIngredientOptionsAsync(query);
+            if (ingredientOptions == null || !ingredientOptions.Any())
+            {
+                _logger.LogInformation("No ingredient options found for query '{Query}' for user {UserId}", query, userId);
+                return Ok(Array.Empty<IngredientOptionDto>());
+            }
+
+            _logger.LogInformation("{Count} ingredient options found for query '{Query}' for user {UserId}", ingredientOptions.Count(), query, userId);
+            return Ok(ingredientOptions);
         }
     }
 }
