@@ -16,5 +16,6 @@
 
         // Foreign key to PlannedMeal
         public int PlannedMealId { get; set; }
+        public PlannedMeal PlannedMeal { get; set; } = null!;
     }
 }

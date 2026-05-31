@@ -11,12 +11,13 @@ import {
     Typography,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
+import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
 import type { PlannedMealDto } from "../../dtos/DailyPlan/PlannedMealDto";
 import type { PlannedMealIngredientDto } from "../../dtos/DailyPlan/PlannedMealIngredientDto";
 import type { UpdatePlannedMealDto } from "../../dtos/DailyPlan/UpdatePlannedMealDto";
-import { updatePlannedMeal } from "../../api/DailyPlanService";
+import { updatePlannedMeal, deletePlannedIngredient } from "../../api/DailyPlanService";
 
 interface EditMealDialogProps {
     open: boolean;
@@ -28,31 +29,45 @@ interface EditMealDialogProps {
 const EditMealDialog = ({ open, meal, onClose, onSave }: EditMealDialogProps) => {
     const [title, setTitle] = useState("");
     const [ingredients, setIngredients] = useState<PlannedMealIngredientDto[]>([]);
-    const [isDirty, setIsDirty] = useState(false);
+    const [editingIngredientId, setEditingIngredientId] = useState<number | null>(null);
+    const [hasDeleted, setHasDeleted] = useState(false);
+    const [hasSaved, setHasSaved] = useState(false);
 
     useEffect(() => {
         if (meal) {
             setTitle(meal.title);
             setIngredients(meal.ingredients);
-            setIsDirty(false);
+            setEditingIngredientId(null);
+            setHasDeleted(false);
+            setHasSaved(false);
         }
     }, [meal]);
 
-    const computedCalories = ingredients.reduce((sum, ing) => sum + (ing.amountG / 100) * ing.calories, 0);
-    const totalCalories = isDirty ? computedCalories : (meal?.totalCalories ?? 0);
+    const totalCalories = ingredients.reduce((sum, ing) => sum + (ing.amountG / 100) * ing.calories, 0);
 
     const handleAmountChange = (index: number, newAmount: number) => {
+        const ingredientId = ingredients[index].plannedIngredientId;
+
+        if (editingIngredientId !== null && editingIngredientId !== ingredientId) return;
+
         setIngredients((prev) =>
             prev.map((ing, i) =>
                 i === index ? { ...ing, amountG: newAmount } : ing
             )
         );
-        setIsDirty(true);
+        setEditingIngredientId(ingredientId);
     };
 
-    const handleDeleteIngredient = (index: number) => {
+    const handleDeleteIngredient = async (index: number) => {
+        const ingredient = ingredients[index];
+
+        if (ingredient.plannedIngredientId !== 0) {
+            const result = await deletePlannedIngredient(meal!.plannedMealId, ingredient.plannedIngredientId);
+            if (!result.success) return;
+        }
+
         setIngredients((prev) => prev.filter((_, i) => i !== index));
-        setIsDirty(true);
+        setHasDeleted(true);
     };
 
     const handleAddIngredient = () => {
@@ -67,11 +82,19 @@ const EditMealDialog = ({ open, meal, onClose, onSave }: EditMealDialogProps) =>
         };
 
         setIngredients((prev) => [...prev, newIngredient]);
-        setIsDirty(true);
+    };
+
+    const handleClose = () => {
+        if (hasDeleted || hasSaved) {
+            onSave();
+        } else {
+            onClose();
+        }
     };
 
     const handleSave = async () => {
         if (!meal) return;
+
         const payload: UpdatePlannedMealDto = {
             title,
             ingredients: ingredients.map((ing) => ({
@@ -80,16 +103,16 @@ const EditMealDialog = ({ open, meal, onClose, onSave }: EditMealDialogProps) =>
             })),
         };
         const result = await updatePlannedMeal(meal.plannedMealId, payload);
-        if (result.success) {
-            onSave();
-            onClose();
-        }
+        if (!result.success) return;
+
+        setEditingIngredientId(null);
+        setHasSaved(true);
     };
 
     if (!meal) return null;
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+        <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
             <DialogTitle sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", pb: 1 }}>
                 <Box>
                     <Typography variant="h6" fontWeight={700} component="div">
@@ -99,7 +122,7 @@ const EditMealDialog = ({ open, meal, onClose, onSave }: EditMealDialogProps) =>
                         {Math.round(totalCalories)} kcal total
                     </Typography>
                 </Box>
-                <IconButton onClick={onClose} size="small" aria-label="close" sx={{ mt: 0.5 }}>
+                <IconButton onClick={handleClose} size="small" aria-label="close" sx={{ mt: 0.5 }}>
                     <CloseIcon />
                 </IconButton>
             </DialogTitle>
@@ -120,7 +143,7 @@ const EditMealDialog = ({ open, meal, onClose, onSave }: EditMealDialogProps) =>
                     <Box>
                         {/* Column headers */}
                         <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                            <Typography variant="caption" color="text.secondary" sx={{ flex: "0 0 45%" }}>
+                            <Typography variant="caption" color="text.secondary" sx={{ flex: "0 0 35%" }}>
                                 Ingredient
                             </Typography>
                             <Typography variant="caption" color="text.secondary" sx={{ flex: "0 0 25%", textAlign: "center" }}>
@@ -129,7 +152,7 @@ const EditMealDialog = ({ open, meal, onClose, onSave }: EditMealDialogProps) =>
                             <Typography variant="caption" color="text.secondary" sx={{ flex: "0 0 20%", textAlign: "center" }}>
                                 Calories
                             </Typography>
-                            <Box sx={{ flex: "0 0 10%", display: "flex", justifyContent: "center" }}>
+                            <Box sx={{ flex: "0 0 20%", display: "flex", justifyContent: "center" }}>
                                 <Button
                                     size="small"
                                     startIcon={<AddIcon />}
@@ -152,6 +175,7 @@ const EditMealDialog = ({ open, meal, onClose, onSave }: EditMealDialogProps) =>
                         {/* Ingredient rows */}
                         {ingredients.map((ing, i) => {
                             const rowCalories = Math.round((ing.amountG / 100) * ing.calories);
+                            const isThisRowEditing = editingIngredientId == ing.plannedIngredientId;
                             return (
                                 <Box
                                     key={i}
@@ -163,7 +187,7 @@ const EditMealDialog = ({ open, meal, onClose, onSave }: EditMealDialogProps) =>
                                         borderColor: "divider",
                                     }}
                                 >
-                                    <Box sx={{ flex: "0 0 45%", display: "flex", alignItems: "center" }}>
+                                    <Box sx={{ flex: "0 0 35%", display: "flex", alignItems: "center" }}>
                                         <Typography variant="body2" fontWeight={500} noWrap>
                                             {ing.name}
                                         </Typography>
@@ -199,7 +223,17 @@ const EditMealDialog = ({ open, meal, onClose, onSave }: EditMealDialogProps) =>
                                     >
                                         {rowCalories} kcal
                                     </Typography>
-                                    <Box sx={{ flex: "0 0 10%", display: "flex", justifyContent: "center" }}>
+                                    <Box sx={{ flex: "0 0 20%", display: "flex", justifyContent: "center", gap: 0.5 }}>
+                                        {isThisRowEditing && (
+                                            <IconButton
+                                                size="small"
+                                                color="success"
+                                                onClick={handleSave}
+                                                aria-label="save changes"
+                                            >
+                                                <CheckIcon fontSize="small" />
+                                            </IconButton>
+                                        )}
                                         <IconButton
                                             size="small"
                                             color="error"
@@ -216,12 +250,9 @@ const EditMealDialog = ({ open, meal, onClose, onSave }: EditMealDialogProps) =>
                 )}
             </DialogContent>
 
-            <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, px: 3, py: 2 }}>
-                <Button variant="text" onClick={onClose} sx={{ textTransform: "none" }}>
-                    Cancel
-                </Button>
-                <Button variant="contained" onClick={handleSave} sx={{ textTransform: "none" }}>
-                    Save Changes
+            <Box sx={{ display: "flex", justifyContent: "flex-end", px: 3, py: 2 }}>
+                <Button variant="contained" onClick={handleClose} sx={{ textTransform: "none" }}>
+                    Done
                 </Button>
             </Box>
         </Dialog>

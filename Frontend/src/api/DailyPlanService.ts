@@ -70,6 +70,22 @@ export const updatePlannedMeal = async (plannedMealId: number, payload: UpdatePl
     }
 }
 
+export const deletePlannedIngredient = async (plannedMealId: number, plannedIngredientId: number): Promise<any> => {
+    try {
+        const result = await api.delete(`${API_BASE_URL}/ingredient`, {
+            params: { plannedMealId, plannedIngredientId },
+        });
+
+        if (result.status >= 400) {
+            return { success: false, status: result.status };
+        }
+
+        return { success: true, status: result.status };
+    } catch (error: any) {
+        return { success: false, status: error?.response?.status };
+    }
+}
+
 export const getDailyPlan = async (targetDate: string): Promise<any> => {
     try {
         const result = await api.get<DailyPlanDto>(`${API_BASE_URL}`, { params: { targetDate } });

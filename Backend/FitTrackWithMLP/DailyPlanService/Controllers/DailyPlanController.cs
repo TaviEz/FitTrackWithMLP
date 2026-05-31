@@ -1,5 +1,6 @@
 ﻿using DailyPlanService.Services.DailyPlan;
 using DailyPlanService.Services.MealOptimzer;
+using FitTrackWithMLP.Shared.DTOs.DailyPlan;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan.Create;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan.Generate;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan.Update;
@@ -111,32 +112,6 @@ namespace DailyPlanService.Controllers
         }
 
         [Authorize]
-        [HttpPut("meal/{plannedMealId:int}")]
-        public async Task<IActionResult> UpdatePlannedMeal(
-            [FromRoute] int plannedMealId,
-            [FromBody] UpdatePlannedMealDto plannedMealDto)
-        {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out _))
-                return Unauthorized("User ID not found in token.");
-
-            var result = await _dailyPlanService.UpdatePlannedMealAsync(userId, plannedMealId, plannedMealDto);     
-
-            switch (result)
-            {
-                case UpdateMealPlanStatus.Updated:
-                    _logger.LogInformation("Planned meal {PlannedMealId} updated for user {UserId}", plannedMealId, userId);
-                    return Ok();
-                case UpdateMealPlanStatus.NotFound:
-                    _logger.LogWarning("Failed to update planned meal {PlannedMealId} for user {UserId}", plannedMealId, userId);
-                    return NotFound();
-                default:
-                    _logger.LogError("Failed to update planned meal {PlannedMealId} for user {UserId}", plannedMealId, userId);
-                    return StatusCode(StatusCodes.Status500InternalServerError);
-            }
-        }
-
-        [Authorize]
         [HttpPost("generate")]
         public async Task<IActionResult> GenerateDailyPlan([FromBody] UserPhysiqueDto userPhysiqueDto)
         {
@@ -174,6 +149,63 @@ namespace DailyPlanService.Controllers
             _logger.LogInformation("Generated daily plan for user with activity level {ActivityLevel} and goal {GoalType}. Target calories: {TargetCalories}, Actual calories: {ActualCalories}",
                 userPhysiqueDto.ActivityLevel, userPhysiqueDto.GoalType, result.TargetCalories, result.ActualCalories);
             return Ok(result);
+        }
+
+        [Authorize]
+        [HttpPut("meal/{plannedMealId:int}")]
+        public async Task<IActionResult> UpdatePlannedMeal(
+            [FromRoute] int plannedMealId,
+            [FromBody] UpdatePlannedMealDto plannedMealDto)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out _))
+                return Unauthorized("User ID not found in token.");
+
+            var result = await _dailyPlanService.UpdatePlannedMealAsync(userId, plannedMealId, plannedMealDto);
+
+            switch (result)
+            {
+                case UpdateMealPlanStatus.Updated:
+                    _logger.LogInformation("Planned meal {PlannedMealId} updated for user {UserId}", plannedMealId, userId);
+                    return Ok();
+                case UpdateMealPlanStatus.NotFound:
+                    _logger.LogWarning("Failed to update planned meal {PlannedMealId} for user {UserId}", plannedMealId, userId);
+                    return NotFound();
+                default:
+                    _logger.LogError("Failed to update planned meal {PlannedMealId} for user {UserId}", plannedMealId, userId);
+                    return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        [Authorize]
+        [HttpDelete("ingredient")]
+        public async Task<IActionResult> DeletePlannedIngredient(
+            [FromQuery] int plannedMealId,
+            [FromQuery] int plannedIngredientId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out _))
+                return Unauthorized("User ID not found in token.");
+
+            var result = await _dailyPlanService.DeletePlannedIngredientAsync(userId, plannedMealId, plannedIngredientId);
+
+            switch (result)
+            {
+                case DeletePlannedIngredientStatus.Deleted:
+                    _logger.LogInformation("Planned ingredient {PlannedIngredientId} deleted from meal {PlannedMealId} for user {UserId}",
+                        plannedIngredientId, plannedMealId, userId);
+                    break;
+                case DeletePlannedIngredientStatus.NotFound:
+                    _logger.LogWarning("Planned ingredient {PlannedIngredientId} not found in meal {PlannedMealId} for user {UserId}",
+                        plannedIngredientId, plannedMealId, userId);
+                    return NotFound();
+                default:
+                    _logger.LogError("Failed to delete planned ingredient {PlannedIngredientId} from meal {PlannedMealId} for user {UserId}",
+                        plannedIngredientId, plannedMealId, userId);
+                    return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+
+            return Ok();
         }
     }
 }

@@ -95,8 +95,8 @@ namespace DailyPlanService.Services.DailyPlan
                 return UpdateMealPlanStatus.NotFound;
             }
 
+            // map the data from the update DTO to the existing planned meal
             _mapper.Map(updateDto, plannedMeal);
-
             foreach (var ingredientDto in updateDto.Ingredients)
             {
                 var existingIngredient = plannedMeal.Ingredients
@@ -113,6 +113,26 @@ namespace DailyPlanService.Services.DailyPlan
             var result = await _dbContext.SaveChangesAsync();
 
             return result > 0 ? UpdateMealPlanStatus.Updated : UpdateMealPlanStatus.Failed;
+        }
+
+        public async Task<DeletePlannedIngredientStatus> DeletePlannedIngredientAsync(string userId, int plannedMealId, int plannedIngredientId)
+        {
+            var plannedIngredient = await _dbContext.PlannedMealIngredients
+                .Include(i => i.PlannedMeal)
+                .ThenInclude(m => m.DailyPlan)
+                .Where(i => i.PlannedIngredientId == plannedIngredientId
+                    && i.PlannedMealId == plannedMealId
+                    && i.PlannedMeal.DailyPlan.UserId == Guid.Parse(userId))
+                .FirstOrDefaultAsync();
+
+            if (plannedIngredient == null)
+            {
+                return DeletePlannedIngredientStatus.NotFound;
+            }
+
+            _dbContext.PlannedMealIngredients.Remove(plannedIngredient);
+            var result = await _dbContext.SaveChangesAsync();
+            return result > 0 ? DeletePlannedIngredientStatus.Deleted : DeletePlannedIngredientStatus.Failed;
         }
     }
 }
