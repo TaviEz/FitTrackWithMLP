@@ -11,7 +11,8 @@ namespace DailyPlanService.Models
 
         // Foreign key to DailyPlan
         public int DailyPlanId { get; set; }
-        // Navigation property
+        // Navigation properties
+        public DailyPlan DailyPlan { get; set; } = null!;
         public required List<PlannedIngredient> Ingredients { get; set; } = new();
     }
 }

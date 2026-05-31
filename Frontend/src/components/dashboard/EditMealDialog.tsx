@@ -15,14 +15,17 @@ import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
 import type { PlannedMealDto } from "../../dtos/DailyPlan/PlannedMealDto";
 import type { PlannedMealIngredientDto } from "../../dtos/DailyPlan/PlannedMealIngredientDto";
+import type { UpdatePlannedMealDto } from "../../dtos/DailyPlan/UpdatePlannedMealDto";
+import { updatePlannedMeal } from "../../api/DailyPlanService";
 
 interface EditMealDialogProps {
     open: boolean;
     meal: PlannedMealDto | null;
     onClose: () => void;
+    onSave: () => void;
 }
 
-const EditMealDialog = ({ open, meal, onClose }: EditMealDialogProps) => {
+const EditMealDialog = ({ open, meal, onClose, onSave }: EditMealDialogProps) => {
     const [title, setTitle] = useState("");
     const [ingredients, setIngredients] = useState<PlannedMealIngredientDto[]>([]);
     const [isDirty, setIsDirty] = useState(false);
@@ -54,7 +57,7 @@ const EditMealDialog = ({ open, meal, onClose }: EditMealDialogProps) => {
 
     const handleAddIngredient = () => {
         const newIngredient: PlannedMealIngredientDto = {
-            plannedMealIngredientId: 0, // 0 flags a database insert command on submission
+            plannedIngredientId: 0,
             name: "New Ingredient",
             amountG: 100,
             calories: 120,
@@ -65,6 +68,22 @@ const EditMealDialog = ({ open, meal, onClose }: EditMealDialogProps) => {
 
         setIngredients((prev) => [...prev, newIngredient]);
         setIsDirty(true);
+    };
+
+    const handleSave = async () => {
+        if (!meal) return;
+        const payload: UpdatePlannedMealDto = {
+            title,
+            ingredients: ingredients.map((ing) => ({
+                plannedIngredientId: ing.plannedIngredientId,
+                amountG: ing.amountG,
+            })),
+        };
+        const result = await updatePlannedMeal(meal.plannedMealId, payload);
+        if (result.success) {
+            onSave();
+            onClose();
+        }
     };
 
     if (!meal) return null;
@@ -201,7 +220,7 @@ const EditMealDialog = ({ open, meal, onClose }: EditMealDialogProps) => {
                 <Button variant="text" onClick={onClose} sx={{ textTransform: "none" }}>
                     Cancel
                 </Button>
-                <Button variant="contained" sx={{ textTransform: "none" }}>
+                <Button variant="contained" onClick={handleSave} sx={{ textTransform: "none" }}>
                     Save Changes
                 </Button>
             </Box>

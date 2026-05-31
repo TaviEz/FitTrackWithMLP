@@ -446,6 +446,10 @@ const Dashboard = () => {
                 open={editMeal !== null}
                 meal={editMeal}
                 onClose={() => setEditMeal(null)}
+                onSave={async () => {
+                    setEditMeal(null);
+                    await fetchDailyPlan(selectedDate);
+                }}
             />
             <ToastContainer />
         </>

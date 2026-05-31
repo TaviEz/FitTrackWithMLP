@@ -1,8 +1,8 @@
 ﻿using AutoMapper;
 using DailyPlanService.Models;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan.Create;
-using FitTrackWithMLP.Shared.DTOs.DailyPlan.Edit;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan.Get;
+using FitTrackWithMLP.Shared.DTOs.DailyPlan.Update;
 
 namespace DailyPlanService.MappingProfiles
 {
@@ -24,9 +24,8 @@ namespace DailyPlanService.MappingProfiles
                     src.Ingredients.Sum(i => (int)Math.Round((i.AmountG / 100.0) * i.Calories))));
             CreateMap<PlannedIngredient, PlannedMealIngredientDto>();
 
-            CreateMap<EditDailyPlanDto, DailyPlan>();
-            CreateMap<EditPlannedMealDto, PlannedMeal>();
-            CreateMap<EditPlannedIngredientDto, PlannedIngredient>();
+            CreateMap<UpdatePlannedMealDto, PlannedMeal>()
+                .ForMember(dest => dest.Ingredients, opt => opt.Ignore());
         }
     }
 }

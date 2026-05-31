@@ -1,8 +1,8 @@
 ﻿using DailyPlanService.Services.DailyPlan;
 using DailyPlanService.Services.MealOptimzer;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan.Create;
-using FitTrackWithMLP.Shared.DTOs.DailyPlan.Edit;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan.Generate;
+using FitTrackWithMLP.Shared.DTOs.DailyPlan.Update;
 using FitTrackWithMLP.Shared.DTOs.User;
 using FitTrackWithMLP.Shared.Enums;
 using FitTrackWithMLP.Shared.Logic;
@@ -87,7 +87,7 @@ namespace DailyPlanService.Controllers
         [HttpPut("{dailyPlanId:int}")]
         public async Task<IActionResult> ReplaceDailyPlan(
             [FromRoute] int dailyPlanId, 
-            [FromBody] EditDailyPlanDto dailyPlanDto)    
+            [FromBody] CreateDailyPlanDto dailyPlanDto)    
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -106,6 +106,32 @@ namespace DailyPlanService.Controllers
                     return NotFound();
                 default:
                     _logger.LogError("Failed to replace daily plan {DailyPlanId} for user {UserId}", dailyPlanId, userId);
+                    return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        [Authorize]
+        [HttpPut("meal/{plannedMealId:int}")]
+        public async Task<IActionResult> UpdatePlannedMeal(
+            [FromRoute] int plannedMealId,
+            [FromBody] UpdatePlannedMealDto plannedMealDto)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out _))
+                return Unauthorized("User ID not found in token.");
+
+            var result = await _dailyPlanService.UpdatePlannedMealAsync(userId, plannedMealId, plannedMealDto);     
+
+            switch (result)
+            {
+                case UpdateMealPlanStatus.Updated:
+                    _logger.LogInformation("Planned meal {PlannedMealId} updated for user {UserId}", plannedMealId, userId);
+                    return Ok();
+                case UpdateMealPlanStatus.NotFound:
+                    _logger.LogWarning("Failed to update planned meal {PlannedMealId} for user {UserId}", plannedMealId, userId);
+                    return NotFound();
+                default:
+                    _logger.LogError("Failed to update planned meal {PlannedMealId} for user {UserId}", plannedMealId, userId);
                     return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }
