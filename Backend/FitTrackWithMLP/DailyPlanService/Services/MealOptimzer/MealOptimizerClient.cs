@@ -12,7 +12,7 @@ namespace DailyPlanService.Services.MealOptimzer
             _httpClient = httpClient;
         }
 
-        public async Task<List<OptimizedMealPlanDto>?> OptimizeAsync(
+        public async Task<List<GeneratedMealPlanDto>?> OptimizeAsync(
             OptimizedRequestDto request,
             CancellationToken cancellationToken = default)
         {
@@ -25,7 +25,7 @@ namespace DailyPlanService.Services.MealOptimzer
                     return null;
                 }
 
-                return await response.Content.ReadFromJsonAsync<List<OptimizedMealPlanDto>>(cancellationToken: cancellationToken);
+                return await response.Content.ReadFromJsonAsync<List<GeneratedMealPlanDto>>(cancellationToken: cancellationToken);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {

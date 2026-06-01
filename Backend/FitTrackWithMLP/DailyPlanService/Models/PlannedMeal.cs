@@ -1,4 +1,4 @@
-﻿using FitTrackWithMLP.Shared.Enums;
+﻿using FitTrackWithMLP.Shared.Enums.Lookups;
 
 namespace DailyPlanService.Models
 {

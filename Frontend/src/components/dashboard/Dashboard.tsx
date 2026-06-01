@@ -23,8 +23,8 @@ import { useUser } from "../../context/UserContext";
 import { getDailyPlan, createDailyPlan } from "../../api/DailyPlanService";
 import { showError } from "../shared/ShowToast";
 import { ToastContainer } from "react-toastify";
-import type { DailyPlanDto } from "../../dtos/DailyPlan/DailyPlanDto";
-import type { PlannedMealDto } from "../../dtos/DailyPlan/PlannedMealDto";
+import type { DailyPlanDto } from "../../dtos/DailyPlan/Get/DailyPlanDto";
+import type { PlannedMealDto } from "../../dtos/DailyPlan/Get/PlannedMealDto";
 import GeneratePlanDialog from "./GeneratePlanDialog";
 import EditMealDialog from "./EditMealDialog";
 
@@ -82,7 +82,6 @@ const Dashboard = () => {
     };
 
     const handleEditMeal = (meal: PlannedMealDto) => {
-        console.log(meal)
         setEditMeal(meal);
     };
 
@@ -91,6 +90,9 @@ const Dashboard = () => {
             (m) => m.category.toLowerCase() === category.toLowerCase()
         ) ?? [];
 
+
+    // TODO: check why the daily calories/target calories do not match the calories in the
+    // generate/regenerate plan modal
     const caloriePercent = targetCalories > 0
         ? Math.min((dailyPlan?.totalCalories ?? 0) / targetCalories * 100, 100)
         : 0;

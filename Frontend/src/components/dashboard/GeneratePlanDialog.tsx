@@ -14,11 +14,11 @@ import { generateDailyPlan, createDailyPlan, replaceDailyPlan } from "../../api/
 import { useUser } from "../../context/UserContext";
 import UserPhysiqueDto from "../../dtos/UserDetails/UserPhysiqueDto";
 import { getActivityLevelEnum } from "../../utils/types";
-import type { GeneratedMealDto } from "../../dtos/DailyPlan/GeneratedMealDto";
-import type { CreateDailyPlanDto } from "../../dtos/DailyPlan/CreateDailyPlanDto";
+import type { CreateDailyPlanDto } from "../../dtos/DailyPlan/Create/CreateDailyPlanDto";
 import GeneratedPlanPreview from "../shared/GeneratedPlanPreview";
 import { showError } from "../shared/ShowToast";
 import { SecondaryButton } from "../../styledComponents/Buttons";
+import type { GeneratedMealDto } from "../../dtos/DailyPlan/Generate/GeneratedMealDto";
 
 interface GeneratePlanDialogProps {
     open: boolean;

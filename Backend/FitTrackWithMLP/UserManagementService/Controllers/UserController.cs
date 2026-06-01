@@ -1,6 +1,6 @@
 ﻿using FitTrackWithMLP.Shared.DTOs.Authentication;
 using FitTrackWithMLP.Shared.DTOs.User;
-using FitTrackWithMLP.Shared.Enums;
+using FitTrackWithMLP.Shared.Enums.Statuses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;

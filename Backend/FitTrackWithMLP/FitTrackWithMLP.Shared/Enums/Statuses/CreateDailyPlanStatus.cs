@@ -1,5 +1,4 @@
-﻿
-namespace FitTrackWithMLP.Shared.Enums
+﻿namespace FitTrackWithMLP.Shared.Enums.Statuses
 {
     public enum CreateDailyPlanStatus
     {

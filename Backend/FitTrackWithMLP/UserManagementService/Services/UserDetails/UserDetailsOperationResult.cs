@@ -1,4 +1,4 @@
-﻿using FitTrackWithMLP.Shared.Enums;
+﻿using FitTrackWithMLP.Shared.Enums.Statuses;
 
 namespace UserManagementService.Services.UserDetails
 {

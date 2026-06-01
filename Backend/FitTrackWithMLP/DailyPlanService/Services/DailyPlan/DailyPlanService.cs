@@ -4,7 +4,7 @@ using DailyPlanService.Models;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan.Create;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan.Get;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan.Update;
-using FitTrackWithMLP.Shared.Enums;
+using FitTrackWithMLP.Shared.Enums.Statuses;
 using Microsoft.EntityFrameworkCore;
 
 namespace DailyPlanService.Services.DailyPlan
@@ -82,37 +82,56 @@ namespace DailyPlanService.Services.DailyPlan
             return result > 0 ? ReplaceDailyPlanStatus.Replaced : ReplaceDailyPlanStatus.Failed;
         }
 
-        public async Task<UpdateMealPlanStatus> UpdatePlannedMealAsync(string userId, int plannedMealId, UpdatePlannedMealDto updateDto)
+        public async Task<AddIngredientRowStatus> AddPlannedIngredientAsnyc(string userId, int plannedMealId, CreatePlannedIngredientDto addDto)
         {
             var plannedMeal = await _dbContext.PlannedMeals
-                .Include(m => m.Ingredients)
                 .Include(m => m.DailyPlan)
-                .Where(p => p.PlannedMealId == plannedMealId && p.DailyPlan.UserId == Guid.Parse(userId))
+                .Where(m => m.PlannedMealId == plannedMealId && m.DailyPlan.UserId == Guid.Parse(userId))
                 .FirstOrDefaultAsync();
 
             if (plannedMeal == null)
             {
-                return UpdateMealPlanStatus.NotFound;
+                return AddIngredientRowStatus.NotFound;
             }
 
-            // map the data from the update DTO to the existing planned meal
-            _mapper.Map(updateDto, plannedMeal);
-            foreach (var ingredientDto in updateDto.Ingredients)
+            var existingIngredient = await _dbContext.PlannedMealIngredients
+                .Where(i => i.PlannedMealId == plannedMealId && i.FoodId == addDto.FoodId)
+                .FirstOrDefaultAsync();
+
+            if (existingIngredient != null)
             {
-                var existingIngredient = plannedMeal.Ingredients
-                    .FirstOrDefault(i => i.PlannedIngredientId == ingredientDto.PlannedIngredientId);
-
-                if (existingIngredient != null)
-                {
-                    existingIngredient.AmountG = ingredientDto.AmountG;
-                }
+                return AddIngredientRowStatus.AlreadyExists;
             }
 
+
+            var newIngredient = _mapper.Map<PlannedIngredient>(addDto);
+            plannedMeal.Ingredients.Add(newIngredient);
             plannedMeal.DailyPlan.ModifiedAt = DateTime.UtcNow;
 
             var result = await _dbContext.SaveChangesAsync();
 
-            return result > 0 ? UpdateMealPlanStatus.Updated : UpdateMealPlanStatus.Failed;
+            return result > 0 ? AddIngredientRowStatus.Created : AddIngredientRowStatus.Failed;
+        }
+        
+        public async Task<UpdatePlannedIngredientStatus> UpdatePlannedIngredientAsync(string userId, int plannedIngredientId, UpdatePlannedIngredientDto updateDto)
+        {
+            var plannedIngredient = await _dbContext.PlannedMealIngredients
+                .Include(i => i.PlannedMeal)
+                .ThenInclude(m => m.DailyPlan)
+                .Where(i => i.PlannedIngredientId == plannedIngredientId && i.PlannedMeal.DailyPlan.UserId == Guid.Parse(userId))
+                .FirstOrDefaultAsync();
+
+            if (plannedIngredient == null)
+            {
+                return UpdatePlannedIngredientStatus.NotFound;
+            }
+
+            plannedIngredient.PlannedMeal.DailyPlan.ModifiedAt = DateTime.UtcNow;
+            plannedIngredient.AmountG = updateDto.AmountG;
+
+            var result = await _dbContext.SaveChangesAsync();
+
+            return result > 0 ? UpdatePlannedIngredientStatus.Updated : UpdatePlannedIngredientStatus.Failed;
         }
 
         public async Task<DeletePlannedIngredientStatus> DeletePlannedIngredientAsync(string userId, int plannedMealId, int plannedIngredientId)

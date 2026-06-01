@@ -1,7 +1,7 @@
 ﻿using FitTrackWithMLP.Shared.DTOs.DailyPlan.Create;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan.Get;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan.Update;
-using FitTrackWithMLP.Shared.Enums;
+using FitTrackWithMLP.Shared.Enums.Statuses;
 
 namespace DailyPlanService.Services.DailyPlan
 {
@@ -12,8 +12,10 @@ namespace DailyPlanService.Services.DailyPlan
             string userId, DateOnly targetDate, CreateDailyPlanDto dailyPlanDto);
         Task<ReplaceDailyPlanStatus> ReplaceDailyPlanAsync(
             string userId, int dailyPlanId, CreateDailyPlanDto dailyPlanDto);
-        Task<UpdateMealPlanStatus> UpdatePlannedMealAsync(
-            string userId, int plannedMealId, UpdatePlannedMealDto updateDto);
+        Task<AddIngredientRowStatus> AddPlannedIngredientAsnyc(
+            string userId, int plannedMealId, CreatePlannedIngredientDto addDto);
+        Task<UpdatePlannedIngredientStatus> UpdatePlannedIngredientAsync(
+            string userId, int plannedIngredientId, UpdatePlannedIngredientDto updateDto);
         Task<DeletePlannedIngredientStatus> DeletePlannedIngredientAsync(
             string userId, int plannedMealId, int plannedIngredientId);
     }

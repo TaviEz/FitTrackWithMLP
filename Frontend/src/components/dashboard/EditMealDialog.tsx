@@ -15,11 +15,10 @@ import AddIcon from "@mui/icons-material/Add";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
-import type { PlannedMealDto } from "../../dtos/DailyPlan/PlannedMealDto";
-import type { PlannedMealIngredientDto } from "../../dtos/DailyPlan/PlannedMealIngredientDto";
-import type { UpdatePlannedMealDto } from "../../dtos/DailyPlan/UpdatePlannedMealDto";
-import { updatePlannedMeal, deletePlannedIngredient, fetchIngredientOptions } from "../../api/DailyPlanService";
-import type { IngredientOptionDto } from "../../dtos/DailyPlan/IngredientOptionDto";
+import type { PlannedMealDto } from "../../dtos/DailyPlan/Get/PlannedMealDto";
+import type { PlannedMealIngredientDto } from "../../dtos/DailyPlan/Get/PlannedMealIngredientDto";
+import { addPlannedIngredient, deletePlannedIngredient, fetchIngredientOptions, updatePlannedIngredient } from "../../api/DailyPlanService";
+import type { IngredientOptionDto } from "../../dtos/DailyPlan/Get/IngredientOptionDto";
 
 interface EditMealDialogProps {
     open: boolean;
@@ -37,7 +36,6 @@ const EditMealDialog = ({ open, meal, onClose, onSave }: EditMealDialogProps) =>
     const [ingredientQuery, setIngredientQuery] = useState("");
     const [ingredientOptions, setIngredientOptions] = useState<IngredientOptionDto[]>([]);
 
-    // TODO: create add ingredient endpoint
     useEffect(() => {
         if (!ingredientQuery.trim()) {
             setIngredientOptions([]);
@@ -93,8 +91,8 @@ const EditMealDialog = ({ open, meal, onClose, onSave }: EditMealDialogProps) =>
         const newIngredient: PlannedMealIngredientDto = {
             plannedIngredientId: 0,
             name: "",
-            amountG: 100,
-            calories: 50,
+            amountG: 0,
+            calories: 0,
             protein: 0,
             fats: 0,
             carbs: 0
@@ -109,15 +107,19 @@ const EditMealDialog = ({ open, meal, onClose, onSave }: EditMealDialogProps) =>
 
     const handleIngredientSelect = (index: number, selected: IngredientOptionDto | null) => {
         if (!selected) return;
+
+        // we keep the previous properties of the ingredient: plannedIngredientId and amountG
+        // and add the properties of ingredientOptionsDto using the spread operator
         setIngredients((prev) =>
             prev.map((ing, i) =>
                 i === index
-                    ? { ...ing, 
-                        name: selected.name, 
-                        calories: selected.calories, 
-                        protein: selected.protein, 
-                        fats: selected.fat, 
-                        carbs: selected.carbs 
+                    ? { ...ing,
+                        foodId: selected.food_id,
+                        name: selected.name,
+                        calories: selected.calories,
+                        protein: selected.protein,
+                        fats: selected.fat,
+                        carbs: selected.carbs
                     } : ing
             )
         );
@@ -134,17 +136,35 @@ const EditMealDialog = ({ open, meal, onClose, onSave }: EditMealDialogProps) =>
     const handleSave = async () => {
         if (!meal) return;
 
-        const payload: UpdatePlannedMealDto = {
-            title,
-            ingredients: ingredients.map((ing) => ({
-                plannedIngredientId: ing.plannedIngredientId,
-                amountG: ing.amountG,
-            })),
-        };
-        const result = await updatePlannedMeal(meal.plannedMealId, payload);
-        if (!result.success) return;
+        // if the editing element has id = 0 => we are adding an ingredient
+        // otherwise we are updating an ingredient
+        if (editingIngredientId === 0) {
+            const newIngredient = ingredients.find((ing) => ing.plannedIngredientId === 0);
+            if (!newIngredient?.foodId) return;
+            
+            const { plannedIngredientId, ...addIngredientDto } = newIngredient as Required<PlannedMealIngredientDto>;
+            await addPlannedIngredient(meal.plannedMealId, addIngredientDto);
+
+            setEditingIngredientId(null);
+            setHasSaved(true);
+            return;
+        }
+
+        const editingIngredient = ingredients.find((ing) => ing.plannedIngredientId === editingIngredientId);
+        if (!editingIngredient) return;
+
+        await updatePlannedIngredient(editingIngredient.plannedIngredientId, { amountG: editingIngredient.amountG });
 
         setEditingIngredientId(null);
+        setHasSaved(true);
+    };
+
+    const handleSaveTitle = async () => {
+        if (!meal) return;
+
+        // TODO: call title update API
+        // await updatePlannedMealTitle(meal.plannedMealId, { title });
+
         setHasSaved(true);
     };
 
@@ -173,6 +193,7 @@ const EditMealDialog = ({ open, meal, onClose, onSave }: EditMealDialogProps) =>
                     label="Meal title"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
+                    onBlur={handleSaveTitle}
                     fullWidth
                     variant="outlined"
                     size="small"
@@ -228,7 +249,7 @@ const EditMealDialog = ({ open, meal, onClose, onSave }: EditMealDialogProps) =>
                                 >
                                     <Box sx={{ flex: "0 0 35%", display: "flex", alignItems: "center" }}>
                                         {ing.plannedIngredientId === 0 ? (
-                                            <Autocomplete<IngredientOptionDto>
+                                            <Autocomplete
                                                 options={ingredientOptions}
                                                 getOptionLabel={(opt) => opt.name}
                                                 size="small"

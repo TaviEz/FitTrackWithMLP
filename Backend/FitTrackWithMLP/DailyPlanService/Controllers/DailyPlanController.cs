@@ -5,7 +5,7 @@ using FitTrackWithMLP.Shared.DTOs.DailyPlan.Generate;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan.Get;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan.Update;
 using FitTrackWithMLP.Shared.DTOs.User;
-using FitTrackWithMLP.Shared.Enums;
+using FitTrackWithMLP.Shared.Enums.Statuses;
 using FitTrackWithMLP.Shared.Logic;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -152,27 +152,56 @@ namespace DailyPlanService.Controllers
         }
 
         [Authorize]
-        [HttpPut("meal/{plannedMealId:int}")]
-        public async Task<IActionResult> UpdatePlannedMeal(
+        [HttpPost("meal/{plannedMealId:int}/ingredient")]
+        public async Task<IActionResult> AddPlannedIngredient(
             [FromRoute] int plannedMealId,
-            [FromBody] UpdatePlannedMealDto plannedMealDto)
+            [FromBody] CreatePlannedIngredientDto addDto)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out _))
                 return Unauthorized("User ID not found in token.");
 
-            var result = await _dailyPlanService.UpdatePlannedMealAsync(userId, plannedMealId, plannedMealDto);
+            var result = await _dailyPlanService.AddPlannedIngredientAsnyc(userId, plannedMealId, addDto);
 
             switch (result)
             {
-                case UpdateMealPlanStatus.Updated:
-                    _logger.LogInformation("Planned meal {PlannedMealId} updated for user {UserId}", plannedMealId, userId);
+                case AddIngredientRowStatus.Created:
+                    _logger.LogInformation("Planned ingredient added to meal {PlannedMealId} for user {UserId}", plannedMealId, userId);
                     return Ok();
-                case UpdateMealPlanStatus.NotFound:
-                    _logger.LogWarning("Failed to update planned meal {PlannedMealId} for user {UserId}", plannedMealId, userId);
+                case AddIngredientRowStatus.NotFound:
+                    _logger.LogWarning("Failed to add planned ingredient to meal {PlannedMealId} for user {UserId} - meal not found", plannedMealId, userId);
+                    return NotFound();
+                case AddIngredientRowStatus.AlreadyExists:
+                    _logger.LogWarning("Planned ingredient already exists in meal {PlannedMealId} for user {UserId}", plannedMealId, userId);
+                    return Conflict();
+                default:
+                    _logger.LogError("Failed to add planned ingredient to meal {PlannedMealId} for user {UserId}", plannedMealId, userId);
+                    return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        [Authorize]
+        [HttpPut("ingredient/{plannedIngredientId:int}")]
+        public async Task<IActionResult> UpdatePlannedIngredient(
+            [FromRoute] int plannedIngredientId,
+            [FromBody] UpdatePlannedIngredientDto updateDto)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out _))
+                return Unauthorized("User ID not found in token.");
+
+            var result = await _dailyPlanService.UpdatePlannedIngredientAsync(userId, plannedIngredientId, updateDto);
+
+            switch (result)
+            {
+                case UpdatePlannedIngredientStatus.Updated:
+                    _logger.LogInformation("Planned ingredient {PlannedIngredientId} updated for user {UserId}", plannedIngredientId, userId);
+                    return Ok();
+                case UpdatePlannedIngredientStatus.NotFound:
+                    _logger.LogWarning("Failed to update planned ingredient {PlannedIngredientId} for user {UserId}", plannedIngredientId, userId);
                     return NotFound();
                 default:
-                    _logger.LogError("Failed to update planned meal {PlannedMealId} for user {UserId}", plannedMealId, userId);
+                    _logger.LogError("Failed to update planned ingredient {PlannedIngredientId} for user {UserId}", plannedIngredientId, userId);
                     return StatusCode(StatusCodes.Status500InternalServerError);
             }
         }

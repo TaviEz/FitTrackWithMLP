@@ -1,5 +1,5 @@
 ﻿using FitTrackWithMLP.Shared.DTOs.Nutrition;
-using FitTrackWithMLP.Shared.Enums;
+using FitTrackWithMLP.Shared.Enums.Lookups;
 
 namespace FitTrackWithMLP.Shared.Logic
 {

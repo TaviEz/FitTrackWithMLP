@@ -1,10 +1,10 @@
-import type { GeneratedDailyPlanDto } from "../dtos/DailyPlan/GeneratedDailyPlanDto";
-import type { CreateDailyPlanDto } from "../dtos/DailyPlan/CreateDailyPlanDto";
-import type { UpdatePlannedMealDto } from "../dtos/DailyPlan/UpdatePlannedMealDto";
+import type { CreateDailyPlanDto } from "../dtos/DailyPlan/Create/CreateDailyPlanDto";
 import type UserPhysiqueDto from "../dtos/UserDetails/UserPhysiqueDto";
 import api from "./api";
-import type { DailyPlanDto } from "../dtos/DailyPlan/DailyPlanDto";
-import type { IngredientOptionDto } from "../dtos/DailyPlan/IngredientOptionDto";
+import type { DailyPlanDto } from "../dtos/DailyPlan/Get/DailyPlanDto";
+import type { IngredientOptionDto } from "../dtos/DailyPlan/Get/IngredientOptionDto";
+import type { GeneratedDailyPlanDto } from "../dtos/DailyPlan/Generate/GeneratedDailyPlanDto";
+import type { CreatePlannedIngredientDto } from "../dtos/DailyPlan/Create/CreatePlannedIngredientDto";
 
 const API_BASE_URL = 'http://localhost:8082/api/DailyPlan';
 
@@ -71,9 +71,24 @@ export const getDailyPlan = async (targetDate: string): Promise<any> => {
     }
 }
 
-export const updatePlannedMeal = async (plannedMealId: number, payload: UpdatePlannedMealDto): Promise<any> => {
+export const addPlannedIngredient = async (
+    plannedMealId: number, payload: CreatePlannedIngredientDto): Promise<any> => {
     try {
-        const result = await api.put(`${API_BASE_URL}/meal/${plannedMealId}`, payload);
+        const result = await api.post(`${API_BASE_URL}/meal/${plannedMealId}/ingredient`, payload);
+
+        if (result.status >= 400) {
+            return { success: false, status: result.status };
+        }
+
+        return { success: true, status: result.status };
+    } catch (error: any) {
+        return { success: false, status: error?.response?.status };
+    }
+}
+
+export const updatePlannedIngredient = async (plannedIngredientId: number, { amountG }: { amountG: number }): Promise<any> => {
+    try {
+        const result = await api.put(`${API_BASE_URL}/ingredient/${plannedIngredientId}`, { amountG: amountG});
 
         if (result.status >= 400) {
             return { success: false, status: result.status };

@@ -1,4 +1,4 @@
-﻿namespace FitTrackWithMLP.Shared.Enums
+﻿namespace FitTrackWithMLP.Shared.Enums.Lookups
 {
     public enum GoalType
     {
