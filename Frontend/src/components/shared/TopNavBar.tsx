@@ -1,12 +1,12 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { AppBar, Toolbar, Tabs, Tab, Typography, Box } from "@mui/material";
+import { AppBar, Toolbar, Tabs, Tab, Typography, Box, Button } from "@mui/material";
 import DashboardIcon from "@mui/icons-material/Dashboard";
-import HistoryIcon from "@mui/icons-material/History";
 import PersonIcon from "@mui/icons-material/Person";
+import LogoutIcon from "@mui/icons-material/Logout";
+import { logoutUser } from "../../api/UserProfileService";
 
 const NAV_ITEMS = [
     { label: "Dashboard", path: "/dashboard", icon: <DashboardIcon fontSize="small" /> },
-    { label: "History",   path: "/history",   icon: <HistoryIcon fontSize="small" /> },
     { label: "Profile",   path: "/profile",   icon: <PersonIcon fontSize="small" /> },
 ];
 
@@ -16,9 +16,14 @@ const TopNavBar = () => {
     const activeIndex = NAV_ITEMS.findIndex((item) => item.path === pathname);
     const currentTab = activeIndex === -1 ? false : activeIndex;
 
+    const handleLogout = async () => {
+        await logoutUser();
+        navigate("/");
+    };
+
     return (
         <AppBar position="fixed" elevation={1} sx={{ bgcolor: "primary.dark" }}>
-            <Toolbar sx={{ justifyContent: "space-between", px: { xs: 2, sm: 4 } }}>
+            <Toolbar sx={{ justifyContent: "space-between", px: { xs: 2, sm: 4 }, position: "relative" }}>
                 <Typography
                     variant="h6"
                     fontWeight={700}
@@ -27,7 +32,7 @@ const TopNavBar = () => {
                     FitTrack
                 </Typography>
 
-                <Box>
+                <Box sx={{ position: "absolute", left: "50%", transform: "translateX(-50%)" }}>
                     <Tabs
                         value={currentTab}
                         onChange={(_, newValue) => navigate(NAV_ITEMS[newValue].path)}
@@ -52,6 +57,19 @@ const TopNavBar = () => {
                         ))}
                     </Tabs>
                 </Box>
+
+                <Button
+                    onClick={handleLogout}
+                    startIcon={<LogoutIcon fontSize="small" />}
+                    sx={{
+                        textTransform: "none",
+                        fontWeight: 600,
+                        color: "rgba(255,255,255,0.7)",
+                        "&:hover": { color: "#ffffff" },
+                    }}
+                >
+                    Logout
+                </Button>
             </Toolbar>
         </AppBar>
     );

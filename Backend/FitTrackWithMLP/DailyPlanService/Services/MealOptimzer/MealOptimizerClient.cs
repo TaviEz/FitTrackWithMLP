@@ -31,7 +31,7 @@ namespace DailyPlanService.Services.MealOptimzer
             {
                 throw; // caller canceled: propagate
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 return null;
             }

@@ -63,6 +63,15 @@ export const getUserDetails = async (): Promise<any> => {
     }
 }
 
+export const logoutUser = async (): Promise<any> => {
+    try {
+        const result = await api.post(`${API_BASE_URL}/logout`);
+        return { success: result.status < 400, status: result.status };
+    } catch (error: any) {
+        return { success: false, status: error?.response?.status };
+    }
+}
+
 export const saveUserDetails = async (userDetails: UserDetails): Promise<any> => {
     try {
         const userActivityLevel = getActivityLevelEnum(userDetails.activityLevel.label);

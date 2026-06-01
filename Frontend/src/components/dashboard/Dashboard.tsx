@@ -442,7 +442,7 @@ const Dashboard = () => {
                             No plan for today
                         </Typography>
                         <Typography variant="body2" color="text.secondary" maxWidth={340}>
-                            You haven't logged any meals yet. Let AI build a plan for you.
+                            Start by generating a plan with AI, or add your meals manually.
                         </Typography>
                     </Box>
                 )}

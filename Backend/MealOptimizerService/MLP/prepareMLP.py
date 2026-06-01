@@ -51,7 +51,7 @@ def generate_daily_plan(
         meal_targets = MealTargets(
             calories=goals.calories * ratio,
             protein=goals.protein * ratio,
-            min_fat=goals.min_fat * ratio
+            min_fat=goals.min_fat * ratio * 0.85
         )
 
         # Get Top k suggestions from the model for this meal type
@@ -72,6 +72,13 @@ def generate_daily_plan(
                 final_meal_data = meal_data
                 break
         
+        if not final_meal_data:
+            for actual_id in suggested_ids:
+                meal_data = mealRepository.get_meal_details_by_id(actual_id)
+                if meal_data and meal_data.complexity == target_complexity and meal_data.meal_type_id == meal_type_id:
+                    final_meal_data = meal_data
+                    break
+
         # Fallback: If no complexity match, take the model's #1 macro choice
         if not final_meal_data:
             final_meal_data = mealRepository.get_meal_details_by_id(id_mapping[top_indices[0]])

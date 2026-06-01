@@ -235,21 +235,23 @@ const Onboarding = () => {
 
             {/* Step 3 — Meal Plan Preview */}
             {step === 3 && !generating && (
-                <GeneratedPlanPreview
-                    meals={generatedMeals}
-                    targetCalories={targetCalories}
-                    actualCalories={actualCalories}
-                    mealsComplexity={mealsComplexity}
-                    onComplexityChange={setMealsComplexity}
-                    actions={
-                        <>
-                            <SecondaryButton onClick={handleRegenerate}>Regenerate Plan</SecondaryButton>
-                            <Button variant="contained" onClick={saveAndNavigateToDashboard} disabled={savingPlan}>
-                                {savingPlan ? "Saving..." : "Continue to Dashboard"}
-                            </Button>
-                        </>
-                    }
-                />
+                <Box sx={{ width: "100%", maxWidth: 760 }}>
+                    <GeneratedPlanPreview
+                        meals={generatedMeals}
+                        targetCalories={targetCalories}
+                        actualCalories={actualCalories}
+                        mealsComplexity={mealsComplexity}
+                        onComplexityChange={setMealsComplexity}
+                        actions={
+                            <>
+                                <SecondaryButton onClick={handleRegenerate}>Regenerate Plan</SecondaryButton>
+                                <Button variant="contained" onClick={saveAndNavigateToDashboard} disabled={savingPlan}>
+                                    {savingPlan ? "Saving..." : "Continue to Dashboard"}
+                                </Button>
+                            </>
+                        }
+                    />
+                </Box>
             )}
 
             <ToastContainer />

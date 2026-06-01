@@ -59,7 +59,7 @@ const SignInForm = () => {
 
 
   return (
-    <Box display="flex" flexDirection="column" component="form" gap={3}>
+    <Box display="flex" flexDirection="column" component="form" gap={3} sx={{ maxWidth: 480, width: "100%", mx: "auto" }}>
       <Typography sx={{ m: 7, ...theme.typography.h2 }}>
         Sign In Page
       </Typography>
