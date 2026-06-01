@@ -8,8 +8,6 @@ import type { CreatePlannedIngredientDto } from "../dtos/DailyPlan/Create/Create
 
 const API_BASE_URL = 'http://localhost:8082/api/DailyPlan';
 
-// TODO: find a way to take into consideration the other generated meals for the week this way you dont repeat
-// yourself
 export const generateDailyPlan = async (userPhysiqueDto: UserPhysiqueDto): Promise<any> => {
     try {
         const result = await api.post<GeneratedDailyPlanDto>(`${API_BASE_URL}/generate`, userPhysiqueDto);

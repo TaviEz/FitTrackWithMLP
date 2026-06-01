@@ -39,7 +39,8 @@ def predict_meals(calories, protein, meal_type_id, k=5):
         
     return top_indices[0].tolist()
 
-def generate_daily_plan(goals: MealTargets, target_complexity: str = "Standard"):
+def generate_daily_plan(
+        goals: MealTargets, target_complexity: str = "Standard", excluded_meal_ids: list[int] = []):
     splits = {'BREAKFAST': 0.25, 'LUNCH': 0.30, 'SNACK': 0.15, 'DINNER': 0.30}
     meal_categories = ['BREAKFAST', 'LUNCH', 'SNACK', 'DINNER']
     daily_plan = []
@@ -62,6 +63,10 @@ def generate_daily_plan(goals: MealTargets, target_complexity: str = "Standard")
         # Iterate through suggestions to find the complexity match
         final_meal_data = None
         for actual_id in suggested_ids:
+            # Skip excluded meal ids
+            if actual_id in excluded_meal_ids:
+                continue
+
             meal_data = mealRepository.get_meal_details_by_id(actual_id)
             if meal_data and meal_data.complexity == target_complexity and meal_data.meal_type_id == meal_type_id:
                 final_meal_data = meal_data

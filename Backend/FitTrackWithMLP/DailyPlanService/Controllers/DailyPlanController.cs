@@ -115,17 +115,25 @@ namespace DailyPlanService.Controllers
         [HttpPost("generate")]
         public async Task<IActionResult> GenerateDailyPlan([FromBody] UserPhysiqueDto userPhysiqueDto)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out _))
+                return Unauthorized("User ID not found in token.");
+
             var activityGroup = NutritionCalculator.GetGroup(userPhysiqueDto.ActivityLevel);
             var dailyTargets = NutritionCalculator.GetDailyTargetsForGoal(
                 userPhysiqueDto.Weight, userPhysiqueDto.Tdee, activityGroup, userPhysiqueDto.GoalType
             );
+
+            var excludedMealIds = await _dailyPlanService.GetLatestPlannedMealsAsync(userId);
 
             var optimizerRequest = new OptimizedRequestDto
             {
                 Calories = dailyTargets.Calories,
                 Protein = dailyTargets.Protein,
                 MinFat = dailyTargets.MinFat,
-                MealsComplexity = userPhysiqueDto.MealsComplexity.ToString()
+                MealsComplexity = userPhysiqueDto.MealsComplexity.ToString(),
+                ExcludedMealIds = excludedMealIds
             };
 
             var optimizedPlan = await _mealOptimizerClient.OptimizeAsync(optimizerRequest);

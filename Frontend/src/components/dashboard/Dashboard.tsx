@@ -91,8 +91,6 @@ const Dashboard = () => {
         ) ?? [];
 
 
-    // TODO: check why the daily calories/target calories do not match the calories in the
-    // generate/regenerate plan modal
     const caloriePercent = targetCalories > 0
         ? Math.min((dailyPlan?.totalCalories ?? 0) / targetCalories * 100, 100)
         : 0;
@@ -152,6 +150,20 @@ const Dashboard = () => {
                                 value={caloriePercent}
                                 sx={{ height: 6, borderRadius: 3 }}
                             />
+                            {targetCalories > 0 && (() => {
+                                const remaining = targetCalories - dailyPlan.totalCalories;
+                                const over = remaining < 0;
+                                return (
+                                    <Typography
+                                        variant="caption"
+                                        sx={{ color: over ? "error.main" : "success.main" }}
+                                    >
+                                        {over
+                                            ? `${Math.abs(remaining)} kcal over target`
+                                            : `${remaining} kcal remaining`}
+                                    </Typography>
+                                );
+                            })()}
                         </Box>
                     )}
 

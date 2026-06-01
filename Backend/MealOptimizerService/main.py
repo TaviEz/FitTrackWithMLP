@@ -22,6 +22,7 @@ class OptimizationRequest(BaseModel):
     protein: float
     min_fat: float
     meals_complexity: str = "Standard"
+    excluded_meal_ids: list[int] = []
 
 @app.get("/")
 async def root():
@@ -34,7 +35,7 @@ async def generate_meals(request: OptimizationRequest):
         protein=request.protein,
         min_fat=request.min_fat
     )
-    result = generate_daily_plan(goals, request.meals_complexity)
+    result = generate_daily_plan(goals, request.meals_complexity, request.excluded_meal_ids)
     return result
 
 @app.get("/ingredients")

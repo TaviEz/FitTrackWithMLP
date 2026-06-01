@@ -12,5 +12,7 @@ namespace FitTrackWithMLP.Shared.DTOs.DailyPlan.Generate
         public int MinFat { get; set; }
         [JsonPropertyName("meals_complexity")]
         public string MealsComplexity { get; set; } = string.Empty;
+        [JsonPropertyName("excluded_meal_ids")]
+        public List<int> ExcludedMealIds { get; set; } = new();
     }
 }

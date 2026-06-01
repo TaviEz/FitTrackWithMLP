@@ -40,7 +40,7 @@ const AppLayout = () => {
   return (
     <>
       {showNav && <TopNavBar />}
-      <div style={{ paddingTop: showNav ? 20 : 0 }}>
+      <div>
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/signIn" element={<SignInForm />} />

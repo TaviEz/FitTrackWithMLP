@@ -12,6 +12,8 @@ namespace DailyPlanService.Services.DailyPlan
             string userId, DateOnly targetDate, CreateDailyPlanDto dailyPlanDto);
         Task<ReplaceDailyPlanStatus> ReplaceDailyPlanAsync(
             string userId, int dailyPlanId, CreateDailyPlanDto dailyPlanDto);
+        Task<List<int>> GetLatestPlannedMealsAsync(
+            string userId, int daysAgo = 7, int mealCap = 10);
         Task<UpdatePlannedMealTitleStatus> UpdatePlannedMealTitleAsync(
             string userId, int plannedMealId, string title);
         Task<AddIngredientRowStatus> AddPlannedIngredientAsnyc(

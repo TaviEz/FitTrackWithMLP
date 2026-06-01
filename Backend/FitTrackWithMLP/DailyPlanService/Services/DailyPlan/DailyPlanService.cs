@@ -82,6 +82,22 @@ namespace DailyPlanService.Services.DailyPlan
             return result > 0 ? ReplaceDailyPlanStatus.Replaced : ReplaceDailyPlanStatus.Failed;
         }
 
+        public async Task<List<int>> GetLatestPlannedMealsAsync(string userId, int daysAgo = 7, int mealCap = 10)
+        {
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var targetDate = today.AddDays(-daysAgo);
+
+            var latestMealsIds = await _dbContext.PlannedMeals
+                .Where(m => m.DailyPlan.UserId == Guid.Parse(userId)
+                   && m.DailyPlan.TargetDate >= targetDate)
+                .OrderByDescending(m => m.DailyPlan.TargetDate)
+                .Take(mealCap)
+                .Select(m => m.MealId)
+                .ToListAsync();
+
+            return latestMealsIds;
+        }
+
         public async Task<UpdatePlannedMealTitleStatus> UpdatePlannedMealTitleAsync(string userId, int plannedMealId, string title)
         {
             var plannedMeal = await _dbContext.PlannedMeals
