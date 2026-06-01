@@ -45,7 +45,7 @@ namespace UserManagementService.Services.UserDetails
             // get the daily targets for the user
             var activityGroup = NutritionCalculator.GetGroup(userDto.ActivityLevel);
             var dailyTargets = NutritionCalculator.GetDailyTargetsForGoal(
-                userDto.Weight, userDto.Tdee, activityGroup, userDto.Goal
+                userDto.Weight, userDto.Tdee, activityGroup, userDto.GoalType
             );
 
             if (user.UserDetails == null)

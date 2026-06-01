@@ -76,7 +76,6 @@ export const saveUserDetails = async (userDetails: UserDetails): Promise<any> =>
 
         const userDto = UserDetailsDto.fromDomain(userDetails, userActivityLevel);
         const result = await api.post(`${API_BASE_URL}/details`, userDto);
-
         if (result.status >= 400) {
             return { success: false, status: result.status };
         }

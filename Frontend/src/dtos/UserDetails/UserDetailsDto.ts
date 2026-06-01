@@ -10,12 +10,12 @@ class UserDetailsDto {
     activityLevel: string;
     bmr: number;
     tdee: number;
-    goal: string;
+    goalType: string;
     targetCalories: number;
 
     public constructor(
         gender: string, age: number, weight: number, height: number, 
-        activityLevel: string, bmr: number, tdee: number, goal: string, targetCalories: number)
+        activityLevel: string, bmr: number, tdee: number, goalType: string, targetCalories: number)
     {
         this.gender = gender;
         this.age = age;
@@ -24,7 +24,7 @@ class UserDetailsDto {
         this.activityLevel = activityLevel;
         this.bmr = bmr;
         this.tdee = tdee;
-        this.goal = goal;
+        this.goalType = goalType;
         this.targetCalories = targetCalories;
     }
 
@@ -44,7 +44,7 @@ class UserDetailsDto {
 
     static toDomain(dto: UserDetailsDto): UserDetails {
         const label = Object.keys(ActivityLevels).find(
-            (key) => ActivityLevels[key as ActivityLevelLabel] === dto.activityLevel
+            (key) => ActivityLevels[key as ActivityLevelLabel].toLowerCase() === dto.activityLevel?.toLowerCase()
         );
         const activityLevel = activityLevelsData.find(a => a.label === label) ?? defaultActivityLevel;
         return new UserDetails(
@@ -55,7 +55,7 @@ class UserDetailsDto {
             activityLevel, 
             dto.bmr, 
             dto.tdee, 
-            dto.goal,
+            dto.goalType,
             dto.targetCalories
         );
     }

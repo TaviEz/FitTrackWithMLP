@@ -152,6 +152,32 @@ namespace DailyPlanService.Controllers
         }
 
         [Authorize]
+        [HttpPut("meal/{plannedMealId:int}/title")]
+        public async Task<IActionResult> UpdatePlannedMealTitle(
+            [FromRoute] int plannedMealId, 
+            [FromBody] UpdatePlannedMealTitleDto updateDto)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out _))
+                return Unauthorized("User ID not found in token.");
+
+            var result = await _dailyPlanService.UpdatePlannedMealTitleAsync(userId, plannedMealId, updateDto.Title);
+
+            switch (result)
+            {
+                case UpdatePlannedMealTitleStatus.Success:
+                    _logger.LogInformation("Planned meal {PlannedMealId} title updated for user {UserId}", plannedMealId, userId);
+                    return Ok();
+                case UpdatePlannedMealTitleStatus.NotFound:
+                    _logger.LogWarning("Planned meal {PlannedMealId} not found for user {UserId}", plannedMealId, userId);
+                    return NotFound();
+                default:
+                    _logger.LogError("Failed to update title for planned meal {PlannedMealId} for user {UserId}", plannedMealId, userId);
+                    return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        [Authorize]
         [HttpPost("meal/{plannedMealId:int}/ingredient")]
         public async Task<IActionResult> AddPlannedIngredient(
             [FromRoute] int plannedMealId,

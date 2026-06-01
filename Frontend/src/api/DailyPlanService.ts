@@ -86,6 +86,20 @@ export const addPlannedIngredient = async (
     }
 }
 
+export const updatePlannedMealTitle = async (plannedMealId: number, title: string): Promise<any> => {
+    try {
+        const result = await api.put(`${API_BASE_URL}/meal/${plannedMealId}/title`, { title });
+
+        if (result.status >= 400) {
+            return { success: false, status: result.status };
+        }
+
+        return { success: true, status: result.status };
+    } catch (error: any) {
+        return { success: false, status: error?.response?.status };
+    }
+}
+
 export const updatePlannedIngredient = async (plannedIngredientId: number, { amountG }: { amountG: number }): Promise<any> => {
     try {
         const result = await api.put(`${API_BASE_URL}/ingredient/${plannedIngredientId}`, { amountG: amountG});
@@ -107,12 +121,12 @@ export const fetchIngredientOptions = async (query: string): Promise<any> => {
         });
 
         if (result.status >= 400) {
-            return [];
+            return { success: false, data: [] };
         }
 
-        return result.data;
+        return { success: true, data: result.data };
     } catch {
-        return [];
+        return { success: false, data: [] };
     }
 }
 

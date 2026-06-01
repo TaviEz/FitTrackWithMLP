@@ -17,7 +17,8 @@ import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
 import type { PlannedMealDto } from "../../dtos/DailyPlan/Get/PlannedMealDto";
 import type { PlannedMealIngredientDto } from "../../dtos/DailyPlan/Get/PlannedMealIngredientDto";
-import { addPlannedIngredient, deletePlannedIngredient, fetchIngredientOptions, updatePlannedIngredient } from "../../api/DailyPlanService";
+import { addPlannedIngredient, deletePlannedIngredient, fetchIngredientOptions, updatePlannedIngredient, updatePlannedMealTitle } from "../../api/DailyPlanService";
+import { showError } from "../shared/ShowToast";
 import type { IngredientOptionDto } from "../../dtos/DailyPlan/Get/IngredientOptionDto";
 
 interface EditMealDialogProps {
@@ -44,8 +45,12 @@ const EditMealDialog = ({ open, meal, onClose, onSave }: EditMealDialogProps) =>
 
         // debounce the api call for 300ms
         const timer = setTimeout(async () => {
-            const results = await fetchIngredientOptions(ingredientQuery);
-            setIngredientOptions(results);
+            const result = await fetchIngredientOptions(ingredientQuery);
+            if (!result.success) {
+                showError("Failed to fetch ingredient options.");
+                return;
+            }
+            setIngredientOptions(result.data);
         }, 300);
         return () => clearTimeout(timer);
     }, [ingredientQuery]);
@@ -143,7 +148,11 @@ const EditMealDialog = ({ open, meal, onClose, onSave }: EditMealDialogProps) =>
             if (!newIngredient?.foodId) return;
             
             const { plannedIngredientId, ...addIngredientDto } = newIngredient as Required<PlannedMealIngredientDto>;
-            await addPlannedIngredient(meal.plannedMealId, addIngredientDto);
+            const addResult = await addPlannedIngredient(meal.plannedMealId, addIngredientDto);
+            if (!addResult.success) {
+                showError("Failed to add ingredient.");
+                return;
+            }
 
             setEditingIngredientId(null);
             setHasSaved(true);
@@ -153,7 +162,11 @@ const EditMealDialog = ({ open, meal, onClose, onSave }: EditMealDialogProps) =>
         const editingIngredient = ingredients.find((ing) => ing.plannedIngredientId === editingIngredientId);
         if (!editingIngredient) return;
 
-        await updatePlannedIngredient(editingIngredient.plannedIngredientId, { amountG: editingIngredient.amountG });
+        const updateResult = await updatePlannedIngredient(editingIngredient.plannedIngredientId, { amountG: editingIngredient.amountG });
+        if (!updateResult.success) {
+            showError("Failed to update ingredient.");
+            return;
+        }
 
         setEditingIngredientId(null);
         setHasSaved(true);
@@ -162,9 +175,11 @@ const EditMealDialog = ({ open, meal, onClose, onSave }: EditMealDialogProps) =>
     const handleSaveTitle = async () => {
         if (!meal) return;
 
-        // TODO: call title update API
-        // await updatePlannedMealTitle(meal.plannedMealId, { title });
-
+        const result = await updatePlannedMealTitle(meal.plannedMealId, title);
+        if (!result.success) {
+            showError("Failed to update meal title.");
+            return;
+        }
         setHasSaved(true);
     };
 

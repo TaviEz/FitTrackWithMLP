@@ -82,6 +82,25 @@ namespace DailyPlanService.Services.DailyPlan
             return result > 0 ? ReplaceDailyPlanStatus.Replaced : ReplaceDailyPlanStatus.Failed;
         }
 
+        public async Task<UpdatePlannedMealTitleStatus> UpdatePlannedMealTitleAsync(string userId, int plannedMealId, string title)
+        {
+            var plannedMeal = await _dbContext.PlannedMeals
+                .Include(m => m.DailyPlan)
+                .Where(m => m.PlannedMealId == plannedMealId && m.DailyPlan.UserId == Guid.Parse(userId))
+                .FirstOrDefaultAsync();
+
+            if (plannedMeal == null)
+            {
+                return UpdatePlannedMealTitleStatus.NotFound;
+            }
+
+            plannedMeal.Title = title;
+            plannedMeal.DailyPlan.ModifiedAt = DateTime.UtcNow;
+
+            var result = await _dbContext.SaveChangesAsync();
+            return result > 0 ? UpdatePlannedMealTitleStatus.Success : UpdatePlannedMealTitleStatus.Failed;
+        }
+
         public async Task<AddIngredientRowStatus> AddPlannedIngredientAsnyc(string userId, int plannedMealId, CreatePlannedIngredientDto addDto)
         {
             var plannedMeal = await _dbContext.PlannedMeals
