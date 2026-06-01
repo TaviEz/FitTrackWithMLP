@@ -2,7 +2,7 @@
 
 namespace FitTrackWithMLP.Shared.DTOs.DailyPlan.Generate
 {
-    public class OptimizedMealPlanDto
+    public class GeneratedMealPlanDto
     {
         [JsonPropertyName("category")]
         public string Category { get; set; } = string.Empty;
@@ -14,7 +14,7 @@ namespace FitTrackWithMLP.Shared.DTOs.DailyPlan.Generate
         public int MealId { get; set; }
 
         [JsonPropertyName("ingredients")]
-        public List<OptimizedIngredientDto> Ingredients { get; set; } = new();
+        public List<GeneratedMealIngredientDto> Ingredients { get; set; } = new();
 
         [JsonPropertyName("error")]
         public double Error { get; set; }

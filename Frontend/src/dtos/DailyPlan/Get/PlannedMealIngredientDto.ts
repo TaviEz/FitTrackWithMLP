@@ -1,5 +1,6 @@
 export interface PlannedMealIngredientDto {
     plannedIngredientId: number;
+    foodId?: number;
     name: string;
     amountG: number;
     protein: number;
