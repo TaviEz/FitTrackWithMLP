@@ -9,21 +9,31 @@
     
     \vspace{1cm}
     
-    \textbf{Rezumat}
+    \textbf{Summary}
     
     \vspace{1cm}
 \end{center}
 
+Modern fitness and nutrition software applications heavily rely on manual calorie tracking 
+and rigid, template-based meal databases. 
+These traditional tools lack automated, mathematically precise personalization, requiring
+ users to manually balance macro-nutrients through tedious trial and error. 
 
-Proiectul de diplomă/lucrarea de disertație va conține un scurt rezumat (abstract – termenul în engleză) de maximum o pagină, care expune ideile principale ale tezei, contribuția autorului la realizarea temei propuse precum și concluziile obținute. Formulați ideile principale ale lucrării în propoziții sau fraze cât mai simple, fără amănunte nesemnificative. Încercați să atingeți următoarele idei:
-\begin{itemize}
-    \item contextul și motivația alegerii temei;
-    \item obiectivele principale;
-    \item metodologia utilizată;
-    \item soluția propusă;
-    \item rezultatele esențiale și principalele concluzii.
-\end{itemize}
+This thesis introduces FitTrack, an intelligent nutrition management platform designed to 
+automate custom meal plan generation based on exact physiological requirements. 
+The system implements an automated calculation engine driven by Linear Programming to 
+dynamically scale individual ingredient weights down to the gram, ensuring all generated 
+menus hit target caloric, protein, carbohydrate, and fat boundaries flawlessly. To 
+complement the optimization engine, a Multi-Layer Perceptron (MLP) classifier is 
+utilized to evaluate physiological metrics—such as age, sex, weight and height-to select 
+the optimal baseline options from a predefined batch of candidate meals that best match 
+the individual's user profile.
 
-Rezumatul ar trebui să fie între 150-250 de cuvinte și să fie urmat de cuvinte-cheie (\textit{keywords}, 5-7 termeni relevanți).
+The application bridges the gap between passive food logging diaries and active, automated
+nutritional coaching. Experimental evaluations demonstrate that the constraints 
+optimization engine eliably satisfies all mathematical constraints within seconds, 
+serving as a practical foundation for building personalized health and wellness 
+applications.
 
-\textit{Recomandare neoficială: Rezumatul se compune, de obicei, după ce ați terminat redactarea lucrării de licență/disertație, după finalizarea capitolului Concluzii}
+\vspace{0.5cm}
+\noindent \textbf{Keywords:} Automated Meal Planning, Linear Programming, Constraints Optimization, Multi-Layer Perceptron, Personalized Nutrition.
