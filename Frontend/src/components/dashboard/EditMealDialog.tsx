@@ -9,6 +9,7 @@ import {
     Divider,
     IconButton,
     TextField,
+    Tooltip,
     Typography,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
@@ -62,7 +63,6 @@ const EditMealDialog = ({ open, meal, dailyPlanId, onClose, onSave }: EditMealDi
             setTitle(meal.title);
             setIngredients(meal.ingredients);
             setEditingIngredientId(null);
-            console.log(meal.plannedMealId)
             setResolvedMealId(meal.plannedMealId);
             setHasDeleted(false);
             setHasSaved(false);
@@ -93,10 +93,12 @@ const EditMealDialog = ({ open, meal, dailyPlanId, onClose, onSave }: EditMealDi
         }
 
         setIngredients((prev) => prev.filter((_, i) => i !== index));
+        if (editingIngredientId === ingredient.plannedIngredientId) setEditingIngredientId(null);
         setHasDeleted(true);
     };
 
     const handleAddIngredient = () => {
+        if (editingIngredientId !== null) return;
         const newIngredient: PlannedMealIngredientDto = {
             plannedIngredientId: 0,
             name: "",
@@ -106,11 +108,7 @@ const EditMealDialog = ({ open, meal, dailyPlanId, onClose, onSave }: EditMealDi
             fats: 0,
             carbs: 0
         };
-        
-        // add on the ui an ingredient with some default values
         setIngredients((prev) => [...prev, newIngredient]);
-        // set the id to 0
-        // in the conditional rendering it knows to display the autocomplete
         setEditingIngredientId(0);
     };
 
@@ -152,7 +150,6 @@ const EditMealDialog = ({ open, meal, dailyPlanId, onClose, onSave }: EditMealDi
             if (!newIngredient?.foodId) return;
 
             let mealId = resolvedMealId;
-            console.log(resolvedMealId);
             if (mealId === 0) {
                 const createResult = await addPlannedMeal(dailyPlanId, { category: meal.category, title });
                 if (!createResult.success) {
@@ -160,7 +157,6 @@ const EditMealDialog = ({ open, meal, dailyPlanId, onClose, onSave }: EditMealDi
                     return;
                 }
                 mealId = createResult.data;
-                console.log(mealId)
                 setResolvedMealId(mealId);
             }
 
@@ -171,6 +167,11 @@ const EditMealDialog = ({ open, meal, dailyPlanId, onClose, onSave }: EditMealDi
                 return;
             }
 
+            setIngredients((prev) =>
+                prev.map((ing) =>
+                    ing.plannedIngredientId === 0 ? { ...ing, plannedIngredientId: -1 } : ing
+                )
+            );
             setEditingIngredientId(null);
             setHasSaved(true);
             return;
@@ -249,9 +250,10 @@ const EditMealDialog = ({ open, meal, dailyPlanId, onClose, onSave }: EditMealDi
                                     size="small"
                                     startIcon={<AddIcon />}
                                     onClick={handleAddIngredient}
-                                    sx={{ 
-                                        textTransform: "none", 
-                                        fontSize: "0.75rem", 
+                                    disabled={editingIngredientId !== null}
+                                    sx={{
+                                        textTransform: "none",
+                                        fontSize: "0.75rem",
                                         fontWeight: 600,
                                         whiteSpace: "nowrap",
                                         p: 0,
@@ -281,21 +283,23 @@ const EditMealDialog = ({ open, meal, dailyPlanId, onClose, onSave }: EditMealDi
                                 >
                                     <Box sx={{ flex: "0 0 35%", display: "flex", alignItems: "center" }}>
                                         {ing.plannedIngredientId === 0 ? (
-                                            <Autocomplete
-                                                options={ingredientOptions}
-                                                getOptionLabel={(opt) => opt.name}
-                                                size="small"
-                                                fullWidth
-                                                onInputChange={(_, value) => setIngredientQuery(value)}
-                                                onChange={(_, selected) => handleIngredientSelect(i, selected)}
-                                                renderInput={(params) => (
-                                                    <TextField {...params} placeholder="Search ingredient" variant="outlined" />
-                                                )}
-                                                sx={{
-                                                    "& .MuiInputBase-root": { py: "1px", fontSize: "0.8125rem" },
-                                                    "& .MuiInputBase-input": { py: "2px !important" },
-                                                }}
-                                            />
+                                            <Tooltip title={ing.name || ""} placement="top" disableHoverListener={!ing.name}>
+                                                <Autocomplete
+                                                    options={ingredientOptions}
+                                                    getOptionLabel={(opt) => opt.name}
+                                                    size="small"
+                                                    fullWidth
+                                                    onInputChange={(_, value) => setIngredientQuery(value)}
+                                                    onChange={(_, selected) => handleIngredientSelect(i, selected)}
+                                                    renderInput={(params) => (
+                                                        <TextField {...params} placeholder="Search ingredient" variant="outlined" />
+                                                    )}
+                                                    sx={{
+                                                        "& .MuiInputBase-root": { py: "1px", fontSize: "0.8125rem" },
+                                                        "& .MuiInputBase-input": { py: "2px !important" },
+                                                    }}
+                                                />
+                                            </Tooltip>
                                         ) : (
                                             <Typography variant="body2" fontWeight={500} noWrap>
                                                 {ing.name}

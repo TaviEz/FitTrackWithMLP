@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace FitTrackWithMLP.Shared
 {
@@ -10,6 +12,9 @@ namespace FitTrackWithMLP.Shared
     {
         public static IApplicationBuilder UseFitTrackAntiforgeryCookie(this IApplicationBuilder app)
         {
+            var env = app.ApplicationServices.GetRequiredService<IWebHostEnvironment>();
+            bool isDev = env.IsDevelopment();
+
             app.Use(async (context, next) =>
             {
                 // issue a new antiforgery token cookie for GET requests if one doesn't exist
@@ -22,8 +27,8 @@ namespace FitTrackWithMLP.Shared
                     context.Response.Cookies.Append("XSRF-TOKEN", tokens.RequestToken!, new CookieOptions
                     {
                         HttpOnly = false,
-                        Secure = true,
-                        SameSite = SameSiteMode.None
+                        Secure = !isDev,
+                        SameSite = isDev ? SameSiteMode.Lax : SameSiteMode.None
                     });
                 }
 

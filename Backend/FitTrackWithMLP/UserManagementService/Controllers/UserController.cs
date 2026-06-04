@@ -18,18 +18,21 @@ namespace UserManagementService.Controllers
         private readonly IAuthCookieService _authCookieService;
         private readonly IUserDetailsService _userDetailsService;
         private readonly ILogger<UserController> _logger;
+        private readonly IWebHostEnvironment _env;
 
         public UserController(
             IIdentityService authService,
             ITokenService tokenService,
             IAuthCookieService authCookieService,
             IUserDetailsService userDetailsService,
-            ILogger<UserController> logger)
+            ILogger<UserController> logger,
+            IWebHostEnvironment env)
         {
             _authService = authService;
             _tokenService = tokenService;
             _authCookieService = authCookieService;
             _userDetailsService = userDetailsService;
+            _env = env;
             _logger = logger;
         }
 
@@ -46,7 +49,7 @@ namespace UserManagementService.Controllers
             }
 
             var token = _tokenService.CreateAccessToken(user);
-            _authCookieService.AppendAuthCookies(HttpContext, token);
+            _authCookieService.AppendAuthCookies(HttpContext, token, _env);
 
             _logger.LogInformation("Login successful for userId: {UserId}", user.Id);
             return Ok(new { accessToken = token });

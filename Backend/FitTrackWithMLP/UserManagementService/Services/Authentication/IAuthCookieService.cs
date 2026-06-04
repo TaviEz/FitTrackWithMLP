@@ -2,7 +2,7 @@
 {
     public interface IAuthCookieService
     {
-        void AppendAuthCookies(HttpContext httpContext, string accessToken);
+        void AppendAuthCookies(HttpContext httpContext, string accessToken, IWebHostEnvironment env);
         void DeleteAuthCookies(HttpContext httpContext);
     }
 }

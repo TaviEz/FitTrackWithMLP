@@ -94,7 +94,6 @@ const Onboarding = () => {
         } else {
             setTargetCalories(null);
             setActualCalories(null);
-            console.log(result)
             if (result.errorCode === "INFEASIBLE_CONSTRAINTS") {
                 showError("The optimizer could not find meals matching your nutritional targets. Try adjusting your profile to relax the parameters.");
             } else {

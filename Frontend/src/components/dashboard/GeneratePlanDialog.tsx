@@ -130,11 +130,17 @@ const GeneratePlanDialog = ({ open, mode, existingPlanId, dateTarget, onClose, o
                 </IconButton>
             </DialogTitle>
             <DialogContent dividers sx={{ overflowX: "hidden", overflowY: "auto", height: 700 }}>
-                {generating || meals.length === 0 ? (
+                {generating ? (
                     <Box display="flex" flexDirection="column" alignItems="center" gap={2} py={6}>
                         <CircularProgress />
                         <Typography variant="body1" color="text.secondary">
                             Generating your meal plan...
+                        </Typography>
+                    </Box>
+                ) : meals.length === 0 ? (
+                    <Box display="flex" flexDirection="column" alignItems="center" gap={2} py={6}>
+                        <Typography variant="body1" color="text.secondary">
+                            Could not generate a plan. Please close and try again.
                         </Typography>
                     </Box>
                 ) : (

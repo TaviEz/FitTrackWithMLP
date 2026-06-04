@@ -71,9 +71,11 @@ const ProfilePage = () => {
             return
         }
 
+        setUserDetailsContext(withCalc)
+
         const updatedDto = await getUserDetails()
         if (updatedDto.success && updatedDto.data) {
-            const updated = userDetails.clone()
+            const updated = withCalc.clone()
             updated.targetCalories = updatedDto.data.targetCalories
             setUserDetails(updated)
             setUserDetailsContext(updated)
