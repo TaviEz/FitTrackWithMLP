@@ -48,7 +48,7 @@ class UserDetailsDto {
         );
         const activityLevel = activityLevelsData.find(a => a.label === label) ?? defaultActivityLevel;
         return new UserDetails(
-            dto.gender, 
+            dto.gender?.toLowerCase() ?? "",
             dto.age, 
             dto.weight, 
             dto.height, 

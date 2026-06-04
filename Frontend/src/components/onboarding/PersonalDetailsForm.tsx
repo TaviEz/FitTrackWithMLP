@@ -13,10 +13,11 @@ interface PersonalDetailsFormProps {
   activityLevels: ActivityLevel[];
   handleOpenActivityLevel: () => void;
   handleCalculateCalories: () => void;
+  showCalculateButton?: boolean;
 };
 
 
-const PersonalDetailsForm = ({userDetails, setUserDetails, activityLevels, handleOpenActivityLevel, handleCalculateCalories}: PersonalDetailsFormProps) => {
+const PersonalDetailsForm = ({userDetails, setUserDetails, activityLevels, handleOpenActivityLevel, handleCalculateCalories, showCalculateButton = true}: PersonalDetailsFormProps) => {
     const selectMenuProps = {
         disableScrollLock: true,
         PaperProps: {
@@ -180,9 +181,11 @@ const PersonalDetailsForm = ({userDetails, setUserDetails, activityLevels, handl
                 </Select>
             </FormControl>
 
-            <PrimaryButton onClick={handleCalculateCalories}>
-                Calculate
-            </PrimaryButton>
+            {showCalculateButton && (
+                <PrimaryButton onClick={handleCalculateCalories}>
+                    Calculate
+                </PrimaryButton>
+            )}
         </Box>
     )
 }

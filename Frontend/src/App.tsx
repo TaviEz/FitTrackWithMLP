@@ -5,6 +5,7 @@ import Login from './components/authentication/LoginPage'
 import SignInForm from './components/authentication/SignInPage'
 import Onboarding from './components/onboarding/OnboardingPage'
 import Dashboard from './components/dashboard/Dashboard'
+import ProfilePage from './components/profile/ProfilePage'
 import TopNavBar from './components/shared/TopNavBar'
 import { useUser } from './context/UserContext'
 import { getLoggedUserId, getUserDetails } from './api/UserProfileService'
@@ -46,6 +47,7 @@ const AppLayout = () => {
           <Route path="/signIn" element={<SignInForm />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Routes>
       </div>
     </>
