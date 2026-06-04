@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from MLP.prepareMLP import generate_daily_plan
 from ingredient.ingredientService import get_ingredient_options
@@ -36,6 +37,14 @@ async def generate_meals(request: OptimizationRequest):
         min_fat=request.min_fat
     )
     result = generate_daily_plan(goals, request.meals_complexity, request.excluded_meal_ids)
+    
+    # handle meals that fail to be optimized due to infeasible_constraints
+    if isinstance(result, dict) and result.get("error") == "INFEASIBLE_CONSTRAINTS":
+        return JSONResponse(
+            status_code=422,
+            content=result
+        )
+        
     return result
 
 @app.get("/ingredients")

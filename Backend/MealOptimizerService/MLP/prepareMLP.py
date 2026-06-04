@@ -84,6 +84,13 @@ def generate_daily_plan(
             final_meal_data = mealRepository.get_meal_details_by_id(id_mapping[top_indices[0]])
 
         optimization_result = optimizer.optimize_meal(final_meal_data.ingredients, meal_targets)
+
+        if not optimization_result:
+            return {
+                "error": "INFEASIBLE_CONSTRAINTS",
+                "message": f"Could not mathematically balance constraints for category '{category}' using recipe '{final_meal_data.title}'."
+            }
+        
         meal_entry = DailyPlanMealResponse(
             category=category,
             title=final_meal_data.title,

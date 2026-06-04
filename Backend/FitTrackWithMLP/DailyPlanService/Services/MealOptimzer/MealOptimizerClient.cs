@@ -1,4 +1,5 @@
-﻿using FitTrackWithMLP.Shared.DTOs.DailyPlan.Generate;
+﻿using DailyPlanService.Services.MealOptimzer.Exceptions;
+using FitTrackWithMLP.Shared.DTOs.DailyPlan.Generate;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan.Get;
 
 namespace DailyPlanService.Services.MealOptimzer
@@ -22,6 +23,11 @@ namespace DailyPlanService.Services.MealOptimzer
 
                 if (!response.IsSuccessStatusCode)
                 {
+                    if (response.StatusCode == System.Net.HttpStatusCode.UnprocessableEntity)
+                    {
+                        throw new InfeasibleConstraintsException("The configuration parameters contain mathematically infeasible macro-nutrient boundaries.");
+                    }
+
                     return null;
                 }
 
@@ -30,6 +36,10 @@ namespace DailyPlanService.Services.MealOptimzer
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
                 throw; // caller canceled: propagate
+            }
+            catch (InfeasibleConstraintsException)
+            {
+                throw;
             }
             catch (Exception e)
             {

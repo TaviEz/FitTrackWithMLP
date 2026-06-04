@@ -76,7 +76,11 @@ const GeneratePlanDialog = ({ open, mode, existingPlanId, dateTarget, onClose, o
             setTargetCalories(result.data.targetCalories);
             setActualCalories(result.data.actualCalories);
         } else {
-            showError("Could not generate meals right now. Please try again.");
+            if (result.errorCode === "INFEASIBLE_CONSTRAINTS") {
+                showError("The optimizer could not find meals matching your nutritional targets. Try adjusting your profile to relax the parameters.");
+            } else {
+                showError("Could not generate meals right now. Please try again.");
+            }
         }
     };
 

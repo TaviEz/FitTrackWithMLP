@@ -1,5 +1,6 @@
 ﻿using DailyPlanService.Services.DailyPlan;
 using DailyPlanService.Services.MealOptimzer;
+using DailyPlanService.Services.MealOptimzer.Exceptions;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan.Create;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan.Generate;
 using FitTrackWithMLP.Shared.DTOs.DailyPlan.Get;
@@ -136,27 +137,43 @@ namespace DailyPlanService.Controllers
                 ExcludedMealIds = excludedMealIds
             };
 
-            var optimizedPlan = await _mealOptimizerClient.OptimizeAsync(optimizerRequest);
-
-            if (optimizedPlan == null)
+            try
             {
-                _logger.LogError("Meal optimizer failed to generate a plan for user with activity level {ActivityLevel} and goal {GoalType}",
-                    userPhysiqueDto.ActivityLevel, userPhysiqueDto.GoalType);
-                return StatusCode(500, "Failed to parse optimizer response.");
+                var optimizedPlan = await _mealOptimizerClient.OptimizeAsync(optimizerRequest);
+
+                if (optimizedPlan == null)
+                {
+                    _logger.LogError("Meal optimizer failed to generate a plan for user with activity level {ActivityLevel} and goal {GoalType}",
+                        userPhysiqueDto.ActivityLevel, userPhysiqueDto.GoalType);
+                    return StatusCode(500, "Failed to parse optimizer response.");
+                }
+
+                var actualCalories = optimizedPlan.Sum(m => m.Calories);
+
+                var result = new GeneratedDailyPlanDto
+                {
+                    TargetCalories = dailyTargets.Calories,
+                    ActualCalories = actualCalories,
+                    Meals = optimizedPlan
+                };
+
+                _logger.LogInformation("Generated daily plan for user with activity level {ActivityLevel} and goal {GoalType}. Target calories: {TargetCalories}, Actual calories: {ActualCalories}",
+                    userPhysiqueDto.ActivityLevel, userPhysiqueDto.GoalType, result.TargetCalories, result.ActualCalories);
+                return Ok(result);
+            }
+            catch (InfeasibleConstraintsException ex)
+            {
+                _logger.LogWarning("Mathematical optimization constraint failure for targets -> Calories: {Calories}, Protein: {Protein}g, MinFat: {MinFat}g",
+                    optimizerRequest.Calories, optimizerRequest.Protein, optimizerRequest.MinFat);
+
+                return BadRequest(new
+                {
+                    error = "INFEASIBLE_CONSTRAINTS",
+                    message = "The optimization engine could not find a valid combination of meals matching your current nutritional targets. " +
+                    "Try going back to adjust your profile configurations to relax the parameters."
+                });
             }
 
-            var actualCalories = optimizedPlan.Sum(m => m.Calories);
-
-            var result = new GeneratedDailyPlanDto
-            {
-                TargetCalories = dailyTargets.Calories,
-                ActualCalories = actualCalories,
-                Meals = optimizedPlan
-            };
-
-            _logger.LogInformation("Generated daily plan for user with activity level {ActivityLevel} and goal {GoalType}. Target calories: {TargetCalories}, Actual calories: {ActualCalories}",
-                userPhysiqueDto.ActivityLevel, userPhysiqueDto.GoalType, result.TargetCalories, result.ActualCalories);
-            return Ok(result);
         }
 
         [Authorize]

@@ -94,7 +94,12 @@ const Onboarding = () => {
         } else {
             setTargetCalories(null);
             setActualCalories(null);
-            showError("Could not generate meals right now. Please try again.");
+            console.log(result)
+            if (result.errorCode === "INFEASIBLE_CONSTRAINTS") {
+                showError("The optimizer could not find meals matching your nutritional targets. Try adjusting your profile to relax the parameters.");
+            } else {
+                showError("Could not generate meals right now. Please try again.");
+            }
         }
     }
 
@@ -220,7 +225,10 @@ const Onboarding = () => {
 
             {/* Step 2 — Choose Approach */}
             {step === 2 && !generating && (
-                <DecisionFlow onComplete={decisionFlowComplete} />
+                <>
+                    <DecisionFlow onComplete={decisionFlowComplete} />
+                    <SecondaryButton onClick={() => setStep(1)}>Back</SecondaryButton>
+                </>
             )}
 
             {/* Loading spinner */}
@@ -244,6 +252,7 @@ const Onboarding = () => {
                         onComplexityChange={setMealsComplexity}
                         actions={
                             <>
+                                <SecondaryButton onClick={() => { setStep(2); setGeneratedMeals([]); }}>Back</SecondaryButton>
                                 <SecondaryButton onClick={handleRegenerate}>Regenerate Plan</SecondaryButton>
                                 <Button variant="contained" onClick={saveAndNavigateToDashboard} disabled={savingPlan}>
                                     {savingPlan ? "Saving..." : "Continue to Dashboard"}

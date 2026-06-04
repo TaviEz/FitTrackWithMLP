@@ -13,12 +13,12 @@ export const generateDailyPlan = async (userPhysiqueDto: UserPhysiqueDto): Promi
         const result = await api.post<GeneratedDailyPlanDto>(`${API_BASE_URL}/generate`, userPhysiqueDto);
 
         if (result.status >= 400) {
-            return { success: false, status: result.status };
+            return { success: false, status: result.status, errorCode: (result.data as any)?.error };
         }
 
         return { success: true, status: result.status, data: result.data };
     } catch (error: any) {
-        return { success: false, status: error?.response?.status };
+        return { success: false, status: error?.response?.status, errorCode: error?.response?.data?.error };
     }
 }
 
