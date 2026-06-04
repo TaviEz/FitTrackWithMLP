@@ -459,6 +459,7 @@ const Dashboard = () => {
             <EditMealDialog
                 open={editMeal !== null}
                 meal={editMeal}
+                dailyPlanId={dailyPlan?.dailyPlanId ?? 0}
                 onClose={() => setEditMeal(null)}
                 onSave={async () => {
                     setEditMeal(null);

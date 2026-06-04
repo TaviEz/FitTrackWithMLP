@@ -1,6 +1,6 @@
 ﻿namespace FitTrackWithMLP.Shared.Enums.Statuses
 {
-    public enum AddIngredientRowStatus
+    public enum AddPlannedIngredientStatus
     {
         Created,
         NotFound,

@@ -23,6 +23,8 @@ namespace DailyPlanService.MappingProfiles
                 .ForMember(dest => dest.TotalCalories, opt => opt.MapFrom(src =>
                     src.Ingredients.Sum(i => (int)Math.Round((i.AmountG / 100.0) * i.Calories))));
             CreateMap<PlannedIngredient, PlannedMealIngredientDto>();
+
+            CreateMap<AddPlannedMealItemDto, PlannedMeal>();
         }
     }
 }

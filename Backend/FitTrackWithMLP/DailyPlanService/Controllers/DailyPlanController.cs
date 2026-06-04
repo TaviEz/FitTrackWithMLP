@@ -160,6 +160,34 @@ namespace DailyPlanService.Controllers
         }
 
         [Authorize]
+        [HttpPost("{dailyPlanId:int}/meal")]
+        public async Task<IActionResult> CreatePlannedMeal(
+            [FromRoute] int dailyPlanId,
+            [FromBody] AddPlannedMealItemDto addMealDto)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId) || !Guid.TryParse(userId, out _))
+                return Unauthorized("User ID not found in token.");
+
+            var result = await _dailyPlanService.AddPlannedMealAsync(userId, dailyPlanId, addMealDto);
+
+            switch (result.Status)
+            {
+                case AddPlannedMealStatus.Created:
+                    _logger.LogInformation("Planned meal {MealId} created in daily plan {DailyPlanId} for user {UserId}", result.CreatedMealId, dailyPlanId, userId);
+                    return Ok(result.CreatedMealId);
+
+                case AddPlannedMealStatus.NotFound:
+                    _logger.LogWarning("Failed to create planned meal in daily plan {DailyPlanId} for user {UserId} - daily plan not found", dailyPlanId, userId);
+                    return NotFound();
+
+                default:
+                    _logger.LogError("Failed to create planned meal in daily plan {DailyPlanId} for user {UserId}", dailyPlanId, userId);
+                    return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+        }
+
+        [Authorize]
         [HttpPut("meal/{plannedMealId:int}/title")]
         public async Task<IActionResult> UpdatePlannedMealTitle(
             [FromRoute] int plannedMealId, 
@@ -199,13 +227,13 @@ namespace DailyPlanService.Controllers
 
             switch (result)
             {
-                case AddIngredientRowStatus.Created:
+                case AddPlannedIngredientStatus.Created:
                     _logger.LogInformation("Planned ingredient added to meal {PlannedMealId} for user {UserId}", plannedMealId, userId);
                     return Ok();
-                case AddIngredientRowStatus.NotFound:
+                case AddPlannedIngredientStatus.NotFound:
                     _logger.LogWarning("Failed to add planned ingredient to meal {PlannedMealId} for user {UserId} - meal not found", plannedMealId, userId);
                     return NotFound();
-                case AddIngredientRowStatus.AlreadyExists:
+                case AddPlannedIngredientStatus.AlreadyExists:
                     _logger.LogWarning("Planned ingredient already exists in meal {PlannedMealId} for user {UserId}", plannedMealId, userId);
                     return Conflict();
                 default:

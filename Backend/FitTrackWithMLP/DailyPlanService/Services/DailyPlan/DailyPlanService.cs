@@ -98,6 +98,28 @@ namespace DailyPlanService.Services.DailyPlan
             return latestMealsIds;
         }
 
+        public async Task<AddPlannedMealResult> AddPlannedMealAsync(string userId, int dailyPlanId, AddPlannedMealItemDto addDto)
+        {
+            var dailyPlan = await _dbContext.DailyPlans
+                .Where(p => p.DailyPlanId == dailyPlanId && p.UserId == Guid.Parse(userId))
+                .FirstOrDefaultAsync();
+
+            if (dailyPlan == null)
+            {
+                return AddPlannedMealResult.NotFound();
+            }
+
+            var newMeal = _mapper.Map<PlannedMeal>(addDto);
+            dailyPlan.Meals.Add(newMeal);
+            dailyPlan.ModifiedAt = DateTime.UtcNow;
+
+            var result = await _dbContext.SaveChangesAsync();
+
+            return result > 0
+                ? AddPlannedMealResult.Created(newMeal.PlannedMealId)
+                : AddPlannedMealResult.Failed();
+        }
+
         public async Task<UpdatePlannedMealTitleStatus> UpdatePlannedMealTitleAsync(string userId, int plannedMealId, string title)
         {
             var plannedMeal = await _dbContext.PlannedMeals
@@ -117,7 +139,7 @@ namespace DailyPlanService.Services.DailyPlan
             return result > 0 ? UpdatePlannedMealTitleStatus.Success : UpdatePlannedMealTitleStatus.Failed;
         }
 
-        public async Task<AddIngredientRowStatus> AddPlannedIngredientAsnyc(string userId, int plannedMealId, CreatePlannedIngredientDto addDto)
+        public async Task<AddPlannedIngredientStatus> AddPlannedIngredientAsnyc(string userId, int plannedMealId, CreatePlannedIngredientDto addDto)
         {
             var plannedMeal = await _dbContext.PlannedMeals
                 .Include(m => m.DailyPlan)
@@ -126,7 +148,7 @@ namespace DailyPlanService.Services.DailyPlan
 
             if (plannedMeal == null)
             {
-                return AddIngredientRowStatus.NotFound;
+                return AddPlannedIngredientStatus.NotFound;
             }
 
             var existingIngredient = await _dbContext.PlannedMealIngredients
@@ -135,7 +157,7 @@ namespace DailyPlanService.Services.DailyPlan
 
             if (existingIngredient != null)
             {
-                return AddIngredientRowStatus.AlreadyExists;
+                return AddPlannedIngredientStatus.AlreadyExists;
             }
 
 
@@ -145,7 +167,7 @@ namespace DailyPlanService.Services.DailyPlan
 
             var result = await _dbContext.SaveChangesAsync();
 
-            return result > 0 ? AddIngredientRowStatus.Created : AddIngredientRowStatus.Failed;
+            return result > 0 ? AddPlannedIngredientStatus.Created : AddPlannedIngredientStatus.Failed;
         }
         
         public async Task<UpdatePlannedIngredientStatus> UpdatePlannedIngredientAsync(string userId, int plannedIngredientId, UpdatePlannedIngredientDto updateDto)

@@ -17,21 +17,23 @@ import CloseIcon from "@mui/icons-material/Close";
 import DeleteIcon from "@mui/icons-material/Delete";
 import type { PlannedMealDto } from "../../dtos/DailyPlan/Get/PlannedMealDto";
 import type { PlannedMealIngredientDto } from "../../dtos/DailyPlan/Get/PlannedMealIngredientDto";
-import { addPlannedIngredient, deletePlannedIngredient, fetchIngredientOptions, updatePlannedIngredient, updatePlannedMealTitle } from "../../api/DailyPlanService";
+import { addPlannedIngredient, addPlannedMeal, deletePlannedIngredient, fetchIngredientOptions, updatePlannedIngredient, updatePlannedMealTitle } from "../../api/DailyPlanService";
 import { showError } from "../shared/ShowToast";
 import type { IngredientOptionDto } from "../../dtos/DailyPlan/Get/IngredientOptionDto";
 
 interface EditMealDialogProps {
     open: boolean;
     meal: PlannedMealDto | null;
+    dailyPlanId: number;
     onClose: () => void;
     onSave: () => void;
 }
 
-const EditMealDialog = ({ open, meal, onClose, onSave }: EditMealDialogProps) => {
+const EditMealDialog = ({ open, meal, dailyPlanId, onClose, onSave }: EditMealDialogProps) => {
     const [title, setTitle] = useState("");
     const [ingredients, setIngredients] = useState<PlannedMealIngredientDto[]>([]);
     const [editingIngredientId, setEditingIngredientId] = useState<number | null>(null);
+    const [resolvedMealId, setResolvedMealId] = useState(meal?.plannedMealId ?? 0);
     const [hasDeleted, setHasDeleted] = useState(false);
     const [hasSaved, setHasSaved] = useState(false);
     const [ingredientQuery, setIngredientQuery] = useState("");
@@ -60,6 +62,8 @@ const EditMealDialog = ({ open, meal, onClose, onSave }: EditMealDialogProps) =>
             setTitle(meal.title);
             setIngredients(meal.ingredients);
             setEditingIngredientId(null);
+            console.log(meal.plannedMealId)
+            setResolvedMealId(meal.plannedMealId);
             setHasDeleted(false);
             setHasSaved(false);
         }
@@ -84,7 +88,7 @@ const EditMealDialog = ({ open, meal, onClose, onSave }: EditMealDialogProps) =>
         const ingredient = ingredients[index];
 
         if (ingredient.plannedIngredientId !== 0) {
-            const result = await deletePlannedIngredient(meal!.plannedMealId, ingredient.plannedIngredientId);
+            const result = await deletePlannedIngredient(resolvedMealId, ingredient.plannedIngredientId);
             if (!result.success) return;
         }
 
@@ -146,9 +150,22 @@ const EditMealDialog = ({ open, meal, onClose, onSave }: EditMealDialogProps) =>
         if (editingIngredientId === 0) {
             const newIngredient = ingredients.find((ing) => ing.plannedIngredientId === 0);
             if (!newIngredient?.foodId) return;
-            
+
+            let mealId = resolvedMealId;
+            console.log(resolvedMealId);
+            if (mealId === 0) {
+                const createResult = await addPlannedMeal(dailyPlanId, { category: meal.category, title });
+                if (!createResult.success) {
+                    showError("Failed to create meal.");
+                    return;
+                }
+                mealId = createResult.data;
+                console.log(mealId)
+                setResolvedMealId(mealId);
+            }
+
             const { plannedIngredientId, ...addIngredientDto } = newIngredient as Required<PlannedMealIngredientDto>;
-            const addResult = await addPlannedIngredient(meal.plannedMealId, addIngredientDto);
+            const addResult = await addPlannedIngredient(mealId, addIngredientDto);
             if (!addResult.success) {
                 showError("Failed to add ingredient.");
                 return;
@@ -173,9 +190,9 @@ const EditMealDialog = ({ open, meal, onClose, onSave }: EditMealDialogProps) =>
     };
 
     const handleSaveTitle = async () => {
-        if (!meal) return;
+        if (!meal || resolvedMealId === 0) return;
 
-        const result = await updatePlannedMealTitle(meal.plannedMealId, title);
+        const result = await updatePlannedMealTitle(resolvedMealId, title);
         if (!result.success) {
             showError("Failed to update meal title.");
             return;

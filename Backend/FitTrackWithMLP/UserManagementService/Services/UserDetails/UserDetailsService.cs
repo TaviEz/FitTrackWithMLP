@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using FitTrackWithMLP.Shared.DTOs.User;
+using FitTrackWithMLP.Shared.Enums.Statuses;
 using FitTrackWithMLP.Shared.Logic;
 using Microsoft.EntityFrameworkCore;
 using UserManagementService.Context;

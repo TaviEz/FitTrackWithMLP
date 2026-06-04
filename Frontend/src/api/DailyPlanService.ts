@@ -69,6 +69,23 @@ export const getDailyPlan = async (targetDate: string): Promise<any> => {
     }
 }
 
+export const addPlannedMeal = async (
+    dailyPlanId: number,
+    payload: { category: string; title: string }
+): Promise<any> => {
+    try {
+        const result = await api.post(`${API_BASE_URL}/${dailyPlanId}/meal`, payload);
+
+        if (result.status >= 400) {
+            return { success: false, status: result.status };
+        }
+
+        return { success: true, status: result.status, data: result.data };
+    } catch (error: any) {
+        return { success: false, status: error?.response?.status };
+    }
+}
+
 export const addPlannedIngredient = async (
     plannedMealId: number, payload: CreatePlannedIngredientDto): Promise<any> => {
     try {

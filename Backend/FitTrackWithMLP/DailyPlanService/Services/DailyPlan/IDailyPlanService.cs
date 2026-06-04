@@ -14,9 +14,11 @@ namespace DailyPlanService.Services.DailyPlan
             string userId, int dailyPlanId, CreateDailyPlanDto dailyPlanDto);
         Task<List<int>> GetLatestPlannedMealsAsync(
             string userId, int daysAgo = 7, int mealCap = 10);
+        Task<AddPlannedMealResult> AddPlannedMealAsync(
+            string userId, int dailyPlanId, AddPlannedMealItemDto addDto);
         Task<UpdatePlannedMealTitleStatus> UpdatePlannedMealTitleAsync(
             string userId, int plannedMealId, string title);
-        Task<AddIngredientRowStatus> AddPlannedIngredientAsnyc(
+        Task<AddPlannedIngredientStatus> AddPlannedIngredientAsnyc(
             string userId, int plannedMealId, CreatePlannedIngredientDto addDto);
         Task<UpdatePlannedIngredientStatus> UpdatePlannedIngredientAsync(
             string userId, int plannedIngredientId, UpdatePlannedIngredientDto updateDto);
