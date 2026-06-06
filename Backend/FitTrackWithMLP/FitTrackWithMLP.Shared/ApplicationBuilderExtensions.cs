@@ -40,8 +40,16 @@ namespace FitTrackWithMLP.Shared
 
         public static IApplicationBuilder UseFitTrackAntiforgeryValidation(this IApplicationBuilder app)
         {
+            var env = app.ApplicationServices.GetRequiredService<IWebHostEnvironment>();
+
             app.Use(async (context, next) =>
             {
+                if (env.IsDevelopment())
+                {
+                    await next();
+                    return;
+                }
+
                 var isUnsafe =
                     HttpMethods.IsPost(context.Request.Method) ||
                     HttpMethods.IsPut(context.Request.Method) ||

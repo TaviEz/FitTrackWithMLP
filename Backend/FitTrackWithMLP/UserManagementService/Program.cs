@@ -33,6 +33,9 @@ namespace UserManagementService
             var redisConnectionString = builder.Configuration.GetConnectionString("RedisConnection");
             var redis = ConnectionMultiplexer.Connect(redisConnectionString);
 
+            var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+                     ?? new[] { "http://localhost:3000" };
+
             builder.Host.UseSerilog();
 
             builder.Services.AddControllers()
@@ -97,7 +100,7 @@ namespace UserManagementService
                 options.AddPolicy(name: myAllowSpecificOrigins,
                                   policy =>
                                   {
-                                      policy.WithOrigins("http://localhost:3000")
+                                      policy.WithOrigins(allowedOrigins)
                                                         .AllowAnyHeader()
                                                         .AllowAnyMethod()
                                                         .AllowCredentials();

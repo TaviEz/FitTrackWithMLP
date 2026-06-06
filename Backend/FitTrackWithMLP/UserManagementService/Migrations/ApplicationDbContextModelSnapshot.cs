@@ -270,7 +270,7 @@ namespace UserManagementService.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("UserDetails");
+                    b.ToTable("UserDetails", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
