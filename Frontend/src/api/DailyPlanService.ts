@@ -6,7 +6,9 @@ import type { IngredientOptionDto } from "../dtos/DailyPlan/Get/IngredientOption
 import type { GeneratedDailyPlanDto } from "../dtos/DailyPlan/Generate/GeneratedDailyPlanDto";
 import type { CreatePlannedIngredientDto } from "../dtos/DailyPlan/Create/CreatePlannedIngredientDto";
 
-const API_BASE_URL = 'http://localhost:8082/api/DailyPlan';
+const API_BASE_URL = import.meta.env.VITE_DAILY_PLAN_API_URL
+    ? `${import.meta.env.VITE_DAILY_PLAN_API_URL}/dailyplan`
+    : 'http://localhost:8082/api/DailyPlan';
 
 export const generateDailyPlan = async (userPhysiqueDto: UserPhysiqueDto): Promise<any> => {
     try {

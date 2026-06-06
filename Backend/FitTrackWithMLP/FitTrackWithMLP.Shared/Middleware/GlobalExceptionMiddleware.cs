@@ -30,7 +30,7 @@ namespace FitTrackWithMLP.Shared.Middleware
                 await context.Response.WriteAsJsonAsync(new
                 {
                     Error = "Internal Server Error",
-                    Message = "An unexpected error occurred. Please try again later."
+                    Message = ex.Message
                 });
             }
         }

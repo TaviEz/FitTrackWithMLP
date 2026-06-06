@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import theme from "../../theme";
 import PasswordField from "./PasswordField";
 import { getLoggedUserId, getUserDetails, loginUser } from "../../api/UserProfileService";
+import { setAccessToken } from "../../api/api";
 import { showError } from "../shared/ShowToast";
 import { ToastContainer } from 'react-toastify';
 import { useUser } from "../../context/UserContext";
@@ -40,6 +41,8 @@ const Login = () => {
         setIsLoading(false);
         return;
       }
+
+      setAccessToken(result.accessToken);
 
       const userIdResult = await getLoggedUserId();
       setUserId(userIdResult.data);

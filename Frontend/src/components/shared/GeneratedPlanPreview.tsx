@@ -10,7 +10,7 @@ import {
     Typography,
 } from "@mui/material";
 import theme from "../../theme";
-import type { GeneratedMealDto } from "../../dtos/DailyPlan/GeneratedMealDto";
+import type { GeneratedMealDto } from "../../dtos/DailyPlan/Generate/GeneratedMealDto";
 
 interface GeneratedPlanPreviewProps {
     meals: GeneratedMealDto[];

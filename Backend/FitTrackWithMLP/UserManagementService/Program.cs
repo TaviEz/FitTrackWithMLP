@@ -1,6 +1,5 @@
 using FitTrackWithMLP.Shared;
 using FitTrackWithMLP.Shared.Middleware;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using Serilog;
@@ -71,7 +70,6 @@ namespace UserManagementService
 
             builder.Services.AddScoped<IIdentityService, IdentityService>();
             builder.Services.AddScoped<ITokenService, TokenService>();
-            builder.Services.AddScoped<IAuthCookieService, AuthCookieService>();
             builder.Services.AddScoped<IUserDetailsService, UserDetailsService>();
 
             builder.Services.AddDbContext<ApplicationDbContext>(
@@ -84,15 +82,6 @@ namespace UserManagementService
 
             builder.Services.AddFitTrackAuthentication(builder.Configuration);
             builder.Services.AddAuthorization();
-
-            builder.Services.AddDataProtection()
-                .SetApplicationName("FitTrackEcosystem")
-                .PersistKeysToStackExchangeRedis(redis, "FitTrack-Antiforgery-Keys");
-
-            builder.Services.AddAntiforgery(options =>
-            {
-                options.HeaderName = "X-XSRF-TOKEN";
-            });
 
             // Enable cors
             builder.Services.AddCors(options =>
@@ -129,9 +118,6 @@ namespace UserManagementService
             app.UseAuthorization();
 
             app.MapIdentityApi<ApplicationUser>();
-
-            app.UseFitTrackAntiforgeryCookie();
-            app.UseFitTrackAntiforgeryValidation();
 
             app.MapControllers();
 

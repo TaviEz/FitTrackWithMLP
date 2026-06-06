@@ -3,7 +3,9 @@ import UserDetailsDto from "../dtos/UserDetails/UserDetailsDto";
 import { getActivityLevelEnum } from "../utils/types";
 import api from "./api";
 
-const API_BASE_URL = 'http://localhost:8081/api/user';
+const API_BASE_URL = import.meta.env.VITE_USER_API_URL
+    ? `${import.meta.env.VITE_USER_API_URL}/user`
+    : 'http://localhost:8081/api/user';
 
 export const loginUser = async (email: string, password: string): Promise<any> => {
     try {
@@ -14,7 +16,7 @@ export const loginUser = async (email: string, password: string): Promise<any> =
             return { success: false, status: result.status };
         }
 
-        return { success: true, status: result.status };
+        return { success: true, status: result.status, accessToken: result.data.accessToken };
     } catch (error: any) {
         return { success: false, status: error?.response?.status };
     }
