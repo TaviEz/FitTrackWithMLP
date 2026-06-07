@@ -2,8 +2,10 @@
 using FitTrackWithMLP.Shared.DTOs.User;
 using FitTrackWithMLP.Shared.Enums.Statuses;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using UserManagementService.Models;
 using UserManagementService.Services.Authentication;
 using UserManagementService.Services.UserDetails;
 
@@ -15,22 +17,28 @@ namespace UserManagementService.Controllers
     {
         private readonly IIdentityService _authService;
         private readonly ITokenService _tokenService;
+        private readonly IRefreshTokenService _refreshTokenService;
         private readonly IUserDetailsService _userDetailsService;
         private readonly ILogger<UserController> _logger;
+        private readonly IWebHostEnvironment _env;
 
         public UserController(
             IIdentityService authService,
             ITokenService tokenService,
+            IRefreshTokenService refreshTokenService,
             IUserDetailsService userDetailsService,
-            ILogger<UserController> logger)
+            ILogger<UserController> logger,
+            IWebHostEnvironment env)
         {
             _authService = authService;
             _tokenService = tokenService;
+            _refreshTokenService = refreshTokenService;
             _userDetailsService = userDetailsService;
             _logger = logger;
+            _env = env;
         }
 
-        
+
         [HttpPost("login")]
         [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
@@ -43,6 +51,16 @@ namespace UserManagementService.Controllers
             }
 
             var token = _tokenService.CreateAccessToken(user);
+            var refreshToken = await _refreshTokenService.GenerateAndStoreAsync(user.Id);
+
+            bool isDev = _env.IsDevelopment();
+            Response.Cookies.Append("refresh_token", refreshToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = !isDev,
+                SameSite = isDev ? SameSiteMode.Lax : SameSiteMode.None,
+                Expires = DateTimeOffset.UtcNow.AddDays(30)
+            });
 
             _logger.LogInformation("Login successful for userId: {UserId}", user.Id);
             return Ok(new { accessToken = token });
@@ -74,12 +92,61 @@ namespace UserManagementService.Controllers
             return BadRequest(result.Errors);
         }
 
+        [HttpPost("refresh")]
+        [AllowAnonymous]
+        public async Task<IActionResult> Refresh()
+        {
+            var refreshToken = Request.Cookies["refresh_token"];
+            if (refreshToken is null)
+            {
+                _logger.LogWarning("Refresh failed: missing refresh token cookie.");
+                return Unauthorized();
+            }
+
+            var storedToken = await _refreshTokenService.ValidateAsync(refreshToken);
+            if (storedToken is null)
+            {
+                _logger.LogWarning("Refresh failed: invalid or expired refresh token.");
+                return Unauthorized();
+            }
+
+            var user = await _authService.FindByIdAsync(storedToken.UserId);
+            if (user is null)
+            {
+                _logger.LogWarning("Refresh failed: user not found for token userId: {UserId}", storedToken.UserId);
+                return Unauthorized();
+            }
+
+            await _refreshTokenService.DeleteAsync(refreshToken);
+            var newRefreshToken = await _refreshTokenService.GenerateAndStoreAsync(user.Id);
+
+            bool isDev = _env.IsDevelopment();
+            Response.Cookies.Append("refresh_token", newRefreshToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = !isDev,
+                SameSite = isDev ? SameSiteMode.Lax : SameSiteMode.None,
+                Expires = DateTimeOffset.UtcNow.AddDays(30)
+            });
+
+            var newAccessToken = _tokenService.CreateAccessToken(user);
+            _logger.LogInformation("Refresh successful for userId: {UserId}", user.Id);
+
+            return Ok(new { accessToken = newAccessToken });
+        }
+
         [Authorize]
         [HttpPost("logout")]
-        // TODO: check here
-        public IActionResult Logout()
+        public async Task<IActionResult> Logout()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var refreshToken = Request.Cookies["refresh_token"];
+            if (refreshToken is not null)
+            {
+                await _refreshTokenService.DeleteAsync(refreshToken);
+                Response.Cookies.Delete("refresh_token");
+            }
 
             _logger.LogInformation("Logout completed for userId: {UserId}", userId);
             return Ok();

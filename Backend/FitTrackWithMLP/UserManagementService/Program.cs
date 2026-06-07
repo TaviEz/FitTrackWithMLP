@@ -3,7 +3,6 @@ using FitTrackWithMLP.Shared.Middleware;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using Serilog;
-using StackExchange.Redis;
 using System.Text.Json.Serialization;
 using UserManagementService.Context;
 using UserManagementService.MappingProfiles;
@@ -66,6 +65,7 @@ namespace UserManagementService
 
             builder.Services.AddScoped<IIdentityService, IdentityService>();
             builder.Services.AddScoped<ITokenService, TokenService>();
+            builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
             builder.Services.AddScoped<IUserDetailsService, UserDetailsService>();
 
             builder.Services.AddDbContext<ApplicationDbContext>(

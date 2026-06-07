@@ -119,18 +119,6 @@ const PersonalDetailsForm = ({userDetails, setUserDetails, activityLevels, handl
                                 }
                             }}
                         />
-
-                        <FormControlLabel
-                            value="other"
-                            control={<Radio />}
-                            label="Other"
-                            sx={{
-                                '& .MuiTypography-root': {
-                                ...theme.typography.body2,
-                                color: theme.palette.primary.main
-                                }
-                            }}
-                        />
                     </RadioGroup>
                 </Box>
             </FormControl>

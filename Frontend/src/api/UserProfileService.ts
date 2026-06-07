@@ -1,7 +1,8 @@
 import UserDetails from "../models/UserDetails";
 import UserDetailsDto from "../dtos/UserDetails/UserDetailsDto";
 import { getActivityLevelEnum } from "../utils/types";
-import api from "./api";
+import api, { setAccessToken } from "./api";
+import axios from "axios";
 
 const API_BASE_URL = import.meta.env.VITE_USER_API_URL
     ? `${import.meta.env.VITE_USER_API_URL}/user`
@@ -10,7 +11,7 @@ const API_BASE_URL = import.meta.env.VITE_USER_API_URL
 export const loginUser = async (email: string, password: string): Promise<any> => {
     try {
         const loginDto = {email: email, password: password};
-        const result = await api.post(`${API_BASE_URL}/login`, loginDto);
+        const result = await axios.post(`${API_BASE_URL}/login`, loginDto, { withCredentials: true });
 
         if (result.status >= 400) {
             return { success: false, status: result.status };
@@ -25,7 +26,7 @@ export const loginUser = async (email: string, password: string): Promise<any> =
 export const registerUser = async (email: string, password: string): Promise<any> => {
     try {
         const registerDto = {email: email, password: password};
-        const result = await api.post(`${API_BASE_URL}/register`, registerDto);
+        const result = await axios.post(`${API_BASE_URL}/register`, registerDto, { withCredentials: true });
 
         if (result.status >= 400) {
             return { success: false, status: result.status };
@@ -68,7 +69,21 @@ export const getUserDetails = async (): Promise<any> => {
 export const logoutUser = async (): Promise<any> => {
     try {
         const result = await api.post(`${API_BASE_URL}/logout`);
+        setAccessToken(null);
         return { success: result.status < 400, status: result.status };
+    } catch (error: any) {
+        return { success: false, status: error?.response?.status };
+    }
+}
+
+export const refreshSession = async (): Promise<any> => {
+    try {
+        // create a separate axios handler for the refresh
+        const result = await axios.post(`${API_BASE_URL}/refresh`, {}, { withCredentials: true });
+        if (result.status >= 400) {
+            return { success: false, status: result.status };
+        }
+        return { success: true, status: result.status, accessToken: result.data.accessToken };
     } catch (error: any) {
         return { success: false, status: error?.response?.status };
     }

@@ -4,11 +4,9 @@ using DailyPlanService.Services.DailyPlan;
 using DailyPlanService.Services.MealOptimzer;
 using FitTrackWithMLP.Shared;
 using FitTrackWithMLP.Shared.Middleware;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
 using Serilog;
-using StackExchange.Redis;
 using System.Text.Json.Serialization;
 using DailyPlanServiceImpl = DailyPlanService.Services.DailyPlan.DailyPlanService;
 

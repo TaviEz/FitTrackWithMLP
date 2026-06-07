@@ -1,5 +1,4 @@
-﻿using FitTrackWithMLP.Shared.DTOs.Authentication;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using UserManagementService.Models;
 
 namespace UserManagementService.Services.Authentication
@@ -55,6 +54,11 @@ namespace UserManagementService.Services.Authentication
             };
 
             return await _userManager.CreateAsync(user, password);
+        }
+
+        public async Task<ApplicationUser?> FindByIdAsync(string userId)
+        {
+            return await _userManager.FindByIdAsync(userId);
         }
     }
 }

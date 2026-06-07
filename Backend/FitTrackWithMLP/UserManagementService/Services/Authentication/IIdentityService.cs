@@ -7,5 +7,6 @@ namespace UserManagementService.Services.Authentication
     {
         Task<ApplicationUser?> AuthenticateAsync(string email, string password);
         Task<IdentityResult> RegisterAsync(string email, string password);
+        Task<ApplicationUser?> FindByIdAsync(string userId);
     }
 }

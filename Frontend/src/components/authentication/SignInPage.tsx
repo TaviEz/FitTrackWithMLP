@@ -1,12 +1,13 @@
 import { Box, TextField, Typography } from "@mui/material"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { PrimaryButton } from "../../styledComponents/Buttons";
 import { useNavigate } from "react-router-dom";
 import theme from "../../theme";
 import PasswordField from "./PasswordField";
-import { registerUser } from "../../api/UserProfileService";
+import { refreshSession, registerUser } from "../../api/UserProfileService";
 import { showInfo } from "../shared/ShowToast";
 import { ToastContainer } from "react-toastify";
+import { setAccessToken } from "../../api/api";
 
 const SignInForm = () => {
   const navigate = useNavigate();
@@ -28,14 +29,21 @@ const SignInForm = () => {
   const handleSignIn = async () => {
     // Frontend validation
     const isValidEmail = validateEmail(emailAddress);
-    const isValidPassword = password.length >= 6;
     const isValidConfirm = confirmPassword === password;
 
+    const passwordValidationError = (() => {
+      if (password.length < 6) return 'Password must be at least 6 characters';
+      if (!/[A-Z]/.test(password)) return 'Password must have at least one uppercase letter';
+      if (!/[0-9]/.test(password)) return 'Password must have at least one digit';
+      if (!/[^a-zA-Z0-9]/.test(password)) return 'Password must have at least one special character';
+      return '';
+    })();
+
     setEmailError(isValidEmail ? '' : 'Enter a valid email address');
-    setPasswordError(isValidPassword ? '' : 'Password must be at least 6 characters');
+    setPasswordError(passwordValidationError);
     setConfirmError(isValidConfirm ? '' : 'Passwords do not match');
 
-    if (!isValidEmail || !isValidPassword || !isValidConfirm) return;
+    if (!isValidEmail || passwordValidationError || !isValidConfirm) return;
 
     // Backend call
     const result = await registerUser(emailAddress, password);
@@ -57,6 +65,16 @@ const SignInForm = () => {
     showInfo('Logged in');
   };
 
+    useEffect(() => {
+      const checkSession = async () => {
+          const result = await refreshSession();
+          if (result.success) {
+              setAccessToken(result.accessToken);
+              navigate('/dashboard');
+          }
+      };
+      checkSession();
+    }, []);
 
   return (
     <Box display="flex" flexDirection="column" component="form" gap={3} sx={{ maxWidth: 480, width: "100%", mx: "auto" }}>

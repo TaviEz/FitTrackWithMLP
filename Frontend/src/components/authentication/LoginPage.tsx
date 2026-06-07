@@ -1,10 +1,10 @@
 import { Box, CircularProgress, Divider, Link, TextField, Typography } from "@mui/material"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { PrimaryButton } from "../../styledComponents/Buttons";
 import { useNavigate } from "react-router-dom";
 import theme from "../../theme";
 import PasswordField from "./PasswordField";
-import { getLoggedUserId, getUserDetails, loginUser } from "../../api/UserProfileService";
+import { getLoggedUserId, getUserDetails, loginUser, refreshSession } from "../../api/UserProfileService";
 import { setAccessToken } from "../../api/api";
 import { showError } from "../shared/ShowToast";
 import { ToastContainer } from 'react-toastify';
@@ -28,8 +28,7 @@ const Login = () => {
   const handleLogin = async () => {
       setIsLoading(true);
       const result = await loginUser(emailAddress, password);
-
-      if(!result.success) {
+      if(!result?.success) {
         switch (result.status) {
           case 401:
             showError("Wrong credentials");
@@ -62,6 +61,17 @@ const Login = () => {
 
       navigate("/onboarding");
   };
+
+  useEffect(() => {
+    const checkSession = async () => {
+        const result = await refreshSession();
+        if (result.success) {
+            setAccessToken(result.accessToken);
+            navigate('/dashboard');
+        }
+    };
+    checkSession();
+  }, []);
 
   return (
     <Box display="flex" flexDirection="column" component="form" gap={3} sx={{ maxWidth: 480, width: "100%", mx: "auto" }}>
