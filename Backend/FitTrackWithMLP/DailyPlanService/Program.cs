@@ -28,10 +28,6 @@ namespace DailyPlanService
                 .ReadFrom.Configuration(builder.Configuration)
                 .CreateLogger();
 
-            // redis config
-            var redisConnectionString = builder.Configuration.GetConnectionString("RedisConnection");
-            var redis = ConnectionMultiplexer.Connect(redisConnectionString);
-
             var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
                 ?? new[] { "http://localhost:3000" };
 
@@ -79,15 +75,6 @@ namespace DailyPlanService
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(connectionString));
 
-            builder.Services.AddDataProtection()
-                .SetApplicationName("FitTrackEcosystem")
-                .PersistKeysToStackExchangeRedis(redis, "FitTrack-Antiforgery-Keys");
-
-            builder.Services.AddAntiforgery(options =>
-            {
-                options.HeaderName = "X-XSRF-TOKEN";
-            });
-
             // Enable cors
             builder.Services.AddCors(options =>
             {
@@ -124,9 +111,6 @@ namespace DailyPlanService
 
             app.UseAuthentication();
             app.UseAuthorization();
-
-            app.UseFitTrackAntiforgeryCookie();
-            app.UseFitTrackAntiforgeryValidation();
 
             app.MapControllers();
 

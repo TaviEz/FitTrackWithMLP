@@ -17,19 +17,16 @@ namespace UserManagementService.Controllers
         private readonly ITokenService _tokenService;
         private readonly IUserDetailsService _userDetailsService;
         private readonly ILogger<UserController> _logger;
-        private readonly IWebHostEnvironment _env;
 
         public UserController(
             IIdentityService authService,
             ITokenService tokenService,
             IUserDetailsService userDetailsService,
-            ILogger<UserController> logger,
-            IWebHostEnvironment env)
+            ILogger<UserController> logger)
         {
             _authService = authService;
             _tokenService = tokenService;
             _userDetailsService = userDetailsService;
-            _env = env;
             _logger = logger;
         }
 

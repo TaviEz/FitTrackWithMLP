@@ -28,10 +28,6 @@ namespace UserManagementService
                 .ReadFrom.Configuration(builder.Configuration)
                 .CreateLogger();
 
-            // redis config
-            var redisConnectionString = builder.Configuration.GetConnectionString("RedisConnection");
-            var redis = ConnectionMultiplexer.Connect(redisConnectionString);
-
             var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
                      ?? new[] { "http://localhost:3000" };
 
