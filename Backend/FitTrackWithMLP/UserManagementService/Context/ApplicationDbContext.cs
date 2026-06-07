@@ -31,8 +31,14 @@ namespace UserManagementService.Context
             modelBuilder.Entity<UserDetails>()
                 .Property(u => u.GoalType)
                 .HasConversion<string>();
+
+            modelBuilder.Entity<RefreshToken>()
+                .HasOne(rt => rt.User)
+                .WithMany()
+                .HasForeignKey(rt => rt.UserId);
         }
 
         public DbSet<UserDetails> UserDetails { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
     }
 }
