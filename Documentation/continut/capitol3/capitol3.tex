@@ -1,188 +1,277 @@
-\chapter{Soluția propusă}
+\chapter{Proposed solution}
 \label{cap:cap3}
 
-(aproximativ 14 pagini)
+\section{System requirements and High-Level Design}
 
-\section{Recomandări conținut}
+\subsection{Problem Reiteration and Solution Strategy}
 
-Prezentarea proiectării și implementării sistemului/aplicației în funcție de specificul acesteia. Ar trebui incluse doar elementele relevante proiectului dintre cele ce urmează.
+In the current digital health landscape, nutritional tracking applications frequently fail 
+to sustain long-term user adherence due to structural rigidity. Traditional platforms 
+rely on manual, repetitive data logging where users must explicitly search, weigh, and 
+log every individual food item consumed. Furthermore, generic meal planning engines often 
+deliver static, pre-packaged templates that fail to account for unique metabolic shifts, 
+individual lifestyle activity factors, or lean muscle mass preservation requirements.
 
+The strategy proposed in this thesis addresses these core limitations by shifting the 
+paradigm from manual tracking to automated macro-nutrient synthesis. This is achieved 
+through a decentralized microservice architecture that decouples user identity tracking 
+from mathematical plan generation. The solution introduces an autonomous optimization 
+engine, the OptimizerService, which dynamically calculates nutritional targets and 
+automatically compiles meal configurations tailored to the user's specific metabolic 
+profile. By automating the data-entry layer and providing instant, scientifically backend 
+plan variations, the platform eliminates the traditional points of friction in dietary 
+logging while maintaining high structural flexibility.
+
+
+\subsection{Original Ideas and Innovative Solutions}
 \begin{itemize}
-    \item Reiterarea problemei pe care o rezolvă soluția propusă și a strategiei de rezolvare.
-    \item Idei originale, soluții noi.
-    \item Cerințe ale utilizatorului (en., user requirements): așteptările utilizatorilor finali de la sistemul sau aplicația dezvoltată.
-    \item Arhitectura/Modelarea sistemului: descrierea componentelor principale și a interacțiunilor dintre acestea, e.g., prin scheme bloc.
-    \item Proiectarea propriu-zisă:
-    \begin{itemize}
-        \item diagrame ER pentru baze de date,
-        \item UML pentru proiectele care necesită diverse paradigme complexe și lucru cu clase – diagramele pot fi incluse și în anexe,
-        \item pseudocod pentru algoritmii creați,
-        \item scheme logice pentru cei care dezvoltă în limbaje structurate,
-        \item proiectare cablaj imprimat.
-    \end{itemize}
-    \item Descrierea succintă a elementelor (e.g., claselor) dezvoltate și implementate de absolvent.
-    \item Analiza platformei hardware pe care va fi executată respectiva aplicație și se analizează care abordare în implementare ar fi mai bună pentru respectiva structură.
-    \item Alegerea tehnologiilor și justificarea pe scurt a alegerii.
-    \item Identificarea avantajelor și a dezavantajelor metodei alese.
-    \item Descrierea implementării soluției.
-    \item Prezentarea unor capturi de ecran relevante sau a unor imagini cu soluția dezvoltată, e.g., capturi de ecran cu funcționalități importante din interfața cu utilizatorul, poze cu sistemul fizic dezvoltat.
+    \item \textbf{Embedded Read-Only Database for Meal Optimization:} The system separates data storage concerns across two distinct database engines based on their access patterns. Transactional data such as user profiles, authentication state, and daily plans are persisted in a cloud-hosted Azure SQL instance. The \texttt{OptimizerService}, which handles meal generation, operates exclusively on static pre-seeded nutritional data that never changes at runtime. For this reason, an embedded SQLite database is deployed directly alongside the service container, eliminating network round-trips to a cloud database for read-only lookups during meal plan generation. Additionally, the \texttt{DailyPlanService} maintains local snapshots of this nutritional data, removing any runtime dependency on the \texttt{OptimizerService}'s internal storage.
+
+    \item \textbf{Dynamic Lean Mass Preservation Target Calibration:} Unlike typical platforms that apply rigid calorie deficits across all profiles, this solution implements a dynamically scaled allocation algorithm within the \texttt{DailyPlanService}. The system evaluates the user's active configuration against specific constraints using the following relationship:
+    
+    \begin{equation}
+        TDEE = BMR \times \text{ActivityFactor}
+    \end{equation}
+    
+    When a restrictive deficit is selected, the system automatically recalibrates macro-nutrient distributions, scaling protein allocations up to 1.4g/kg or 2.0g/kg based on calculated lean mass preservation metrics while strictly enforcing a minimum fat threshold of 0.7g/kg or 0.8g/kg to protect metabolic health. This separation ensures nutritional logic remains within the .NET domain layer, keeping the \texttt{OptimizerService} focused solely on meal selection.
+
+    \item \textbf{Stateless Authentication with Refresh Token Rotation:} The system implements a dual-token authentication strategy to balance security and user experience across a cross-domain microservices architecture. Short-lived JWT access tokens (15 minutes) are stored in JavaScript memory and transmitted via the Authorization Bearer header, eliminating CSRF attack vectors entirely. Long-lived refresh tokens (30 days) are persisted server-side in the \texttt{AuthServiceDb} and transmitted exclusively via HttpOnly cookies, making them inaccessible to JavaScript and therefore resistant to XSS attacks. Upon each token refresh, the existing refresh token is deleted and replaced with a newly generated one — a practice known as refresh token rotation — ensuring that a stolen refresh token can only be used once before being invalidated.
 \end{itemize}
 
-\section{Exemple și alte elemente de ajutor}
+\section{User Requirements}
 
+The application's scope is driven by the practical needs of the end user, divided into functional operations and non-functional quality expectations.
+
+\subsection{Functional Requirements}
 \begin{itemize}
-    \item se analizează platforma hardware pe care va fi executată respectiva aplicație și se analizează care abordare în implementare ar fi mai bună pentru respectiva structură
-    \item se stabilesc modulele generale ale aplicației și interacțiunile dintre ele;
-    \item se analizează avantaje și dezavantajele metodei alese;
-    \item se indică limitele în care metoda va funcționa. 
+    \item \textbf{Authentication:} Users must be able to sign up, log in securely, and 
+    remain authenticated across page refreshes.
+    \item \textbf{Onboarding Form:} First-time users require a guided form to enter basic 
+    metrics (weight, height, age, sex, and activity level).
+    \item \textbf{Metabolic Calculation:} The system must automatically compute and display 
+    the user's BMR and TDEE based on their onboarding input.
+    \item \textbf{Diet Goal Customization:} Users need to select a specific goal 
+    (e.g., Lean Cut, Lean Bulk, or Lose Fat) which automatically scales their calorie and 
+    macro targets.
+    \item \textbf{Meal Plan Selection:} Users must be able to choose between automatically 
+    generating a meal plan via the AI optimizer or manually adding foods.
+    \item \textbf{Dashboard CRUD:} The main interface must allow users to view their daily 
+    macro progress, log consumed food items, update metrics, and delete entries.
 \end{itemize}
 
-\textit{Componente software:}
+\subsection{Non-Functional Requirements}
 \begin{itemize}
-    \item proiectarea propriu zisă (diagrame ER pentru baze de date, UML pentru proiectele care necesită diverse paradigme complexe și lucru cu clase – orientat obiect, scheme logice pentru cei care dezvoltă în limbaje structurate etc);
-    \item se stabilește tehnologia aleasă pentru implementare și se justifică alegerea făcută;
-    \item se descriu succint numai clasele dezvoltate și implementate de absolvent cu trimitere la pagina din anexă unde se află codul complet;
+    \item \textbf{Performance:} Page transitions, database saves, and macro calculations 
+    must happen within a sub-second timeframe to ensure a smooth user experience.
+    \item \textbf{Data Privacy:} User profiles, target metrics, and logged food records must 
+    be securely isolated so users can only access their own data.
 \end{itemize}
 
-Figurile mai complexe, care nu se văd bine în format A4/portrait, pot fi incluse în anexe și referite normal (vezi Figura \ref{fig:AT} din Anexa \ref{anexa3:func_xyz}).
+\section{Architectural Modeling}
 
-\vspace{1em}
+\subsection{System Architecture}
 
-\textit{Componente hardware:}
-\begin{itemize}
-    \item stabilirea componentelor hardware necesare. Exemplu: etaje analogice, display-uri, dispozitive I/O, periferice USB, etc.;
-    \item analiza performanțelor și descrierea perifericelor procesorului/microcontrolerului folosit
-    \item realizarea schemei bloc care să reflecte interconectarea componentelor principale;
-    \item simularea funcționării componentelor hardware (OrCAD, Proteus, simulatoare HDL);
-    \item proiectarea cablajului imprimat (Altium Designer, Eagle).
-\end{itemize}
+The system is designed using a decentralized microservice architecture to ensure 
+scalability, fault isolation, and strict separation of business concerns. Each service 
+operates independently with its own data store, exposing functionality exclusively through 
+well-defined HTTP APIs. The structural organization of the system's components, their 
+interfaces, and data boundaries are illustrated in the component diagram below.
 
-\textcolor{gray}{\lipsum} (Figura \ref{fig:BB8})
-
-\begin{figure}[H]
+\begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.3\textwidth]{continut/capitol3/figuri/BB8.png}
-    \caption{BB8\protect\footnotemark}
-    \label{fig:BB8}
+    \includegraphics[width=0.9\textwidth]{continut/capitol3/figuri/ComponentDiagram.pdf}
+    \caption{System Component Architecture Diagram}
+    \label{fig:component_architecture}
 \end{figure}
-\footnotetext{imagine preluată de pe un site web care nu „merită” trecut la bibliografie \url{https://www.pngitem.com/}}
 
-\textcolor{gray}{\lipsum}
+As shown in Figure~\ref{fig:component_architecture}, the system architecture is composed of 
+the following core layers and components:
 
-Ecuația \eqref{eq:sample} este un exemplu foarte simplu de formulă matematică. Ecuațiile vor fi referite prin comanda \LaTeX\ \verb|\eqref{}| din pachetul \verb|amsmath|.
+\begin{itemize}
+    \item \textbf{Presentation Layer (React SPA):} A lightweight, client-side single-page 
+    application built with React. It handles user interactions, manages local routing states, 
+    and communicates asynchronously with the backend APIs via standard RESTful HTTP protocols 
+    using JSON payloads.
+    \item \textbf{User Management Service (\texttt{UserManagementService}):} A specialized 
+    backend service responsible for user administration. It processes user registration, 
+    validates credentials during login, handles secure session management, and stores physical 
+    user profile metrics.
+    \item \textbf{Daily Plan Service (\texttt{DailyPlanService}):} The orchestrator for 
+    the user's active nutritional tracking. It handles core CRUD operations related to food
+    logging, manages daily macro-nutrient targets based on selected goals, and coordinates
+    meal plan persistence. When automated meal generation is requested, it delegates to the
+    \texttt{OptimizerService} via a typed \texttt{HttpClient}, forwarding the user's 
+    targets and receiving back an optimized meal configuration.
+    \item \textbf{Optimizer Service (\texttt{OptimizerService}):} A highly isolated 
+    computational engine built exclusively for running the meal generation algorithms. It 
+    ingests targeted macro goals and selects optimal food combinations from its embedded 
+    storage without interfering with transactional user flows.
+    \item \textbf{Data Tier Topology:} Storage concerns are explicitly segregated. Relational 
+    transactional records and user authorization states are persisted in the 
+    cloud-hosted \texttt{AuthServiceDb} (Azure SQL). In contrast, the static food and 
+    ingredient catalogs used for macro synthesis are hosted within an embedded SQLite 
+    database running locally inside the \texttt{OptimizerService} container to minimize 
+    network latency.
+\end{itemize}
 
-\begin{equation}
-    \label{eq:multiline_sample}
-    \begin{split}
-        A & = \frac{\pi r^2}{2} \\
-         & = \frac{1}{2} \pi r^2
-    \end{split}
-\end{equation}
+\clearpage
+\subsection{Database Design}
 
-\begin{equation}
-    \label{eq:sample}
-    e^{\pi i} + 1 = 0
-\end{equation}
+The system employs three distinct databases, each scoped to its respective service to 
+ensure strict data isolation and separation of concerns.
 
-În ecuația \eqref{eq:multiline_sample} avem un prim exemplu multiline în care alinierea față de simbolul egal este specificată în codul de generare a ecuației.
+\subsubsection{UserManagement Service Database}
+The \textit{AuthServiceDb} manages user identity, authentication state, and physical profile 
+data. The \textit{AspNetUsers} table is provided by the ASP.NET Core Identity framework and 
+serves as the central user entity. The \textit{UserDetails} table maintains a one-to-one 
+relationship with \textit{AspNetUsers}, storing user physiological data used for 
+nutritional calculations. The \textit{RefreshTokens} table maintains a one-to-many 
+relationship with \textit{AspNetUsers}, persisting refresh tokens issued after successful 
+authentication to support token rotation.
 
-În cazul unui număr mare de ecuații poate fi de dorit folosirea de macrodefiniții pentru a standardiza și urmări mai ușor codul de generare al acestora, evitându-se variații de formă și alte greșeli de redactare.
-Un principal avantaj al utilizării macrodefinițiilor pentru notații este că eventualele modificări pot fi propagate rapid și uniform în întregul document.
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\textwidth]{continut/capitol3/figuri/AuthServiceERdiagram.pdf}
+    \caption{UserManagement Service Database Schema}
+    \label{fig:auth_db}
+\end{figure}
 
-Ecuațiile, definițiile și teoremele se referă în textul lucrării de licență/disertație prefixate: ecuația \eqref{eq:sample}, definiția \ref{def:diploma} sau teorema \ref{thm:equal}, iar aici este o pură întâmplare că au același indice, fiind vorba despre prima ecuație, prima definiție și prima teoremă din Capitolul \ref{cap:cap3}.
+\clearpage
+\subsubsection{DailyPlan Service Database}
+The \textit{DailyPlanServiceDb} stores user meal plans and their associated nutritional 
+data. Each \textit{DailyPlan} record contains one or more \textit{PlannedMeals}, which 
+in turn contain one or more \textit{PlannedMealIngredients}. This structure represents a 
+snapshot of the generated meal plan, persisted independently from the OptimizerService to 
+avoid runtime coupling between services.
 
-În continuare, definiția \ref{def:diploma} introduce conceptul de „Lucrare de diplomă”. Titlul efectiv este opțional și îl regăsiți în \LaTeX\ între [].
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\textwidth]{continut/capitol3/figuri/DailyPlanServiceERdiagram.pdf}
+    \caption{DailyPlan Service Database Schema}
+    \label{fig:dailyplan_db}
+\end{figure}
 
-\begin{definition}[Lucrare de diplomă]
-    \label{def:diploma}
-    Lucrarea de diplomă face dovada nivelului și calității pregătirii profesionale, teoretice și aplicative a absolventului, iar prin modul în care aceasta este prezentată (susținută public în fața unei comisii de examinare) ea evidențiază calitățile științifice și inginerești definitorii ale absolventului.
-\end{definition}
+\clearpage
+\subsubsection{Optimizer Service Database}
+The OptimizerService uses an embedded SQLite database pre-seeded with static nutritional 
+data. The \textit{basic\_foods} table stores individual food items with their macronutrient 
+values. The \textit{meals} table defines meal templates with complexity and type 
+classifications. The \textit{meal\_ingredients} table serves as a junction table 
+establishing a many-to-many relationship between meals and foods. This database is
+ read-only at runtime and is bundled directly within the service container.
 
-Numerotarea teoremelor se va face similar ecuațiilor și definițiilor de mai sus. Vezi teorema \ref{thm:equal}.
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\textwidth]{continut/capitol3/figuri/OptimizerServiceERdiagram.pdf}
+    \caption{Optimizer Service Database Schema}
+    \label{fig:optimizer_db}
+\end{figure}
 
-\begin{theorem}[Teorema egalității]
-    \label{thm:equal}
-    Dacă $a=b$, atunci $b=a$.
-\end{theorem}
+\section{Implementation Description}
+This section describes the primary classes and programming components 
+developed to implement the platform's core business logic. The backend 
+architecture follows a clean, layered structure where controllers expose 
+the API endpoints, services handle business operations, and entities 
+model the core data structures.
 
-\begin{proof}
-Ne bazăm pe proprietatea de reflexivitate.
-\end{proof}
+\subsection{Description of Implemented Elements and Classes}
 
-\textcolor{gray}{\lipsum}
+Both backend services follow a uniform three-layer structure: a controller at the API
+boundary, a service class containing the domain logic, and a \texttt{DbContext} injected
+directly into the service for data access. This pattern is applied consistently across
+all features, with each layer depending on its neighbour exclusively through an interface,
+enabling independent testability and clear separation of concerns. The components described
+below represent the most significant classes implemented within this structure.
 
-În acest capitol ar trebui să se regăsească un algoritm (dacă este cazul) și el va fi referit ca Algoritmul \ref{alg:acceptance}.
+\begin{itemize}
+    \item \textbf{\texttt{UserController}:} Positioned within the API exposure
+    layer of the \texttt{UserManagementService}. It exposes the complete HTTP
+    interface for session and profile lifecycle management, covering both
+    anonymous operations such as registration, login, and token refresh, and
+    authenticated operations such as logout, identity retrieval, and physical
+    metric persistence. Security boundaries are enforced at the controller level
+    using the \texttt{[Authorize]} attribute on all routes that require a valid
+    access token.
+    
+    \item \textbf{\texttt{UserDetailsService}:} Implements the core domain logic for user 
+    processing. It coordinates payload validation, computes basic metabolic baselines 
+    from raw physical data, and triggers persistent repository writes to the database 
+    tier.
+    
+    \item \textbf{\texttt{TokenService}:} A dedicated utility component within 
+    the authentication infrastructure that handles the cryptographic generation 
+    of short-lived JSON Web Tokens (JWT). It populates the token payload with 
+    essential user identity properties using standard security claims, specifically 
+    mapping the unique user identifier (\texttt{ClaimTypes.NameIdentifier}) and the 
+    validated email address (\texttt{ClaimTypes.Email}). The resulting JWT is 
+    cryptographically signed using the \texttt{HmacSha256Signature} algorithm and 
+    issued with a strict 15-minute expiration lifespan.
 
-\begin{algorithm}[ht]
-    \caption{Pseudo code for reviewing process}\label{alg:acceptance}
-    \begin{algorithmic}[1]
-        \Procedure{Acceptance}{paper, committee}
-            \State $\textit{reviewers} \gets \text{randomly select } \{(i,j) \mid i,j \in  \{1, \cdots, \#\{\textit{committee}\}\}, i \neq j \}$
-            \State $\textit{reviews} \gets 2 \times 1 \text{ array of } \textit{False}$
-            \BState \emph{reviewing round}:
-            \For {$i \in \textit{reviewers }$}
-                \If {$paper \text{ reads well for } \textit{committee}(i) $}
-                    \State $\textit{review}(i) \gets \textit{True}$.
-                \Else \text{ do nothing}
-                \EndIf
-            \EndFor
-            \BState \emph{evaluation round}:
-            \If {$\textit{reviews}(i) \text{ is } \textit{False} \text{ for all } i \in \textit{reviewers}$}
-                \State \textbf{goto} \emph{hell}.
-            \ElsIf {$\textit{reviews}(i) \text{ is } \textit{True} \text{ for all } i \in \textit{reviewers}$}
-                \State \textbf{goto} \emph{Licența 2022}
-            \Else \textbf{ goto} \emph{revision round}
-            \EndIf
-            \BState \emph{revision round}:
-            \State $\textit{reviser} \gets \text{randomly select } \{i \mid i \in  \{1, \cdots, \#\{\textit{committee}\}\}, i \not\in \textit{reviewers} \}$
-            \If {$paper \text{ reads well for } \textit{committee(reviser)} $}
-                \State \textbf{ goto} \emph{Licența 2022}
-            \ElsIf{\textit{committee(reviser)} \text{ has no opinion and likes inifinite loop}}
-                \State \textbf{ goto} \emph{reviewing round}
-            \Else \textbf{ goto} \emph{hell}
-            \EndIf
-            \BState \emph{hell} 
-            \State \text{Try again in summer 2023!}
-            \BState \emph{Licența 2022 (some people also call it hell)}:
-            \State \text{See you at Beer Zone!}
-        \EndProcedure
-    \end{algorithmic}
-\end{algorithm}
+    \item \textbf{\texttt{RefreshTokenService}:} Implements the \texttt{IRefreshTokenService} 
+    interface to handle the lifecycle of long-lived session tokens. It provides three 
+    core operations: \texttt{GenerateAndStoreAsync} to cryptographically generate a 
+    secure token string and persist it in the database for a specific user, 
+    \texttt{ValidateAsync} to retrieve and check the validity of an incoming token
+    against storage, and \texttt{DeleteAsync} to remove a token upon user logout, 
+    enforcing the refresh token rotation strategy.
 
-În acest capitol se descrie și implementarea practică a proiectului. În mod uzual, puteți insera cod de dimensiuni mici, care este relevant și care se impune a fi comentat în detaliu. Astfel, Listing-ul \ref{code:c_mpi} prezintă un supergreu pas de inițializare a unui program MPI pentru a obține cinstit punctul din oficiu, în care se poate face referire la linia \ref{line:if} pentru a descrie ce face \verb|if|-u' di acolo.
+    \item \textbf{\texttt{IdentityService}:} Implements the \texttt{IIdentityService} 
+    interface to manage core user account operations. It abstracts user interaction 
+    with the security provider through three asynchronous tasks: \texttt{AuthenticateAsync} 
+    to validate plaintext user credentials against stored password hashes, 
+    \texttt{RegisterAsync} to handle the creation of new user records within the 
+    database, and \texttt{FindByIdAsync} to look up an active user profile using their 
+    unique identifier.
 
-\begin{code}
-    \begin{minted}{c}
-        #include <stdio.h>
-        #include "mpi.h"
-        
-        int main( int argc, char **argv ) {
-        	char message[20];
-        	int myrank;	
-        		
-        	MPI_Status status;
-        
-        	MPI_Init( &argc, &argv );
-        	MPI_Comm_rank( MPI_COMM_WORLD, &myrank );
-        	
-        	if (myrank == 0) { /* codul pentru procesul 0 */|\label{line:if}|
-        		strcpy(message,"Hello");
-        		MPI_Send(message, strlen(message), MPI_CHAR, 
-        			1, 99, MPI_COMM_WORLD);
-        	} else { /* codul pentru procesul 1 */
-        		MPI_Recv(message, 20, MPI_CHAR, 
-        			0, 99, MPI_COMM_WORLD, &status);
-        		printf("received :%s:\n", message);
-        	}
-        	
-        	MPI_Finalize();
-        	return 0;
-        }
-    \end{minted}
-    \caption{Supercod MPI în C} 
-    \label{code:c_mpi}
-\end{code}
+    \item \textbf{\texttt{DailyPlanController}:} Exposes the API endpoints for managing 
+    tracking records and triggering menu synthesis. It handles the integration between 
+    the user front-end and the optimization core through two key 
+    operations: \texttt{POST /api/dailyplan/generate}, which redirects user physical 
+    parameters to the internal optimization engine to build a macro-calibrated menu, 
+    and \texttt{GET /api/dailyplan/ingredient/search}, which queries available food 
+    data pools. Additionally, it implements core CRUD operations across both the meal 
+    and ingredient levels, specifically allowing users to fetch complete plans, modify 
+    specific meal titles, and add, update, or delete individual ingredients within a 
+    planned meal slot.
+    
+    \item \textbf{\texttt{DailyPlanService}:} Implements the \texttt{IDailyPlanService} 
+    interface to execute the business logic behind the active tracking dashboard. 
+    It acts as the direct coordinator between the data repositories and the controller 
+    layer, handling state modifications across both meal and ingredient scopes. It 
+    processes date-specific plan lookups (\texttt{GetDailyPlanAsync}), manages full 
+    layout initializations or structural replacements, and evaluates modification rules 
+    whenever users add, update, or remove ingredients and meal slot parameters.
+    
+    \item \textbf{\texttt{MealOptimizerClient}:} Implements the
+    \texttt{IMealOptimizerClient} interface to abstract the communication with
+    the underlying optimization engine service. It provides a clean, async gateway
+    to forward user metabolic configurations and macro-nutrient targets down to the
+    solver (\texttt{OptimizeAsync}) and also forwards the keyword-matching
+    logic (\texttt{GetIngredientOptionsAsync}) to populate available food selections
+    during custom plan creation.
 
-Codul complet relevant se va include în anexe (vezi Anexele \ref{anexa6:listing_python}, \ref{anexa7:listing_kotlin} și \ref{anexa8:listing_xml}). De exemplu, Listing-ul \ref{code:xml_pom} (Anexa \ref{anexa8:listing_xml}) prezintă fișierul de configurare \textit{maven} pentru un serviciu SOAP minimal.
+    \item \textbf{\texttt{FitTrackWithMLP.Shared}:} A dedicated shared class library
+    referenced by both the \newline\texttt{UserManagementService} and the
+    \texttt{DailyPlanService}. It centralizes cross-cutting concerns that would
+    otherwise be duplicated across services. It defines the common Data Transfer
+    Objects used for inter-layer communication, such as user profile payloads and
+    plan request structures, as well as shared enumerations including goal type
+    statuses and plan generation states. Beyond contracts, the library also houses
+    a global exception handling middleware applied uniformly across both services,
+    and an \texttt{AddFitTrackAuthentication} extension method on
+    \texttt{IServiceCollection} that encapsulates the shared JWT validation
+    configuration, ensuring both services enforce identical token verification
+    rules from a single definition.
+\end{itemize}
 
-\textcolor{gray}{\lipsum}
+\subsection{End-to-End Request Flow}
+
+\subsection{Algorithm Pseudocode}
+
+\section{Technology Stack Selection and Justification}
+
+\subsection{Hardware Platform Analysis}
+
+\subsection{Advantages and Disadvantages}
+
+\section{Application Walkthrough and Screenshots}
