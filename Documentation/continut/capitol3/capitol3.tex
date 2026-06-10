@@ -25,22 +25,45 @@ logging while maintaining high structural flexibility.
 
 \subsection{Original Ideas and Innovative Solutions}
 \begin{itemize}
-    \item \textbf{Embedded Read-Only Database for Meal Optimization:} The system separates data storage concerns across two distinct database engines based on their access patterns. Transactional data such as user profiles, authentication state, and daily plans are persisted in a cloud-hosted Azure SQL instance. The \texttt{OptimizerService}, which handles meal generation, operates exclusively on static pre-seeded nutritional data that never changes at runtime. For this reason, an embedded SQLite database is deployed directly alongside the service container, eliminating network round-trips to a cloud database for read-only lookups during meal plan generation. Additionally, the \texttt{DailyPlanService} maintains local snapshots of this nutritional data, removing any runtime dependency on the \texttt{OptimizerService}'s internal storage.
+    \item \textbf{Embedded Read-Only Database for Meal Optimization:} The system separates data 
+    storage concerns across two distinct database engines based on their access patterns. 
+    Transactional data such as user profiles, authentication state, and daily plans are persisted 
+    in a cloud-hosted Azure SQL instance. The \texttt{OptimizerService}, which handles meal 
+    generation, operates exclusively on static pre-seeded nutritional data that never changes at 
+    runtime. For this reason, an embedded SQLite database is deployed directly alongside the service 
+    container, eliminating network round-trips to a cloud database for read-only lookups during meal 
+    plan generation. Additionally, the \texttt{DailyPlanService} maintains local snapshots of this 
+    nutritional data, removing any runtime dependency on the \texttt{OptimizerService}'s internal storage.
 
-    \item \textbf{Dynamic Lean Mass Preservation Target Calibration:} Unlike typical platforms that apply rigid calorie deficits across all profiles, this solution implements a dynamically scaled allocation algorithm within the \texttt{DailyPlanService}. The system evaluates the user's active configuration against specific constraints using the following relationship:
+    \item \textbf{Dynamic Lean Mass Preservation Target Calibration:} Unlike typical platforms that 
+    apply rigid calorie deficits across all profiles, this solution implements a dynamically scaled 
+    allocation algorithm within the \texttt{DailyPlanService}. The system evaluates the user's 
+    active configuration against specific constraints using the following relationship:
     
     \begin{equation}
         TDEE = BMR \times \text{ActivityFactor}
     \end{equation}
     
-    When a restrictive deficit is selected, the system automatically recalibrates macro-nutrient distributions, scaling protein allocations up to 1.4g/kg or 2.0g/kg based on calculated lean mass preservation metrics while strictly enforcing a minimum fat threshold of 0.7g/kg or 0.8g/kg to protect metabolic health. This separation ensures nutritional logic remains within the .NET domain layer, keeping the \texttt{OptimizerService} focused solely on meal selection.
+    When a restrictive deficit is selected, the system automatically recalibrates macro-nutrient 
+    distributions, scaling protein allocations up to 1.4g/kg or 2.0g/kg based on calculated lean 
+    mass preservation metrics while strictly enforcing a minimum fat threshold of 0.7g/kg or 0.8g/kg 
+    to protect metabolic health. This separation ensures nutritional logic remains within the .NET 
+    domain layer, keeping the \texttt{OptimizerService} focused solely on meal selection.
 
-    \item \textbf{Stateless Authentication with Refresh Token Rotation:} The system implements a dual-token authentication strategy to balance security and user experience across a cross-domain microservices architecture. Short-lived JWT access tokens (15 minutes) are stored in JavaScript memory and transmitted via the Authorization Bearer header, eliminating CSRF attack vectors entirely. Long-lived refresh tokens (30 days) are persisted server-side in the \texttt{AuthServiceDb} and transmitted exclusively via HttpOnly cookies, making them inaccessible to JavaScript and therefore resistant to XSS attacks. Upon each token refresh, the existing refresh token is deleted and replaced with a newly generated one — a practice known as refresh token rotation — ensuring that a stolen refresh token can only be used once before being invalidated.
+    \item \textbf{Stateless Authentication with Refresh Token Rotation:} The system implements a
+    dual-token authentication strategy to balance security and user experience across a 
+    cross-domain microservices architecture. Short-lived JWT access tokens are stored 
+    exclusively in JavaScript memory rather than cookies, eliminating CSRF attack vectors 
+    entirely. Long-lived refresh tokens are transmitted via HttpOnly cookies, making them 
+    inaccessible to JavaScript and resistant to XSS attacks. Upon each refresh, the existing 
+    token is invalidated and replaced, ensuring a stolen token can only be used once before 
+    being revoked.
 \end{itemize}
 
 \section{User Requirements}
 
-The application's scope is driven by the practical needs of the end user, divided into functional operations and non-functional quality expectations.
+The application's scope is driven by the practical needs of the end user, divided into functional 
+operations and non-functional quality expectations.
 
 \subsection{Functional Requirements}
 \begin{itemize}
@@ -192,36 +215,28 @@ below represent the most significant classes implemented within this structure.
     metric persistence. Security boundaries are enforced at the controller level
     using the \texttt{[Authorize]} attribute on all routes that require a valid
     access token.
-    
+\end{itemize}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\textwidth]{continut/capitol3/figuri/UMLtemplateDiagram.pdf}
+    \caption{UML template diagram}
+    \label{fig:uml}
+\end{figure}
+
+\begin{itemize}
     \item \textbf{\texttt{UserDetailsService}:} Implements the core domain logic for user 
     processing. It coordinates payload validation, computes basic metabolic baselines 
     from raw physical data, and triggers persistent repository writes to the database 
     tier.
     
-    \item \textbf{\texttt{TokenService}:} A dedicated utility component within 
-    the authentication infrastructure that handles the cryptographic generation 
-    of short-lived JSON Web Tokens (JWT). It populates the token payload with 
-    essential user identity properties using standard security claims, specifically 
-    mapping the unique user identifier (\texttt{ClaimTypes.NameIdentifier}) and the 
-    validated email address (\texttt{ClaimTypes.Email}). The resulting JWT is 
-    cryptographically signed using the \texttt{HmacSha256Signature} algorithm and 
-    issued with a strict 15-minute expiration lifespan.
-
-    \item \textbf{\texttt{RefreshTokenService}:} Implements the \texttt{IRefreshTokenService} 
-    interface to handle the lifecycle of long-lived session tokens. It provides three 
-    core operations: \texttt{GenerateAndStoreAsync} to cryptographically generate a 
-    secure token string and persist it in the database for a specific user, 
-    \texttt{ValidateAsync} to retrieve and check the validity of an incoming token
-    against storage, and \texttt{DeleteAsync} to remove a token upon user logout, 
-    enforcing the refresh token rotation strategy.
-
-    \item \textbf{\texttt{IdentityService}:} Implements the \texttt{IIdentityService} 
-    interface to manage core user account operations. It abstracts user interaction 
-    with the security provider through three asynchronous tasks: \texttt{AuthenticateAsync} 
-    to validate plaintext user credentials against stored password hashes, 
-    \texttt{RegisterAsync} to handle the creation of new user records within the 
-    database, and \texttt{FindByIdAsync} to look up an active user profile using their 
-    unique identifier.
+    \item \textbf{Token Infrastructure (\texttt{TokenService} \& \texttt{RefreshTokenService}):}
+    Together these two components implement the dual-token authentication strategy.
+    \texttt{TokenService} handles the cryptographic generation of short-lived JWT access
+    tokens, signing them with the shared secret and embedding the user's identity claims.
+    \texttt{RefreshTokenService} manages the lifecycle of long-lived session tokens,
+    persisting them to the database on issuance, validating them on each refresh request,
+    and deleting them on logout to enforce single-use rotation.
 
     \item \textbf{\texttt{DailyPlanController}:} Exposes the API endpoints for managing 
     tracking records and triggering menu synthesis. It handles the integration between 
@@ -250,28 +265,257 @@ below represent the most significant classes implemented within this structure.
     logic (\texttt{GetIngredientOptionsAsync}) to populate available food selections
     during custom plan creation.
 
-    \item \textbf{\texttt{FitTrackWithMLP.Shared}:} A dedicated shared class library
-    referenced by both the \newline\texttt{UserManagementService} and the
-    \texttt{DailyPlanService}. It centralizes cross-cutting concerns that would
-    otherwise be duplicated across services. It defines the common Data Transfer
-    Objects used for inter-layer communication, such as user profile payloads and
-    plan request structures, as well as shared enumerations including goal type
-    statuses and plan generation states. Beyond contracts, the library also houses
-    a global exception handling middleware applied uniformly across both services,
-    and an \texttt{AddFitTrackAuthentication} extension method on
-    \texttt{IServiceCollection} that encapsulates the shared JWT validation
-    configuration, ensuring both services enforce identical token verification
-    rules from a single definition.
 \end{itemize}
 
 \subsection{End-to-End Request Flow}
 
+The following sequence diagrams illustrate the key interaction flows within the system, 
+covering authentication, data persistence, and inter-service communication. The first 
+diagram describes the user authentication and onboarding flow, detailing how credentials 
+are validated, JWT access tokens and refresh tokens are issued, and how the user is guided 
+through the initial profile setup. The second diagram illustrates the AI-assisted meal plan 
+generation flow, showcasing the inter-service communication between the DailyPlanService 
+and the OptimizerService, including how nutritional targets are calculated and how excluded 
+meals are taken into account during generation. The third diagram describes the token 
+refresh flow, demonstrating how the system transparently renews expired access tokens 
+using the refresh token stored in an HttpOnly cookie, without requiring the user 
+to re-authenticate.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.75\textwidth]{continut/capitol3/figuri/SequenceDiagram1.pdf}
+    \caption{Authentication and Onboarding Form Flow}
+    \label{fig:seqDiagram1}
+\end{figure}
+
+\begin{figure}[!t]
+    \centering
+    \includegraphics[width=0.9\textwidth]{continut/capitol3/figuri/SequenceDiagram2.pdf}
+    \caption{Generate Meal Plan Flow}
+    \label{fig:seqDiagram2}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\textwidth]{continut/capitol3/figuri/SequenceDiagram3.pdf}
+    \caption{Refresh Token Flow}
+    \label{fig:seqDiagram3}
+\end{figure}
+
+\clearpage
 \subsection{Algorithm Pseudocode}
+
+The meal selection algorithm generates a complete daily plan by distributing nutritional 
+targets across four meal categories using fixed caloric split ratios. For each category, 
+a pre-trained MLP model predicts the top $k$ most suitable meals based on calorie and 
+protein targets. The algorithm filters suggestions by complexity level and excludes 
+previously consumed meals, falling back to the top model suggestion if no match is found. 
+Each selected meal is then passed to the ingredient optimization algorithm to calibrate 
+portion sizes.
+
+\begin{algorithm}
+\caption{Meal Selection Algorithm}
+\begin{algorithmic}[1]
+\Require goals (calories, protein, min\_fat), target\_complexity, excluded\_meal\_ids
+\Ensure daily\_plan list of 4 meals
+
+\State splits $\gets$ \{BREAKFAST: 0.25, LUNCH: 0.30, SNACK: 0.15, DINNER: 0.30\}
+\State daily\_plan $\gets$ []
+
+\For{each meal\_category in [BREAKFAST, LUNCH, SNACK, DINNER]}
+    \State ratio $\gets$ splits[meal\_category]
+    \State meal\_targets $\gets$ goals $\times$ ratio
+
+    \State k $\gets$ 15 if target\_complexity = "Simple" else 5
+    \State top\_indices $\gets$ MLP.predict(meal\_targets.calories, meal\_targets.protein, meal\_category, k)
+    \State suggested\_ids $\gets$ map top\_indices to actual meal IDs
+
+    \State final\_meal $\gets$ null
+    \For{each meal\_id in suggested\_ids}
+        \If{meal\_id $\in$ excluded\_meal\_ids} \textbf{continue} \EndIf
+        \State meal $\gets$ MealRepository.get(meal\_id)
+        \If{meal.complexity = target\_complexity \textbf{and} meal.category = meal\_category}
+            \State final\_meal $\gets$ meal
+            \State \textbf{break}
+        \EndIf
+    \EndFor
+
+    \If{final\_meal = null}
+        \State final\_meal $\gets$ MealRepository.get(suggested\_ids[0]) \Comment{Fallback}
+    \EndIf
+
+    \State result $\gets$ MealOptimizer.optimize(final\_meal.ingredients, meal\_targets)
+
+    \State daily\_plan.append(result)
+\EndFor
+
+\State \Return daily\_plan
+\end{algorithmic}
+\end{algorithm}
+
+The ingredient optimization algorithm determines the optimal portion size in grams for 
+each ingredient in a selected meal. Using Sequential Least Squares Programming (SLSQP), 
+it minimizes a weighted squared error objective function over calorie and protein 
+targets, while enforcing a minimum fat constraint to protect metabolic health. Each 
+ingredient is bounded by category-specific minimum and maximum gram values to ensure 
+realistic portion sizes.
+
+\clearpage
+\begin{algorithm}
+\caption{Ingredient Weight Optimization via SLSQP}
+\begin{algorithmic}[1]
+\Require ingredients list, targets (calories, protein, min\_fat)
+\Ensure optimized ingredient weights in grams
+
+\State data\_matrix $\gets$ nutrient values per 1g for each ingredient
+\State bounds $\gets$ (min\_g, max\_g) per ingredient based on food category
+\State initial\_guess $\gets$ reasonable starting portion per ingredient category
+
+\Function{Objective}{weights}
+    \State current\_cal $\gets$ weights $\cdot$ data\_matrix[:, calories]
+    \State current\_protein $\gets$ weights $\cdot$ data\_matrix[:, protein]
+    \State cal\_error $\gets$ $(current\_cal - target\_cal)^2$
+    \State protein\_error $\gets$ $(current\_protein - target\_protein)^2$
+    \State \Return $cal\_error + 20 \times protein\_error$ \Comment{protein weighted higher for macro accuracy}
+\EndFunction
+
+\State constraints $\gets$ \{min\_fat: weights $\cdot$ data\_matrix[:, fat] $\geq$ targets.min\_fat\}
+
+\State result $\gets$ SLSQP.minimize(Objective, initial\_guess, bounds, constraints)
+
+\If{result.success}
+    \State \Return optimized ingredient list with weights
+\Else
+    \State \Return null
+\EndIf
+
+\end{algorithmic}
+\end{algorithm}
+
 
 \section{Technology Stack Selection and Justification}
 
+The selection of the technology stack was driven by the computational demands of the 
+meal optimization algorithm, the need for a highly responsive user experience, and the 
+requirement for robust security boundaries within a microservices architecture. 
+
+\subsection{Backend Framework: ASP.NET Core (.NET 10)}
+ASP.NET Core was selected as the foundational framework for the microservices backend due 
+to several architectural advantages:
+\begin{itemize}
+    \item \textbf{High Throughput and Performance:} The .NET services act as API
+    orchestrators handling concurrent user sessions, async database reads and writes,
+    and inter-service HTTP calls to the optimizer. ASP.NET Core's Kestrel server is
+    purpose-built for high-concurrency I/O-bound workloads, making it well-suited for
+    this coordination role without introducing unnecessary processing overhead.
+    \item \textbf{Asynchronous Programming Model:} The native async/await patterns
+    keep API endpoints non-blocking during database queries and outbound HTTP calls,
+    freeing threads to serve other requests and maintaining responsiveness under
+    concurrent load.
+    \item \textbf{Built-in Dependency Injection:} The framework natively supports 
+    clean dependency inversion interfaces, which facilitates decoupling controllers 
+    from core business service handlers.
+\end{itemize}
+
+\subsection{Frontend Library: React (TypeScript)}
+The user interface is constructed as a client-side Single Page Application (SPA) 
+using React, engineered to minimize user tracking friction:
+\begin{itemize}
+    \item \textbf{Component-Based Architecture:} It enables isolation of UI components, 
+    allowing the daily dashboard progress tracking macros, the onboarding setup wizards, 
+    and individual ingredient search logs to render dynamically.
+    \item \textbf{Virtual DOM and Sub-Second Updates:} React ensures that modifications 
+    to meal logs, macro-nutrient calculations, or target updates reflect immediately 
+    on-screen without requiring complete page refreshes.
+    \item \textbf{Strict Typing with TypeScript:} TypeScript was layered over React to 
+    enforce strict data contracts, ensuring data mapping to backend Data Transfer 
+    Objects (DTOs) remains reliable.
+\end{itemize}
+
+\subsection{Data Management Tier: Azure SQL and SQLite}
+To eliminate standard cloud infrastructure network bottlenecks, a hybrid database 
+approach was chosen:
+\begin{itemize}
+    \item \textbf{Azure SQL (Relational Engine):} Used for cloud storage of relational 
+    user transactional records, authentication security states, and persistent historical 
+    tracking plans. It guarantees strict ACID compliance and secure multi-tenant isolation 
+    boundaries.
+    \item \textbf{Embedded SQLite:} Deployed directly alongside the execution container 
+    of the \texttt{OptimizerService}. Because the ingredient pool consists of static, 
+    pre-seeded nutritional profiles, storing this data in an embedded local file 
+    eliminates cloud database network round-trip overhead entirely, allowing sub-second 
+    lookups during calculation loops.
+\end{itemize}
+
 \subsection{Hardware Platform Analysis}
+
+The application runs entirely on Azure cloud infrastructure, with no dependency on
+physical server management. Each of the three microservices is packaged as a
+Docker image, built locally, and pushed to the \textbf{Azure Container Registry (ACR)},
+which serves as the central image repository for the deployment pipeline. The containers
+are then deployed as independent instances within the \textbf{Azure Container environment},
+where each service receives its own isolated compute allocation.
+
+The two ASP.NET Core services are predominantly I/O-bound, spending the majority of
+their execution time waiting on database queries and outbound HTTP calls rather than
+performing intensive computation. The Python \texttt{OptimizerService} is the only
+CPU-intensive workload in the system, performing numerical optimization during meal
+plan generation. This difference in resource profiles means the two service types
+could be scaled independently based on demand without affecting each other.
+
+The transactional database tier is provided by \textbf{Azure SQL}, a fully managed
+relational database service that handles availability, automated backups, and failover
+at the platform level. Because the database is managed externally to the containers,
+it remains persistent and unaffected by container restarts or redeployments.
+
+This cloud-native deployment model also ensures environment parity between local
+development, where services run via Docker Compose from the same images, and
+production, where those images are pulled from ACR and executed in the Azure
+container environment.
 
 \subsection{Advantages and Disadvantages}
 
-\section{Application Walkthrough and Screenshots}
+The microservice architecture and cloud-native deployment model offer several structural
+benefits, but also introduce trade-offs that are worth acknowledging.
+
+\textbf{Advantages:}
+\begin{itemize}
+    \item \textbf{Fault Isolation:} A failure or restart in the \texttt{OptimizerService}
+    does not affect the \newline\texttt{UserManagementService} or the daily plan 
+    tracking flow. Each container operates independently, limiting the blast radius of 
+    any single service degradation.
+
+    \item \textbf{Independent Deployability:} Each service can be rebuilt, pushed to ACR,
+    and redeployed without touching the others. The Python optimization engine, for
+    instance, can receive algorithm updates independently of the .NET authentication layer.
+
+    \item \textbf{Data Ownership and Schema Isolation:} Each service controls its own
+    database schema. There is no shared database that could create hidden coupling between
+    services, making schema migrations safer and more contained.
+
+    \item \textbf{Technology Heterogeneity:} The architecture allowed the optimization
+    engine to be implemented in Python, which provides access to the scientific computing
+    ecosystem (scipy, scikit-learn), while the API layer benefits from the performance and
+    type safety of .NET. Each service uses the language best suited to its role.
+\end{itemize}
+
+\textbf{Disadvantages:}
+\begin{itemize}
+    \item \textbf{Operational Complexity:} Running three containers alongside two database
+    instances locally requires Docker Compose coordination. Onboarding to the development
+    environment is more involved than a single-process monolith.
+
+    \item \textbf{Inter-Service Network Overhead:} The meal plan generation flow requires
+    an HTTP call from the \texttt{DailyPlanService} to the \texttt{OptimizerService},
+    introducing network latency that would not exist in an in-process call within a
+    monolithic architecture.
+
+    \item \textbf{Distributed Debugging:} Tracing a failure that spans multiple services
+    requires correlating logs across separate containers, which is more demanding than
+    following a single stack trace in a unified process.
+
+    \item \textbf{Cold Start Latency:} Azure container instances that scale to zero
+    will incur a startup delay on the first incoming request. For the
+    \texttt{OptimizerService}, which loads an MLP model on startup, this cold start
+    period is more pronounced than for a stateless HTTP service.
+\end{itemize}
