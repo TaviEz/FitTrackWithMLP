@@ -18,7 +18,7 @@ through a decentralized microservice architecture that decouples user identity t
 from mathematical plan generation. The solution introduces an autonomous optimization 
 engine, the OptimizerService, which dynamically calculates nutritional targets and 
 automatically compiles meal configurations tailored to the user's specific metabolic 
-profile. By automating the data-entry layer and providing instant, scientifically backend 
+profile. By automating the data-entry layer and providing instant, scientifically backed 
 plan variations, the platform eliminates the traditional points of friction in dietary 
 logging while maintaining high structural flexibility.
 
@@ -84,10 +84,20 @@ operations and non-functional quality expectations.
 
 \subsection{Non-Functional Requirements}
 \begin{itemize}
-    \item \textbf{Performance:} Page transitions, database saves, and macro calculations 
+    \item \textbf{Performance:} Page transitions, database saves, and macro calculations
     must happen within a sub-second timeframe to ensure a smooth user experience.
-    \item \textbf{Data Privacy:} User profiles, target metrics, and logged food records must 
+    \item \textbf{Security:} All authenticated endpoints must reject requests without a
+    valid JWT access token. Refresh tokens must be transmitted exclusively via HttpOnly
+    cookies and invalidated on each rotation to prevent session hijacking.
+    \item \textbf{Data Privacy:} User profiles, target metrics, and logged food records must
     be securely isolated so users can only access their own data.
+    \item \textbf{Availability:} Cloud-hosted services must be configured to restart
+    automatically on failure. Container restarts must not affect database state, as
+    persistent data is held in the externally managed Azure SQL instance.
+    \item \textbf{Scalability:} Each microservice must be independently deployable and
+    scalable without requiring changes to other services, allowing the
+    memory-intensive \texttt{OptimizerService} to be scaled separately from the
+    I/O-bound API services.
 \end{itemize}
 
 \section{Architectural Modeling}
@@ -129,11 +139,13 @@ the following core layers and components:
     computational engine built exclusively for running the meal generation algorithms. It 
     ingests targeted macro goals and selects optimal food combinations from its embedded 
     storage without interfering with transactional user flows.
-    \item \textbf{Data Tier Topology:} Storage concerns are explicitly segregated. Relational 
-    transactional records and user authorization states are persisted in the 
-    cloud-hosted \texttt{AuthServiceDb} (Azure SQL). In contrast, the static food and 
-    ingredient catalogs used for macro synthesis are hosted within an embedded SQLite 
-    database running locally inside the \texttt{OptimizerService} container to minimize 
+    \item \textbf{Data Tier Topology:} Storage concerns are explicitly segregated across
+    three databases. User identity, authentication state, and physical profile data are
+    persisted in the cloud-hosted \texttt{AuthServiceDb} (Azure SQL). Daily meal plans,
+    planned meals, and their ingredient records are stored in \texttt{DailyPlanServiceDb}
+    (Azure SQL), owned exclusively by the \texttt{DailyPlanService}. The static food and
+    ingredient catalogs used for macro synthesis are hosted within an embedded SQLite
+    database running locally inside the \texttt{OptimizerService} container to minimize
     network latency.
 \end{itemize}
 
@@ -180,8 +192,7 @@ The OptimizerService uses an embedded SQLite database pre-seeded with static nut
 data. The \textit{basic\_foods} table stores individual food items with their macronutrient 
 values. The \textit{meals} table defines meal templates with complexity and type 
 classifications. The \textit{meal\_ingredients} table serves as a junction table 
-establishing a many-to-many relationship between meals and foods. This database is
- read-only at runtime and is bundled directly within the service container.
+establishing a many-to-many relationship between meals and foods. This database is read-only at runtime and is bundled directly within the service container.
 
 \begin{figure}[htbp]
     \centering
@@ -220,7 +231,7 @@ below represent the most significant classes implemented within this structure.
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.9\textwidth]{continut/capitol3/figuri/UMLtemplateDiagram.pdf}
-    \caption{UML template diagram}
+    \caption{UML Class Diagram of the Layered Controller--Service--DbContext Pattern (representative interfaces shown; the same structure applies to both backend services)}
     \label{fig:uml}
 \end{figure}
 
@@ -458,9 +469,9 @@ where each service receives its own isolated compute allocation.
 
 The two ASP.NET Core services are predominantly I/O-bound, spending the majority of
 their execution time waiting on database queries and outbound HTTP calls rather than
-performing intensive computation. The Python \texttt{OptimizerService} is the only
-CPU-intensive workload in the system, performing numerical optimization during meal
-plan generation. This difference in resource profiles means the two service types
+performing intensive computation. The Python \texttt{OptimizerService} is the most memory-intensive workload in the
+system, as it loads the MLP model and nutritional data into memory on startup and
+retains them for the lifetime of the container. This difference in resource profiles means the two service types
 could be scaled independently based on demand without affecting each other.
 
 The transactional database tier is provided by \textbf{Azure SQL}, a fully managed

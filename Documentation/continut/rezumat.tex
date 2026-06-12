@@ -19,21 +19,21 @@ and rigid, template-based meal databases.
 These traditional tools lack automated, mathematically precise personalization, requiring
  users to manually balance macro-nutrients through tedious trial and error. 
 
-This thesis introduces FitTrack, an intelligent nutrition management platform designed to 
-automate custom meal plan generation based on exact physiological requirements. 
-The system implements an automated calculation engine driven by Linear Programming to 
-dynamically scale individual ingredient weights down to the gram, ensuring all generated 
-menus hit target caloric, protein, carbohydrate, and fat boundaries flawlessly. To 
-complement the optimization engine, a Multi-Layer Perceptron (MLP) classifier is 
-utilized to evaluate physiological metrics—such as age, sex, weight and height-to select 
-the optimal baseline options from a predefined batch of candidate meals that best match 
-the individual's user profile.
+This thesis introduces FitTrack, an intelligent nutrition management platform designed to
+automate custom meal plan generation based on individual physiological requirements.
+The system implements a two-stage optimization pipeline: a Multi-Layer Perceptron (MLP)
+classifier first shortlists candidate meals by evaluating the user's computed calorie and
+protein targets alongside a meal category identifier, and a nonlinear constrained
+optimizer then scales each meal's ingredient weights to gram-level precision using
+Sequential Least Squares Programming (SLSQP). The optimizer minimizes a weighted
+quadratic deviation from the calorie and protein targets, with a minimum fat constraint
+and category-specific ingredient bounds ensuring realistic portion compositions.
 
 The application bridges the gap between passive food logging diaries and active, automated
-nutritional coaching. Experimental evaluations demonstrate that the constraints 
-optimization engine reliably satisfies all mathematical constraints within seconds, 
-serving as a practical foundation for building personalized health and wellness 
-applications.
+nutritional coaching. Experimental evaluations across six user profiles spanning all
+activity groups and dietary goals demonstrate a consistent calorie deviation of under
+1.3\% from the computed target, serving as a practical foundation for building
+personalized health and wellness applications.
 
 \vspace{0.5cm}
-\noindent \textbf{Keywords:} Automated Meal Planning, Linear Programming, Constraints Optimization, Multi-Layer Perceptron, Personalized Nutrition.
+\noindent \textbf{Keywords:} Automated Meal Planning, Nonlinear Optimization, SLSQP, Multi-Layer Perceptron, Personalized Nutrition.

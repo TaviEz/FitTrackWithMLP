@@ -5,8 +5,8 @@ The widespread reliance on manual food logging and static meal templates in
 contemporary nutrition software leaves a significant gap between user needs and 
 the capabilities of current tools. To address this limitation, this thesis 
 presents FitTrack, an automated nutrition management platform that integrates an 
-optimization engine driven by Linear Programming with an MLP classifier to select 
-and scale candidate meals based on physiological user profiles. The following 
+nonlinear constrained optimization engine with an MLP classifier to select
+and scale candidate meals based on individual nutritional targets. The following 
 sections detail the context that motivated this work, the objectives pursued, the 
 research methodology applied, and the general structure of the thesis.
 
@@ -45,12 +45,12 @@ an individual's unique physical profile.
     \item Design and implement a secure user profile system that collects and 
     processes essential physiological metrics, including age, sex, weight, and 
     activity level.
-    \item Train and integrate an MLP classifier capable of evaluating user profiles 
-    to select the most appropriate baseline options from a predefined batch of 
-    candidate meals.
-    \item Formulate and deploy a constraints-based optimization engine using Linear 
-    Programming to dynamically scale ingredient weights down to the gram, ensuring 
-    strict compliance with target caloric and macro-nutrient boundaries.
+    \item Train and integrate an MLP classifier capable of evaluating computed
+    nutritional targets to select the most appropriate candidate meals from the
+    predefined meal dataset.
+    \item Formulate and deploy a nonlinear constrained optimization engine using
+    SLSQP to dynamically scale ingredient weights down to the gram, minimizing
+    deviation from target caloric and protein boundaries.
     \item Build a responsive and intuitive user interface that allows seamless 
     navigation, profile updates, and clear visualization of the generated meal 
     plans without administrative overhead.
@@ -71,23 +71,22 @@ proportions. Alongside this, user profile structures were designed to
 process essential physiological metrics such as age, sex, weight, and 
 activity levels.
 
-The second phase involved the implementation of the dual-stage 
-calculation engine. The process begins with a predictive classification 
-stage, where an MLP classifier is trained and deployed to analyze the 
-user's physiological data and select the most appropriate baseline 
-option from the meal dataset. Once the base meal is selected, 
-the pipeline transitions to a deterministic optimization stage. Here, 
-a constraints-based Linear Programming solver takes the target caloric 
-and macro-nutrient boundaries calculated for that user and 
-mathematically adjusts the individual ingredient weights down to the 
-exact gram.
+The second phase involved the implementation of the dual-stage
+calculation engine. The process begins with a predictive classification
+stage, where an MLP classifier is trained and deployed to evaluate the
+user's computed calorie and protein targets alongside the meal category,
+selecting the most appropriate candidate meals from the dataset. Once
+the candidate meals are selected, the pipeline transitions to a
+deterministic optimization stage. Here, a nonlinear constrained
+optimizer using SLSQP takes the per-meal calorie and protein targets
+and mathematically adjusts the individual ingredient weights to the
+gram by minimizing a weighted quadratic deviation function.
 
-The final phase of the methodology centers on experimental evaluation. 
-The platform's performance was assessed by running various simulated 
-user profiles through the architecture to measure the solver's 
-computational efficiency, verifying that it reliably satisfies all 
-mathematical constraints within seconds without losing structural 
-ingredient integrity.
+The final phase of the methodology centers on experimental evaluation.
+The platform's accuracy was assessed by running six user profiles
+spanning all activity groups and dietary goals through the system,
+measuring the calorie deviation between the computed target and the
+generated plan — consistently within 1.3\%.
 
 \section{General Structure of the Thesis}
 
@@ -101,14 +100,13 @@ specific objectives of the FitTrack platform.
 
 \textbf{Chapter 2} establishes the theoretical framework and reviews 
 existing literature. It explores the fundamentals of personalized 
-nutrition, the mechanics of Multi-Layer Perceptron networks, and the 
-mathematical principles behind Linear Programming and constraints 
-optimization.
+nutrition, the mechanics of Multi-Layer Perceptron networks, and the
+mathematical principles behind nonlinear constrained optimization.
 
 \textbf{Chapter 3} details the architecture and system design of the 
 application. This section covers the data modeling pipeline, 
-the integration between the MLP classifier and the Linear Programming 
-solver, and the overall software infrastructure.
+the integration between the MLP classifier and the nonlinear constrained
+optimizer, and the overall software infrastructure.
 
 \textbf{Chapter 4} focuses on the practical implementation, experimental 
 results, and performance analysis. It demonstrates how the system 

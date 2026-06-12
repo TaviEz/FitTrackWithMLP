@@ -1,26 +1,99 @@
-\chapter{Concluzii}
+\chapter{Conclusions}
 \label{cap:cap5}
 
-Concluziile lucrării (1–2 pagini) în care se regăsesc cele mai importante concluzii din lucrare, care pornind de la obiectivele propuse în introducerea lucrării vor conține opinia personală a autorului privind rezultatele obținute în lucrare, o comparație a acestora cu alte proiecte/produse similare precum și posibile direcții de dezvoltare. 
+This project set out to address a recurring limitation in existing digital nutrition
+platforms: the gap between tools that track what a user has already eaten and tools
+that can proactively generate a nutritionally precise meal plan tailored to individual
+metabolic targets. The result is a full-stack web application that automates daily
+meal planning through a combination of machine learning-based meal filtering and
+mathematical optimization, deployed as a cloud-native microservices system on
+Microsoft Azure.
 
-\begin{itemize}
-    \item Gradul în care s-a realizat tema propusă (motivarea eventualelor obiective modificate);
-    \item Evidențierea concisă a contribuțiilor/soluțiilor personale (dacă este cazul);
-    \item Comparație cu alte proiecte similare;
-    \item Posibile direcții de dezvoltare.
-\end{itemize}
+The core objective — generating a complete daily meal plan that satisfies a user's
+calorie and macro-nutrient targets at the gram level — was achieved. The experimental
+results presented in Chapter 4 confirm that the optimizer produces meal plans within
+a 1.3\% deviation from the calculated calorie target across all tested activity groups
+and dietary goals, which in absolute terms amounts to at most 32 kcal. This level of
+precision exceeds what manual logging tools offer by design, as those platforms place
+the burden of nutritional alignment entirely on the user.
 
-În acest capitol nu se introduc figuri, table sau listing-uri de cod. Pot fi în schimb referite!
+The most significant personal contribution of this work is the two-stage optimization
+pipeline at the core of the \texttt{OptimizerService}. Rather than relying on static
+recipe lookups, the system first employs a Multi-Layer Perceptron classifier to
+shortlist candidate meals based on the user's computed calorie and protein targets,
+then applies a nonlinear constrained optimizer (SLSQP) to scale ingredient amounts
+to gram-level precision by minimizing a weighted quadratic deviation from those targets. This combination — a learned classifier
+followed by exact mathematical optimization — is not present in any of the comparable
+platforms surveyed in Chapter 2.
 
-Concluziile finale au un rol semnificativ în cadrul lucrării de diplomă, care trebuie pus în evidență în special în momentul susținerii acesteia în fața comisiei. Aici trebuie prezentate, în câteva pagini, cele mai importante rezultate ale muncii depuse de candidat și potențiale direcții de dezvoltare ulterioară a temei abordate. Acest capitol oferă o sinteză a realizărilor obținute, precum și avantajele și neajunsurile soluțiilor alese. Concluziile nu trebuie să aducă rezultate sau interpretări noi, ci doar să le evidențieze pe cele din conținutul lucrării.
+\section{Comparison with Similar Solutions}
 
-\section{Direcții viitoare de dezvoltare}
-\label{cap:cap5:directii-viitoare}
+As outlined in the comparative analysis from Chapter 2 (see
+Table~\ref{tab:comparative_analysis}), existing digital nutrition solutions fall into
+two broad categories. Manual logging utilities such as MyFitnessPal require the user
+to search and record food entries after consumption, offering no generative capability.
+Dynamic metabolic trackers such as MacroFactor introduce adaptive calorie targets based
+on observed weight trends, but still do not generate meal plans — the user remains
+responsible for food selection. Standard automated planners can suggest recipes, but
+treat them as fixed structures and cannot adjust ingredient quantities to meet a
+specific calorie target.
 
-\textcolor{gray}{\lipsum[1-3]}
+The proposed system addresses all three limitations simultaneously: it generates a
+complete plan automatically, selects meals intelligently through a trained classifier,
+and scales each meal's ingredient amounts to satisfy the user's targets as hard
+mathematical constraints. In this sense the application occupies a distinct position
+in the landscape — closer to a personalized nutrition engine than a tracking tool.
 
-\section{Lecții învățate pe parcursul dezvoltării proiectului de diplomă}
+\section{Future Development Directions}
 
-Ar fi interesant dacă acest capitol s-ar încheia cu o astfel de secțiune, în mod special la licență.
+The current implementation establishes a functional foundation, but several directions
+could meaningfully extend the system's practical utility.
 
-\textcolor{gray}{\lipsum[2-4]}
+The most impactful near-term improvement would be a streamlined ingredient input
+mechanism. At present, the optimizer works from a fixed read-only dataset of
+ingredients bundled inside the container. A natural extension would be to allow users
+to register the ingredients they currently have available — effectively describing the
+contents of their fridge or pantry — and have the optimizer constrain its meal
+generation to only those ingredients. This would shift the system from a general
+meal planner to a context-aware one, reducing food waste and increasing the
+likelihood that users actually prepare the suggested meals.
+
+A second direction is real-world longitudinal validation. The experimental results in
+Chapter 4 confirm numerical accuracy, but they do not measure whether consistent use
+of the application over time produces the intended physiological outcomes. A structured
+test — tracking a user's body weight, energy levels, and adherence rate over the course
+of a month while following the generated plans — would provide evidence of the system's
+practical effectiveness beyond algorithmic correctness. This kind of validation would
+also surface usability issues that only emerge through daily use.
+
+\section{Lessons Learned}
+
+The microservices architecture adopted in this project introduced meaningful development
+overhead — separate deployments, inter-service networking, CORS configuration, and
+container registry management — that a monolithic design would not have required. In
+retrospect, the split between the .NET API layer and the Python optimizer was
+architecturally justified: the two services use different runtimes and have different
+scaling characteristics, and a crash or redeployment of the optimizer does not
+interrupt authentication or plan management. For projects of similar scope, a 
+microservices boundary is most valuable when services differ in runtime, language, or 
+failure tolerance — not simply to add architectural complexity.
+
+Transitioning from a local Docker environment to Azure Container Apps required an
+initial setup investment — configuring environment variables, internal service URLs,
+and CORS origins correctly for the cloud environment. This friction is expected and
+largely a one-time cost, but it reinforced that cloud deployment should be accounted
+for early in the development cycle rather than treated as a final step.
+
+The decision to use a nonlinear constrained optimizer for ingredient scaling proved
+correct. An approximate approach — rounding ingredient amounts to the nearest fixed
+increment — would have been simpler to implement but would have introduced uncontrolled
+calorie deviation. The SLSQP solver finds the closest achievable solution within the
+defined bounds and constraints, which is what makes the sub-1.3\% deviation result
+meaningful.
+
+Finally, bundling the SQLite dataset as a static artifact inside the container image
+is a clean and dependency-free pattern for read-only data, but it does mean that any
+change to the meal or ingredient dataset requires rebuilding and redeploying the
+container. In practice this was not an issue, as the dataset was finalized before
+deployment, but it is a real tradeoff to consider if the dataset were expected to
+evolve over time.

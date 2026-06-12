@@ -268,10 +268,10 @@ structure and a single meal entry:
 }
 \end{verbatim}
 
-The per-meal \texttt{error} field is the residual reported by the linear programming
-solver and reflects numerical precision rather than a meaningful deviation — values
-in the range of $10^{-10}$ to $10^{-15}$ indicate that the optimization constraints
-were satisfied to machine precision.
+The per-meal \texttt{error} field is the residual reported by the SLSQP solver and
+reflects numerical precision rather than a meaningful deviation — values in the range
+of $10^{-10}$ to $10^{-15}$ indicate that the optimizer converged to a solution
+satisfying its constraints to machine precision.
 
 Overall, the results confirm that the system behaves correctly across the full range of
 supported user profiles. The optimizer produces nutritionally consistent meal plans with

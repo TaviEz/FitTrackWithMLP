@@ -67,8 +67,8 @@ AF &= 1.900 \quad \text{(Intense: daily heavy physical labor or athletic sports)
 
 \subsection{Multi-Layer Perceptron (MLP) Classifier Foundations}
 
-To automate the selection of recipe baselines within the system, a Multi-Layer Perceptron 
-(MLP) architecture is utilized as an intelligent heuristic filter. Instead of executing 
+To automate the selection of recipe baselines within the system, a Multi-Layer Perceptron
+(MLP) architecture is utilized as a learned classifier. Instead of executing 
 resource-intensive database queries to scan thousands of potential meal profiles, the 
 network processes the primary user macro-nutrient requirements instantly to isolate a 
 highly ranked subset of candidate configurations.
@@ -108,60 +108,61 @@ Top-K maximum selection operator. This isolates a focused array of candidate rec
 (where $k=5$ for standard targets or $k=15$ for simple complexity structures) to be passed 
 downstream for exact ingredient weight optimization.
 
-\subsection{Linear Programming and Constraints Optimization}
+\subsection{Nonlinear Constrained Optimization}
 
-To resolve the exact ingredient quantities necessary to fulfill a user's 
-macro-nutrient targets, the system utilizes Linear Programming (LP). While 
-the Multi-Layer Perceptron architecture acts as a heuristic filter to select 
-the most structurally appropriate recipe templates, the Linear Programming solver 
-operates as an exact mathematical algorithm. It determines the optimal allocation 
-of continuous variables (ingredient weights in grams) under strict linear boundary limits.
+To resolve the exact ingredient quantities necessary to fulfill a user's
+macro-nutrient targets, the system employs a nonlinear constrained optimizer.
+While the Multi-Layer Perceptron classifier selects the most suitable candidate
+meal templates, the optimizer determines the precise weight in grams for each
+ingredient by solving a continuous constrained minimization problem using the
+Sequential Least Squares Programming (SLSQP) method.
+
+A strict Linear Programming formulation was initially considered, which would
+express calorie and protein targets as hard equality or inequality constraints.
+However, enforcing exact macro-nutrient targets as hard constraints can render
+the problem infeasible for certain meal compositions where no combination of
+ingredient weights satisfies all constraints simultaneously. To guarantee that
+the solver always produces a valid result, the calorie and protein targets are
+instead incorporated into a weighted quadratic objective function, allowing the
+optimizer to find the closest achievable solution even when exact targets cannot
+be met.
 
 \subsubsection{Problem Formulation and the Objective Function}
-The optimization process treats each ingredient within the selected recipe as a decision 
-variable $x_i$, representing the mass of that ingredient in grams. The primary objective 
-is to minimize a linear cost or deviation function, ensuring the meal remains as close as 
-possible to an ideal baseline structure while satisfying the user's daily goals. The 
-general mathematical formulation minimizes the objective function:
+Each ingredient in the selected meal is treated as a decision variable $x_i$,
+representing its mass in grams. The objective minimizes a weighted sum of squared
+deviations from the calorie and protein targets:
 
 \begin{equation}
-\min \sum_{i=1}^{n} c_i x_i
+\min \left( \sum_{i=1}^{n} e_i x_i - E_{\text{target}} \right)^2
++ 20 \cdot \left( \sum_{i=1}^{n} p_i x_i - P_{\text{target}} \right)^2
 \end{equation}
 
-Where $n$ is the total number of ingredients in the candidate meal, and $c_i$ represents 
-the constant coefficients dictating the optimization priority or scaling factors for 
-each specific ingredient.
+Where $e_i$ and $p_i$ are the calorie and protein values of ingredient $i$ per
+gram respectively, and $E_{\text{target}}$, $P_{\text{target}}$ are the per-meal
+calorie and protein targets. The factor of 20 weights the protein deviation more
+heavily, reflecting that a gram of protein deviation is more significant to the
+nutritional goal than a single calorie deviation.
 
-\subsubsection{Linear Constraints and Boundary Conditions}
-The solution space is strictly bounded by a system of linear inequalities derived from 
-the user's nutritional parameters. For a target plan requiring specific calorie 
-bounds ($E$), a minimum protein threshold ($P$), and a minimum fat threshold ($F$), 
-the system maps out the continuous constraints as follows:
+\subsubsection{Constraints and Boundary Conditions}
+A single inequality constraint enforces a minimum fat threshold:
 
 \begin{equation}
-\sum_{i=1}^{n} e_i x_i \le E_{\text{target}}
+\sum_{i=1}^{n} f_i x_i \ge F_{\text{min}}
 \end{equation}
 
-\begin{equation}
-\sum_{i=1}^{n} p_i x_i \ge P_{\text{target}}
-\end{equation}
-
-\begin{equation}
-\sum_{i=1}^{n} f_i x_i \ge F_{\text{target}}
-\end{equation}
-
-Where $e_i$, $p_i$, and $f_i$ represent the constant nutritional values of 
-ingredient $i$ per single gram (for calories, protein, and fat respectively). 
-Additionally, non-negativity and structural boundaries are applied to prevent 
-negative food weights and ensure realistic ingredient portions:
+Where $f_i$ is the fat content of ingredient $i$ per gram. Additionally,
+each decision variable is bounded by category-specific gram limits to ensure
+realistic portion sizes:
 
 \begin{equation}
 x_{\min, i} \le x_i \le x_{\max, i}, \quad \forall i \in \{1, \dots, n\}
 \end{equation}
 
-By evaluating these bounded intersections, the solver instantly locates the precise 
-feasible region, bypassing manual adjustment loops to output a mathematically sound 
-meal composition.
+The bounds are assigned per ingredient food category — for example, protein
+sources are bounded between 30g and 300g, oils between 5g and 20g, and
+vegetables between 30g and 200g. These boundaries encode domain knowledge about
+realistic meal portions and prevent the solver from producing nutritionally valid
+but culinarily impractical compositions.
 
 \section{Comparative Analysis of Existing Solutions}
 
@@ -172,14 +173,14 @@ two categories: manual logging utilities and rigid algorithmic recipe generators
 \begin{itemize}
     \item \textbf{Manual Logging Utilities (e.g., MyFitnessPal):} These platforms operate 
     primarily as relational database management interfaces. Users manually search, select, 
-    and log food entries post-consumption \cite{url:myfitnesspal}. Caloric guidelines are treated as static targets 
-    derived from baseline formulas, placing the operational burden of macro-nutrient 
-    mathematical alignment entirely on the end user.
+    and log food entries post-consumption \cite{url:myfitnesspal}. Caloric guidelines are 
+    treated as static targets derived from baseline formulas, placing the operational burden 
+    of macro-nutrient mathematical alignment entirely on the end user.
     \item \textbf{Dynamic Metabolic Trackers (e.g., MacroFactor):} These systems use advanced 
     expenditure analytics to continuously recalculate metabolic expenditure based on daily 
-    weight and logging inputs \cite{url:macrofactor}. While highly accurate from a physiological modeling 
-    perspective, they remain bound to manual data-entry paradigms and lack automated meal 
-    generation capabilities.
+    weight and logging inputs \cite{url:macrofactor}. While highly accurate from a 
+    physiological modeling perspective, they remain bound to manual data-entry paradigms and 
+    lack automated meal generation capabilities.
     \item \textbf{Automated Rule-Based Planners (e.g., Eat This Much):} 
     Standard automated meal planners utilize deterministic decision trees or 
     static search queries to select pre-authored recipes from a fixed 
@@ -199,7 +200,7 @@ is outlined in Table~\ref{tab:comparative_analysis}.
 \hline
 \textbf{Technical Criterion} & \textbf{MyFitnessPal} & \textbf{MacroFactor} & \textbf{Standard Planners} & \textbf{Proposed System} \\ \hline
 Automated Generation        & No                    & No                   & Yes                        & \textbf{Yes}             \\ \hline
-Heuristic Prep-Filtering    & No                    & No                   & No                         & \textbf{Yes (MLP)}       \\ \hline
+ML-Based Meal Pre-Selection & No                    & No                   & No                         & \textbf{Yes (MLP)}       \\ \hline
 Exact Gram-Level Scaling    & No                    & No                   & No                         & \textbf{Yes (LP)}        \\ \hline
 Dynamic Macro Adjustments   & No                    & Yes                  & No                         & \textbf{Yes}             \\ \hline
 Minimal Operational Burden  & No                    & No                   & Moderate                   & \textbf{High}            \\ \hline
@@ -244,8 +245,8 @@ derived set of technical and functional specifications:
     loop to a simple configuration step.
     \item \textbf{Hybrid Pipeline Execution:} The system backend must execute a two-stage 
     processing pipeline to combine performance speed with mathematical precision. 
-    A machine learning classification layer (MLP) must handle initial structural baseline 
-    filtering from the database, which a dedicated constraint solver (Linear Programming) 
+    A machine learning classification layer (MLP) must handle initial structural baseline
+    filtering from the database, which a nonlinear constrained optimizer (SLSQP)
     then scales down to individual ingredient masses in grams.
     \item \textbf{User-Defined Complexity Constraints:} The menu generation pipeline must 
     dynamically adapt candidate food pools based on specified user lifestyle parameters. 
