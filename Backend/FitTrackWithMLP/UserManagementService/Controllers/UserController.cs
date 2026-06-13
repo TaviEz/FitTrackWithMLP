@@ -2,10 +2,8 @@
 using FitTrackWithMLP.Shared.DTOs.User;
 using FitTrackWithMLP.Shared.Enums.Statuses;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using UserManagementService.Models;
 using UserManagementService.Services.Authentication;
 using UserManagementService.Services.UserDetails;
 
@@ -51,6 +49,9 @@ namespace UserManagementService.Controllers
             }
 
             var token = _tokenService.CreateAccessToken(user);
+
+            // cleanup any existing refresh tokens for this user
+            await _refreshTokenService.DeleteTokensByUserIdAsync(user.Id);
             var refreshToken = await _refreshTokenService.GenerateAndStoreAsync(user.Id);
 
             bool isDev = _env.IsDevelopment();

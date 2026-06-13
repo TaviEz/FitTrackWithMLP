@@ -1,6 +1,6 @@
 import './App.css'
 import { useEffect } from 'react'
-import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom'
+import { BrowserRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import Login from './components/authentication/LoginPage'
 import SignInForm from './components/authentication/SignInPage'
 import Onboarding from './components/onboarding/OnboardingPage'
@@ -17,15 +17,18 @@ const AppLayout = () => {
   const { pathname } = useLocation();
   const showNav = !HIDDEN_NAV_ROUTES.includes(pathname);
   const { setUserId, setUserDetails } = useUser();
+  const navigate = useNavigate();
 
   useEffect(() => {
-    if (!showNav) {
+    // skip rehydrate on login or sign in
+    if (pathname === '/' || pathname === '/signIn') {
       return;
     }
 
     const rehydrate = async () => {
       const userId = await getLoggedUserId();
       if (!userId.success || !userId.data) {
+        navigate('/');
         return;
       }
 

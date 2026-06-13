@@ -34,6 +34,16 @@ namespace UserManagementService.Services.Authentication
             return token;
         }
 
+        public async Task DeleteTokensByUserIdAsync(string userId)
+        {
+            var tokens = await _dbContext.RefreshTokens
+                .Where(rt => rt.UserId == userId)
+                .ToListAsync();
+
+            _dbContext.RefreshTokens.RemoveRange(tokens);
+            await _dbContext.SaveChangesAsync();
+        }
+
         public async Task<RefreshToken?> ValidateAsync(string token)
         {
             return await _dbContext.RefreshTokens
