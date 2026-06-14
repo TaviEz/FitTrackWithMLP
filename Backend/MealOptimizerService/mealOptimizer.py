@@ -20,7 +20,6 @@ class MealOptimizer:
             }
 
     def optimize_meal(self, ingredients, targets):
-        """The Linear Programming Solver for a single meal."""
         # Filter ingredients that exist in our DB
         valid_ingredients = [ing for ing in ingredients if ing.name in self.db]
 
