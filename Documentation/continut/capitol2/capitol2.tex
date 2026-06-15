@@ -68,10 +68,10 @@ AF &= 1.900 \quad \text{(Intense: daily heavy physical labor or athletic sports)
 \subsection{Multi-Layer Perceptron (MLP) Classifier Foundations}
 
 To automate the selection of recipe baselines within the system, a Multi-Layer Perceptron
-(MLP) architecture is utilized as a learned classifier. Instead of executing 
-resource-intensive database queries to scan thousands of potential meal profiles, the 
-network processes the primary user macro-nutrient requirements instantly to isolate a 
-highly ranked subset of candidate configurations.
+(MLP) architecture is utilized as a learned classifier \cite[Ch.~10]{book:geron:handson:2019}.
+Instead of executing resource-intensive database queries to scan thousands of potential meal
+profiles, the network processes the primary user macro-nutrient requirements instantly to
+isolate a highly ranked subset of candidate configurations.
 
 \subsubsection{Structural Topology and Layer Configurations}
 The neural network is structured as a feedforward network containing an input layer, two 
@@ -91,8 +91,9 @@ vector ($b$):
 \text{Output} = W \cdot x + b
 \end{equation}
 
-To introduce non-linear mapping capabilities, the hidden layers apply the Rectified Linear 
-Unit (ReLU) activation function, which truncates negative values to zero. The network 
+To introduce non-linear mapping capabilities, the hidden layers apply the Rectified Linear
+Unit (ReLU) activation function, which truncates negative values to zero 
+\cite[Ch.~10]{book:geron:handson:2019}. The network 
 configuration expands the 3-dimensional input into a primary hidden layer of 512 neurons, 
 compresses the features into a secondary hidden layer of 256 neurons, and finally projects 
 onto the output layer.
@@ -115,7 +116,7 @@ macro-nutrient targets, the system employs a nonlinear constrained optimizer.
 While the Multi-Layer Perceptron classifier selects the most suitable candidate
 meal templates, the optimizer determines the precise weight in grams for each
 ingredient by solving a continuous constrained minimization problem using the
-Sequential Least Squares Programming (SLSQP) method.
+Sequential Least Squares Programming (SLSQP) method \cite{art:virtanen:scipy:2020}.
 
 A strict Linear Programming formulation was initially considered, which would
 express calorie and protein targets as hard equality or inequality constraints.

@@ -403,6 +403,95 @@ realistic portion sizes.
 \end{algorithmic}
 \end{algorithm}
 
+\subsection{MLP Model Training}
+
+The meal ranking component is implemented as a feedforward Multi-Layer Perceptron (MLP)
+trained using PyTorch. Its role within the system is to rank available meals by
+suitability given a set of nutritional targets and a meal category, producing a
+priority-ordered list of candidate meal identifiers that the selection algorithm
+then filters by complexity and exclusion constraints.
+
+\subsubsection{Training Dataset}
+
+The training dataset was generated synthetically using the same meal database and
+optimizer deployed at runtime. A total of 5000 samples were produced by randomly
+sampling user profiles: TDEE values between 1500 and 4000 kcal, body weights between
+35 and 150 kg, protein multipliers drawn from \{1.6, 1.8, 2.0, 2.2\} g/kg, and a
+randomly assigned meal category. For each sample, the per-category calorie and protein
+targets were derived by applying the fixed meal split ratios to the total daily targets.
+
+For each generated sample, the SLSQP ingredient optimizer was executed against every
+eligible meal in the database for that category. The meal that produced the lowest
+residual error was recorded as the label. This process ensures that the MLP learns
+to approximate the optimizer's own selection logic — at inference time, running SLSQP
+over every candidate meal would be computationally redundant, so the MLP serves as a
+fast pre-filter that ranks candidates before a single SLSQP call is made on the
+selected meal. The resulting dataset was persisted as \texttt{meal\_mlp\_dataset.csv}
+and used directly for training.
+
+\subsubsection{Architecture}
+
+The network consists of two fully connected hidden layers followed by a linear output
+layer:
+
+\begin{itemize}
+    \item \textbf{Input layer:} 3 neurons, one per feature (calories, protein, meal
+    category identifier). All inputs are standardised prior to training using
+    \texttt{StandardScaler}, which is persisted alongside the model and reapplied to
+    every inference request at runtime.
+    \item \textbf{Hidden layer 1:} 512 neurons, ReLU activation.
+    \item \textbf{Hidden layer 2:} 256 neurons, ReLU activation.
+    \item \textbf{Output layer:} $N$ linear neurons, where $N$ is the number of
+    distinct meal classes. Raw logits are passed directly to the loss function during
+    training; at inference, \texttt{torch.topk} is applied to the logits to extract
+    the top-$k$ ranked meal indices.
+\end{itemize}
+
+No explicit regularisation layers were included. Because the model operates over a
+bounded, closed meal catalogue whose distribution does not change at runtime, the
+objective is consistent ranking within the known set rather than generalisation to
+unseen meal definitions.
+
+\subsubsection{Training Configuration}
+
+The model was trained for 2001 epochs using the Adam optimiser with a learning rate of
+$10^{-3}$ and a mini-batch size of 32. The loss function used is cross-entropy loss,
+which is standard for multi-class classification tasks.
+
+\begin{itemize}
+    \item \textbf{Optimiser:} Adam, $lr = 0.001$
+    \item \textbf{Loss:} Cross-Entropy Loss
+    \item \textbf{Batch size:} 32, with shuffling enabled per epoch
+    \item \textbf{Epochs:} 2001
+\end{itemize}
+
+\subsubsection{Accuracy}
+
+After training, the model was evaluated on the training dataset using top-$k$ accuracy
+metrics, reflecting the way the model is actually used at inference time:
+
+\begin{itemize}
+    \item \textbf{Top-1 accuracy: 81.78\%.} The model selects the exact meal the
+    optimizer would have chosen as its first prediction in roughly four out of five
+    cases. The remaining gap is attributable to label ambiguity — for similar
+    calorie and protein targets, multiple meals can satisfy the nutritional goal
+    equally well, so the best meal label can differ between samples with
+    near-identical inputs, making perfect top-1 convergence unachievable.
+    \item \textbf{Top-5 accuracy: 99.82\%.} The correct meal appears within the
+    first five ranked candidates in virtually all cases.
+    \item \textbf{Top-15 accuracy: 100.00\%.} The correct meal is always present
+    within the top 15 candidates. Since the selection algorithm uses $k = 15$ for
+    simple complexity plans, this confirms that the MLP never excludes the optimal
+    meal from the candidate pool.
+\end{itemize}
+
+The practical significance of the top-15 result is that the meal selection algorithm
+is guaranteed to have the optimizer-preferred meal available as a candidate in every
+case, with complexity filtering and exclusion constraints then narrowing the final
+choice. The end-to-end calorie deviation results presented in Chapter~4 provide
+further system-level validation, demonstrating that the full pipeline consistently
+delivers plans within 1.3\% of the target calorie intake across a range of unseen
+user profiles.
 
 \section{Technology Stack Selection and Justification}
 

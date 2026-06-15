@@ -57,9 +57,20 @@ for epoch in range(2001):
 model.eval() 
 with torch.no_grad():
     all_outputs = model(X_train)
+
+    # Top 1
     _, predicted = torch.max(all_outputs, 1)
     accuracy = (predicted == y_train).sum().item() / y_train.size(0)
-    print(f"\nFinal Training Accuracy: {accuracy * 100:.2f}%")
+    print(f"Top-1 Training Accuracy: {accuracy * 100:.2f}%")
+
+    # Top k
+    def topk_acc(outputs, targets, k):
+        _, topk_preds = torch.topk(outputs, k, dim=1)
+        correct = topk_preds.eq(targets.view(-1, 1).expand_as(topk_preds))
+        return correct.any(dim=1).float().mean().item()
+    
+    print(f"Top-5 Training Accuracy:  {topk_acc(all_outputs, y_train, 5)  * 100:.2f}%")
+    print(f"Top-15 Training Accuracy: {topk_acc(all_outputs, y_train, 15) * 100:.2f}%")
 
 # Save Model and Metadata (Mapping + Class Count)
 torch.save(model.state_dict(), "./data/meal_selector_model.pth")
