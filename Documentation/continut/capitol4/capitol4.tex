@@ -82,10 +82,10 @@ and token evaluation occur in the correct logical order:
     \item \textbf{Token Refresh Flow:} Testing verified the silent token renewal mechanism.
     When an API request returns a 401 due to an expired access token, the frontend
     automatically issues a \texttt{POST /api/user/refresh} request carrying the HttpOnly
-    refresh token cookie. The \texttt{UserManagementService} validates the token, queries the
-    associated user, deletes the old refresh token, and persists a newly rotated one. A
-    fresh JWT access token and updated refresh cookie are returned, after which the frontend
-    transparently retries the original request — all without requiring the user to
+    refresh token cookie. The UserManagementService validates the token, 
+    queries the associated user, deletes the old refresh token, and persists a newly rotated 
+    one. A fresh JWT access token and updated refresh cookie are returned, after which the 
+    frontend transparently retries the original request — all without requiring the user to
     re-authenticate.
     \item \textbf{Meal Plan CRUD Operations:} Testing validated that manually adding,
     updating, or deleting individual food items within an active meal slot correctly

@@ -151,13 +151,9 @@ A minimum fat inequality constraint was initially formulated to protect metaboli
 \sum_{i=1}^{n} f_i x_i \ge F_{\text{min}}
 \end{equation}
 
-Where $f_i$ is the fat content of ingredient $i$ per gram. During testing, however,
-this constraint caused the solver to return infeasible results for certain meal
-compositions whose ingredient profiles could not simultaneously satisfy the fat
-floor and the calorie and protein targets. To ensure the optimizer always produces
-a valid solution regardless of meal structure, the fat constraint was relaxed and
-the solver relies solely on the per-ingredient gram bounds to maintain realistic
-portion sizes.
+Where $f_i$ is the fat content of ingredient $i$ per gram and $F_{\text{min}}$ is
+the minimum fat target supplied by the \texttt{DailyPlanService}, calculated as a
+per-kilogram value scaled to the user's body weight and dietary goal.
 
 Each decision variable is bounded by category-specific gram limits:
 

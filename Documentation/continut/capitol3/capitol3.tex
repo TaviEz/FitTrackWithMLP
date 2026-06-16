@@ -45,10 +45,11 @@ logging while maintaining high structural flexibility.
     \end{equation}
     
     When a restrictive deficit is selected, the system automatically recalibrates macro-nutrient 
-    distributions, scaling protein allocations up to 1.4g/kg or 2.0g/kg based on calculated lean 
-    mass preservation metrics while strictly enforcing a minimum fat threshold of 0.7g/kg or 0.8g/kg 
-    to protect metabolic health. This separation ensures nutritional logic remains within the .NET 
-    domain layer, keeping the \texttt{OptimizerService} focused solely on meal selection.
+    distributions, scaling protein allocations up to 1.4g/kg or 2.0g/kg based on calculated lean
+    mass preservation metrics \cite{art:jager:issn:protein:2017} while strictly enforcing a minimum 
+    fat threshold of 0.7g/kg or 0.8g/kg to protect metabolic health \cite{techreport:fao:energy}. 
+    This separation ensures nutritional logic remains within the .NET domain layer, keeping 
+    the \texttt{OptimizerService} focused solely on meal selection.
 
     \item \textbf{Stateless Authentication with Refresh Token Rotation:} The system implements a
     dual-token authentication strategy to balance security and user experience across a 
