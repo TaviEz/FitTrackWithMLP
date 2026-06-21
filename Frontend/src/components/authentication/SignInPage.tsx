@@ -61,8 +61,8 @@ const SignInForm = () => {
     }
 
     // Success
-    navigate("/onboarding");
-    showInfo('Logged in');
+    navigate("/");
+    showInfo('Successfully registered! Please sign in with your new credentials.');
   };
 
     useEffect(() => {

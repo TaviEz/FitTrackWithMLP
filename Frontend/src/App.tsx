@@ -1,5 +1,6 @@
 import './App.css'
 import { useEffect } from 'react'
+import { Toolbar } from '@mui/material'
 import { BrowserRouter, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import Login from './components/authentication/LoginPage'
 import SignInForm from './components/authentication/SignInPage'
@@ -44,6 +45,7 @@ const AppLayout = () => {
   return (
     <>
       {showNav && <TopNavBar />}
+      {showNav && <Toolbar />}
       <div>
         <Routes>
           <Route path="/" element={<Login />} />

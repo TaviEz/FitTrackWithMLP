@@ -101,7 +101,7 @@ const Dashboard = () => {
                 display="flex"
                 justifyContent="center"
                 alignItems="center"
-                sx={{ mt: `${NAV_HEIGHT}px`, height: `calc(100vh - ${NAV_HEIGHT}px)` }}
+                sx={{ height: `calc(100vh - ${NAV_HEIGHT}px)` }}
             >
                 <CircularProgress />
             </Box>
@@ -112,7 +112,6 @@ const Dashboard = () => {
         <>
             <Box
                 sx={{
-                    mt: `${NAV_HEIGHT}px`,
                     height: `calc(100vh - ${NAV_HEIGHT}px)`,
                     width: "100%",
                     display: "flex",

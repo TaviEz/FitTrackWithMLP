@@ -171,9 +171,9 @@ const Onboarding = () => {
     };
 
     return (
-        <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" gap={2}>
+        <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" gap={1}>
             {/* Onboarding Stepper */}
-            <Box sx={{ width: '100%', maxWidth: 600, mt: 4, mb: 2 }}>
+            <Box sx={{ width: '100%', maxWidth: 600, mt: 2, mb: 1 }}>
                 <Stepper activeStep={step - 1} alternativeLabel>
                     {steps.map((label) => (
                         <Step key={label}>
@@ -193,7 +193,7 @@ const Onboarding = () => {
                         Share a few details and we'll guide you every step of the way.
                     </Typography>
 
-                    <Grid container spacing={4}>
+                    <Grid container spacing={2}>
                         <Grid size={{ xs: 12, md: 7 }}>
                             <Card sx={{ p: 3, borderRadius: 2, border: `1px solid ${theme.palette.divider}` }}>
                                 <PersonalDetailsForm
